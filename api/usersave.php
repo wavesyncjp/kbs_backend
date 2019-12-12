@@ -4,7 +4,7 @@ require '../util.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 	echo 'NOT SUPPORT';
-	exit;;
+	exit;
 }
 
 $postparam = file_get_contents("php://input");
