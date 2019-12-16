@@ -41,7 +41,7 @@ if(isset($param->locations)){
 			$locSave = ORM::for_table(TBLLOCATIONINFO)->create();
 			setInsert($locSave, $param->createUserId);			
 		}		
-		copyData($loc, $locSave, array('pid', 'isContract', 'isDepend'));		
+		copyData($loc, $locSave, array('pid', 'isContract', 'isDepend', 'contractData'));		
 		$locSave->tempLandInfoPid = $land->pid;
 		$locSave->save();		
 	}
