@@ -11,23 +11,26 @@ $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
 //更新
-if($param->pid > 0){
+if(isset($param->pid) && $param->pid > 0){
 	$contract = ORM::for_table(TBLCONTRACTINFO)->find_one($param->pid);
-	setUpdate($land, $param->updateUserId);
+	setUpdate($contract, $param->updateUserId);
 }
 //登録
 else {
 	//000002
 	$contract = ORM::for_table(TBLCONTRACTINFO)->create();	
 	$maxNo = ORM::for_table(TBLCONTRACTINFO)->max('contractNumber');
+	if(!isset($maxNo)) {
+		$maxNo = '001';
+	}
 	$maxNum = intval(ltrim($maxNo, "0")) + 1;
 	$nextNo = str_pad($maxNum, 3, '0', STR_PAD_LEFT);
 	$contract->contractNumber = $nextNo;
-	setInsert($land, $param->createUserId);
+	setInsert($contract, $param->createUserId);
 }
 
 
-copyData($param, $contract, array('pid', 'land', 'details', 'depends'));
+copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'depends'));
 $contract->save();
 
 //契約詳細
