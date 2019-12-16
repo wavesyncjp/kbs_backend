@@ -19,7 +19,9 @@ ORM::configure('password', '');
 ORM::configure('id_column_overrides', array(
 		'tbltemplandinfo'=>'pid',
 		'tbllocationinfo'=>'pid',
-		'tblstockcontractinfo'=>'pid',
+		'tblcontractinfo'=>'pid',
+		'tblcontractdetailinfo'=>'pid',
+		'tblcontractdependinfo'=>'pid',
 		'tblbukken'=>'bukkenId',
 		'tbluser'=>'userId',
 		'tbltoken'=>'userId',
@@ -34,7 +36,9 @@ $FILE_PATH = 'uploads';
 		
 define('TBLTEMPLANDINFO','tbltemplandinfo');
 define('TBLLOCATIONINFO','tbllocationinfo');
-define('TBLSTOCKCONTRACTINFO','tblstockcontractinfo');
+define('TBLCONTRACTINFO','tblcontractinfo');
+define('TBLCONTRACTDETAILINFO','tblcontractdetailinfo');
+define('TBLCONTRACTDEPENDINFO','tblcontractdependinfo');
 define('TBLBUKKEN','tblbukken');
 define('TBLUSER','tbluser');
 define('TBLTOKEN','tbltoken');

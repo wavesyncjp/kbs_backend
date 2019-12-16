@@ -65,6 +65,24 @@ function getLandInfo($pid){
 }
 
 /**
+ * 契約情報取得
+ * @param unknown $pid
+ */
+function getContractInfo($pid){
+	$contract = ORM::for_table(TBLCONTRACTINFO)->findOne($pid)->asArray();
+	
+	$details = ORM::for_table(TBLCONTRACTDETAILINFO)->where('contractInfoPid', $contract->pid)->where_null('deleteDate')->findArray();
+	if(isset($details)){	
+		$contract['details'] = $details;
+	}
+	$depends = ORM::for_table(TBLCONTRACTDEPENDINFO)->where('contractInfoPid', $contract->pid)->where_null('deleteDate')->findArray();
+	if(isset($depends)){	
+		$contract['depends'] = $depends;
+	}
+	return $contract;
+}
+
+/**
  * 
  * @param unknown $data
  */
