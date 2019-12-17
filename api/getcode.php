@@ -7,10 +7,10 @@ $param = json_decode($postparam);
 $query = ORM::for_table("tblcode");
 
 if(isset($param->code)){
-	$codes = $codes->where_in('code', $param->code);
+	$query = $query->where_in('code', $param->code);
 }
 
-$codes = $codes->find_array();
-echo json_encode($codes);
+$query = $query->find_array();
+echo json_encode($query);
 
 ?>
