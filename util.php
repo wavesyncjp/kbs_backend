@@ -79,6 +79,13 @@ function getContractInfo($pid){
 	if(isset($depends)){	
 		$contract['depends'] = $depends;
 	}
+
+	//地図添付
+	$contractFiles = ORM::for_table(TBLCONTRACTFILE)->where('contractInfoPid', $pid)->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
+	if(isset($contractFiles)){
+		$contract['contractFiles'] = $contractFiles;
+	}
+
 	return $contract;
 }
 

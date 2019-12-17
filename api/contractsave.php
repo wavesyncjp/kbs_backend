@@ -30,7 +30,7 @@ else {
 }
 
 
-copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'depends'));
+copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'depends', 'contractFiles'));
 $contract->save();
 
 //契約詳細
