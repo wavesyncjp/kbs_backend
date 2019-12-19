@@ -45,6 +45,8 @@ if(isset($param->pickDate) && $param->pickDate != ''){
 $lands = $query->find_array();
 $ret = array();
 foreach($lands as $land){
+
+	// 所在地
 	$address = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $land['pid'])->where_not_null('address')->where_not_equal('address', '')->where_null('deleteDate')->select('address')->find_array();
 	if(isset($address) && sizeof($address) > 0){
 		$arrs = array();
@@ -55,6 +57,25 @@ foreach($lands as $land){
 	}
 	else {
 		$land['remark1'] = '';
+	}
+
+	//地番
+	$address = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $land['pid'])->where_not_null('blockNumber')->where_not_equal('blockNumber', '')->where_null('deleteDate')->select('blockNumber')->find_array();
+	if(isset($address) && sizeof($address) > 0){
+		$arrs = array();
+		foreach($address as $arr){
+			$arrs[] = $arr['blockNumber'];
+		}
+		$land['remark2'] = implode(",", $arrs);		
+	}
+	else {
+		$land['remark2'] = '';
+	}
+
+	//地図添付
+	$mapFiles = ORM::for_table(TBLMAPATTACH)->where('tempLandInfoPid', $land['pid'])->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
+	if(isset($mapFiles)){
+		$land['mapFiles'] = $mapFiles;
 	}
 	
 	$ret[] = $land;
