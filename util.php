@@ -118,4 +118,17 @@ function copyData($source, $dest, $excludes){
 	}
 }
 
+
+function formatNumber($number, $is2Byte) {
+	if(!isset($number) || $number == '') {
+		return '';
+	}
+	$ret = number_format($number);
+
+	if(isset($is2Byte) && $is2Byte) {
+		return mb_convert_kana($ret, 'KVRN');
+	}
+	return ret;
+}
+
 ?>
