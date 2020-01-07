@@ -75,6 +75,9 @@ function getContractInfo($pid){
 	if(isset($details)){	
 		$contract['details'] = $details;
 	}
+	else {
+		$contract['details'] = [];
+	}
 	$depends = ORM::for_table(TBLCONTRACTDEPENDINFO)->where('contractInfoPid', $pid)->where_null('deleteDate')->findArray();
 	if(isset($depends)){	
 		$contract['depends'] = $depends;
