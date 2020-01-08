@@ -20,7 +20,9 @@ $query = ORM::for_table(TBLTEMPLANDINFO)
 if(isset($param->bukkenNo) && $param->bukkenNo !== ''){
     $query = $query->where('p1.bukkenNo', $param->bukkenNo);
 }
-
+if(isset($param->bukkenName) && $param->bukkenName !== ''){
+	$query = $query->where_like('p1.bukkenName', '%'.$param->bukkenName.'%');
+}
 //契約番号
 if(isset($param->contractNumber) && $param->contractNumber !== ''){
     $query = $query->where('p2.contractNumber', $param->contractNumber);
