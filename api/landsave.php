@@ -41,9 +41,35 @@ if(isset($param->locations)){
 			$locSave = ORM::for_table(TBLLOCATIONINFO)->create();
 			setInsert($locSave, $param->createUserId);			
 		}		
-		copyData($loc, $locSave, array('pid', 'isContract', 'isDepend', 'contractData'));		
+		copyData($loc, $locSave, array('pid', 'isContract', 'isDepend', 'contractData', 'sharers', 'delSharers'));		
 		$locSave->tempLandInfoPid = $land->pid;
-		$locSave->save();		
+		$locSave->save();	
+		
+		//所有者
+		if(isset($loc->sharers)) {
+			//所有者ループ
+			$sharerPos = 1;
+			foreach($loc->sharers as $sharer){
+				if($sharer->pid > 0) {
+					$sharerSave = ORM::for_table(TBLSHARERINFO)->find_one($sharer->pid);
+					setUpdate($sharerSave, $param->updateUserId);
+				}
+				else {
+					$sharerSave = ORM::for_table(TBLSHARERINFO)->create();
+					setInsert($sharerSave, $param->createUserId > 0 ? $param->createUserId : $param->updateUserId );
+				}
+				copyData($sharer, $sharerSave, null);	
+				$sharerSave->registPosition = $sharerPos;
+				$sharerSave->tempLandInfoPid = $land->pid;
+				$sharerSave->locationInfoPid = $loc->pid;
+				$sharerSave->save();
+				$sharerPos++;
+			}
+		}
+		// 削除
+		if(isset($loc->delSharers)) {
+			ORM::for_table(TBLSHARERINFO)->where_in('pid', $loc->delSharers)->delete_many();
+		}
 	}
 }
 
