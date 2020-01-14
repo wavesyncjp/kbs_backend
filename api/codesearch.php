@@ -12,11 +12,11 @@ $query = ORM::for_table(TBLCODE)
 
 $query = $query->inner_join(TBLCODENAMEMST, array('p1.code', '=', 'p2.code'), 'p2');
 
-$query = $query->where_null('deleteDate');
+$query = $query->where_null('p1.deleteDate');
 
 
 if(isset($param->code) && $param->code !== ''){
-	$query = $query->where_like('code', $param->code.'%');
+	$query = $query->where_like('p1.code', $param->code.'%');
 }
 
 if(isset($param->codeDetail) && $param->codeDetail !== ''){

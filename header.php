@@ -31,7 +31,9 @@ ORM::configure('id_column_overrides', array(
 		'tblmapattach'=>'pid',
 		'tblcontractfile'=>'pid',
 		'tblinformation'=>'pid',
-		'tblsharerinfo'=>'pid'
+		'tblsharerinfo'=>'pid',
+		'tblcode' =>array('code', 'codeDetail'),
+		'tblcodenamemst' => 'code'
 ) );
 
 $FILE_PATH = 'uploads';
@@ -50,6 +52,8 @@ define('TBLFILEATTACH','tblfileattach');
 define('TBLMAPATTACH','tblmapattach');
 define('TBLCONTRACTFILE','tblcontractfile');
 define('TBLINFORMATION','tblinformation');
-define('TBLSHARERINFO', 'tblsharerinfo')
+define('TBLSHARERINFO', 'tblsharerinfo');
+define('TBLCODE', 'tblcode');
+define('TBLCODENAMEMST', 'tblcodenamemst')
 
 ?>
