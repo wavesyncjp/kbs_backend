@@ -26,10 +26,11 @@ copyData($param, $loc, array('pid', 'isContracted', 'dependTypeMap', 'isContract
 $loc->save();
 
 //所有者
-if(isset($loc->sharers)) {
+if(isset($param->sharers)) {
+
     //所有者ループ
     $sharerPos = 1;
-    foreach($loc->sharers as $sharer){
+    foreach($param->sharers as $sharer){
         if($sharer->pid > 0) {
             $sharerSave = ORM::for_table(TBLSHARERINFO)->find_one($sharer->pid);
             setUpdate($sharerSave, $param->updateUserId);
@@ -40,15 +41,15 @@ if(isset($loc->sharers)) {
         }
         copyData($sharer, $sharerSave, null);	
         $sharerSave->registPosition = $sharerPos;
-        $sharerSave->tempLandInfoPid = $land->pid;
+        $sharerSave->tempLandInfoPid = $loc->tempLandInfoPid;
         $sharerSave->locationInfoPid = $loc->pid;
         $sharerSave->save();
         $sharerPos++;
     }
 }
 // 削除
-if(isset($loc->delSharers)) {
-    ORM::for_table(TBLSHARERINFO)->where_in('pid', $loc->delSharers)->delete_many();
+if(isset($param->delSharers)) {
+    ORM::for_table(TBLSHARERINFO)->where_in('pid', $param->delSharers)->delete_many();
 }
 
 //
