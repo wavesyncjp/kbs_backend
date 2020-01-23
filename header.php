@@ -6,10 +6,10 @@ header('Content-type:  application/json; charset=UTF-8');
 
 require 'idiorm.php';
 
-ORM::configure('driver_options', array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
-ORM::configure('mysql:host=sddb0040052539.cgidb;dbname=sddb0040052539');
-ORM::configure('username', 'sd_dba_LTE2MjA0');
-ORM::configure('password', 'password32');
+#ORM::configure('driver_options', array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
+#ORM::configure('mysql:host=sddb0040052539.cgidb;dbname=sddb0040052539');
+#ORM::configure('username', 'sd_dba_LTE2MjA0');
+#ORM::configure('password', 'password32');
 
 #ORM::configure('driver_options', array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
 #ORM::configure('mysql:host=localhost;dbname=koshiba_bds');
@@ -21,7 +21,6 @@ ORM::configure('id_column_overrides', array(
 		'tbllocationinfo'=>'pid',
 		'tblcontractinfo'=>'pid',
 		'tblcontractdetailinfo'=>'pid',
-		'tblcontractdependinfo'=>'pid',
 		'tblbukken'=>'bukkenId',
 		'tbluser'=>'userId',
 		'tbltoken'=>'userId',
@@ -31,9 +30,10 @@ ORM::configure('id_column_overrides', array(
 		'tblmapattach'=>'pid',
 		'tblcontractfile'=>'pid',
 		'tblinformation'=>'pid',
-		'tblsharerinfo'=>'pid',
-		'tblcode' =>array('code', 'codeDetail'),
-		'tblcodenamemst' => 'code'
+		'tblsharerinfo'=>'pid',		
+		'tblcode'=>array('code', 'codeDetail'),
+		'tblcodenamemst' => 'code',
+		'tblcontractsellerinfo'=>'pid'
 ) );
 
 $FILE_PATH = 'uploads';
@@ -42,7 +42,6 @@ define('TBLTEMPLANDINFO','tbltemplandinfo');
 define('TBLLOCATIONINFO','tbllocationinfo');
 define('TBLCONTRACTINFO','tblcontractinfo');
 define('TBLCONTRACTDETAILINFO','tblcontractdetailinfo');
-define('TBLCONTRACTDEPENDINFO','tblcontractdependinfo');
 define('TBLBUKKEN','tblbukken');
 define('TBLUSER','tbluser');
 define('TBLTOKEN','tbltoken');
@@ -54,6 +53,7 @@ define('TBLCONTRACTFILE','tblcontractfile');
 define('TBLINFORMATION','tblinformation');
 define('TBLSHARERINFO', 'tblsharerinfo');
 define('TBLCODE', 'tblcode');
-define('TBLCODENAMEMST', 'tblcodenamemst')
+define('TBLCODENAMEMST', 'tblcodenamemst');
+define('TBLCONTRACTSELLERINFO', 'tblcontractsellerinfo');
 
 ?>

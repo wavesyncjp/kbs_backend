@@ -30,13 +30,12 @@ else {
 }
 
 
-copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'depends', 'contractFiles'));
+copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'sellers', 'contractFiles'));
 $contract->save();
 
 //契約詳細
 if(isset($param->details)){
-	foreach ($param->details as $detail){
-
+	foreach ($param->details as $detail){		
 		//削除
 		if($detail->deleteUserId > 0) {
 			$detailSave = ORM::for_table(TBLCONTRACTDETAILINFO)->find_one($detail->pid);
@@ -58,27 +57,25 @@ if(isset($param->details)){
 	}
 }
 
-//不可分詳細
-if(isset($param->depends)){
-	foreach ($param->depends as $depend){
-
+//契約者
+if(isset($param->sellers)){
+	foreach ($param->sellers as $seller){		
 		//削除
-		if($depend->deleteUserPid > 0) {
-			$dependSave = ORM::for_table(TBLCONTRACTDEPENDINFO)->find_one($depend->pid);
-			$dependSave->delete();
+		if($seller->deleteUserId > 0) {
+			ORM::for_table(TBLCONTRACTSELLERINFO)->find_one($seller->pid)->delete();			
 		}
 		else {
-			if($depend->pid > 0){
-				$dependSave = ORM::for_table(TBLCONTRACTDEPENDINFO)->find_one($depend->pid);
-				setUpdate($dependSave, $param->updateUserId);			
+			if($seller->pid > 0){
+				$sellerSave = ORM::for_table(TBLCONTRACTSELLERINFO)->find_one($seller->pid);
+				setUpdate($sellerSave, $param->updateUserId);			
 			}
 			else {
-				$dependSave = ORM::for_table(TBLCONTRACTDEPENDINFO)->create();
-				setInsert($dependSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId );			
+				$sellerSave = ORM::for_table(TBLCONTRACTSELLERINFO)->create();
+				setInsert($sellerSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
 			}		
-			copyData($depend, $dependSave, array('pid'));		
-			$dependSave->contractInfoPid = $contract->pid;
-			$dependSave->save();
+			copyData($seller, $sellerSave, array('pid'));		
+			$sellerSave->contractInfoPid = $contract->pid;
+			$sellerSave->save();
 		}		
 	}
 }

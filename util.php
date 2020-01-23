@@ -85,10 +85,15 @@ function getContractInfo($pid){
 	else {
 		$contract['details'] = [];
 	}
-	$depends = ORM::for_table(TBLCONTRACTDEPENDINFO)->where('contractInfoPid', $pid)->where_null('deleteDate')->findArray();
-	if(isset($depends)){	
-		$contract['depends'] = $depends;
+
+	//契約者	
+	$sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where('contractInfoPid', $pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
+	if(isset($sellers)){	
+		$contract['sellers'] = $sellers;
 	}
+	else {
+		$contract['sellers'] = [];
+	}	
 
 	//地図添付
 	$contractFiles = ORM::for_table(TBLCONTRACTFILE)->where('contractInfoPid', $pid)->where_null('deleteDate')->order_by_desc('updateDate')->findArray();

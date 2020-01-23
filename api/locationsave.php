@@ -22,7 +22,7 @@ else {
 	setInsert($loc, $param->createUserId);
 }
 
-copyData($param, $loc, array('pid', 'isContracted', 'dependTypeMap', 'isContract', 'isDepend', 'contractData', 'sharers', 'delSharers'));
+copyData($param, $loc, array('pid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers'));
 $loc->save();
 
 //所有者
