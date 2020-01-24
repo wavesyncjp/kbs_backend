@@ -19,41 +19,82 @@ if(isset($param->pid) && $param->pid > 0){
 else {
 	//000002
 	$contract = ORM::for_table(TBLCONTRACTINFO)->create();	
-	$maxNo = ORM::for_table(TBLCONTRACTINFO)->max('contractNumber');
+	$maxNo = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->tempLandInfoPid)->max('contractNumber');
 	if(!isset($maxNo)) {
-		$maxNo = '001';
+		$nextNo = '001';
 	}
-	$maxNum = intval(ltrim($maxNo, "0")) + 1;
-	$nextNo = str_pad($maxNum, 3, '0', STR_PAD_LEFT);
+	else {
+		$maxNum = intval(ltrim($maxNo, "0")) + 1;
+		$nextNo = str_pad($maxNum, 3, '0', STR_PAD_LEFT);
+	}	
 	$contract->contractNumber = $nextNo;
 	setInsert($contract, $param->createUserId);
 }
 
 
-copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'sellers', 'contractFiles'));
+copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'sellers', 'locations', 'contractFiles'));
 $contract->save();
 
 //契約詳細
 if(isset($param->details)){
-	foreach ($param->details as $detail){		
+	foreach ($param->details as $detail){
+		
+		$action = -1;
 		//削除
 		if($detail->deleteUserId > 0) {
 			$detailSave = ORM::for_table(TBLCONTRACTDETAILINFO)->find_one($detail->pid);
-			$detailSave->delete();
+			$detailSave->delete();	
+			$action = 2;		
 		}
 		else {
 			if($detail->pid > 0){
 				$detailSave = ORM::for_table(TBLCONTRACTDETAILINFO)->find_one($detail->pid);
-				setUpdate($detailSave, $param->updateUserId);			
+				setUpdate($detailSave, $param->updateUserId);
+				$action = 1;			
 			}
 			else {
 				$detailSave = ORM::for_table(TBLCONTRACTDETAILINFO)->create();
 				setInsert($detailSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
+				$action = 0;
 			}		
-			copyData($detail, $detailSave, array('pid'));		
+			copyData($detail, $detailSave, array('pid', 'deleteUserId'));		
 			$detailSave->contractInfoPid = $contract->pid;
 			$detailSave->save();
-		}		
+		}
+		
+		//仕入契約登記人情報
+		
+		foreach($param->locations as $loc) {			
+			if($detailSave->locationInfoPid == $loc->locationInfoPid) {								
+				//契約詳細削除->仕入契約登記人情報削除
+				if($action == 2 || $detailSave->contractDataType === '02') {					
+
+					$regist = ORM::for_table(TBLCONTRACTREGISTRANT)
+									->where('contractInfoPid', $detailSave->pid)
+									->where_in('sharerInfoPid', $loc->sharerInfoPid)->delete_many();
+										
+				}
+				//契約詳細登録->仕入契約登記人情報登録
+				else if(sizeof($loc->sharerInfoPid) == 1) {				
+					$regist = ORM::for_table(TBLCONTRACTREGISTRANT)->where(array(
+						'contractInfoPid' => $detailSave->pid,
+						'sharerInfoPid' => $loc->sharerInfoPid[0]
+					))->findOne();
+
+					if(!isset($regist) || $regist == null) {						
+						$regist = ORM::for_table(TBLCONTRACTREGISTRANT)->create();
+						$regist->contractInfoPid = $detailSave->pid;
+						$regist->sharerInfoPid = $loc->sharerInfoPid[0];
+						setInsert($regist, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);
+						$regist->save();
+					}
+				}				
+
+				break;
+			}
+		}
+		
+
 	}
 }
 
