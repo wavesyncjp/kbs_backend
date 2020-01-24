@@ -10,14 +10,28 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 $userId = $param->userId;
+$pid = $param->pid;
 
-
-foreach ($param->pid as $pid){
-	ORM::raw_execute("UPDATE tbllocationinfo SET deleteUserId = :userId, deleteDate = now() WHERE pid = :pid ", 
-		array('userId' => $userId,'pid' => $pid));
-	ORM::raw_execute("UPDATE tblstockcontractinfo SET deleteUserId = :userId, deleteDate = now() WHERE locationInfoPid = :pid ",
-			array('userId' => $userId,'pid' => $pid));
+$count = ORM::for_table(TBLCONTRACTDETAILINFO)->where('locationInfoPid', $pid)->where_null('deleteDate')->count();
+if($count > 0) {	
+	echo json_encode(array('status' => 'NG'));
+	exit;
 }
-echo 'OK';
+
+//共有者情報
+$sharers = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $pid)->where_null('deleteDate')->find_many();
+if(isset($sharers)) {
+	foreach($sharers as $sharer) {
+		setDelete($sharer, $userId);
+		$sharer->delete();
+	}
+}
+$loc = ORM::for_table(TBLLOCATIONINFO)->find_one($pid);
+if(isset($loc)) {
+	setDelete($loc, $userId);
+	$loc->delete();
+}
+
+echo json_encode(array('status' => 'OK'));
 
 ?>

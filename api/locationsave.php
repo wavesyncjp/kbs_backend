@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
+ORM::get_db()->beginTransaction();
 //更新
 if($param->pid > 0){
 	$loc = ORM::for_table(TBLLOCATIONINFO)->find_one($param->pid);
@@ -51,10 +52,11 @@ if(isset($param->sharers)) {
 if(isset($param->delSharers)) {
     ORM::for_table(TBLSHARERINFO)->where_in('pid', $param->delSharers)->delete_many();
 }
+ORM::get_db()->commit();
 
-//
-$loc = ORM::for_table(TBLLOCATIONINFO)->findOne($param->pid)->asArray();
-$sharers = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();			
+$locationPid = $loc->pid;
+$loc = ORM::for_table(TBLLOCATIONINFO)->findOne($locationPid)->asArray();
+$sharers = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $locationPid)->where_null('deleteDate')->order_by_asc('registPosition')->findArray();			
 $loc['sharers'] = $sharers;
 echo json_encode($loc);
 
