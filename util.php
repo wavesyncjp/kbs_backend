@@ -78,9 +78,17 @@ function getLandInfo($pid){
 function getContractInfo($pid){
 	$contract = ORM::for_table(TBLCONTRACTINFO)->findOne($pid)->asArray();
 	
+	$detailList = [];
 	$details = ORM::for_table(TBLCONTRACTDETAILINFO)->where('contractInfoPid', $pid)->where_null('deleteDate')->findArray();
 	if(isset($details)){	
-		$contract['details'] = $details;
+
+		foreach($details as $detail){
+			$registrants = ORM::for_table(TBLCONTRACTREGISTRANT)->where('contractDetailInfoPid', $detail['pid'])->where_null('deleteDate')->findArray();			
+			$detail['registrants'] = $registrants;	
+			$detailList[] = $detail;		
+		}
+
+		$contract['details'] = $detailList;
 	}
 	else {
 		$contract['details'] = [];

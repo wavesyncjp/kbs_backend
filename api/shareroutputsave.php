@@ -25,19 +25,20 @@ foreach($param->sharers  as $sharer) {
     if(isset($ctDetail)) {
 
         //削除
-        if($saveSharer->outPutFlg == '0') {
+        if(!isset($saveSharer->outPutFlg) || $saveSharer->outPutFlg == '0') {
             ORM::for_table(TBLCONTRACTREGISTRANT)
-                ->where(array('contractInfoPid' => $ctDetail->contractInfoPid, 'sharerInfoPid' => $saveSharer->pid))->delete_many();
+                ->where(array('contractDetailInfoPid' => $ctDetail->pid, 'sharerInfoPid' => $saveSharer->pid))->delete_many();
         }
-        else {
+        else if($saveSharer->outPutFlg == '1') {
             $regist = ORM::for_table(TBLCONTRACTREGISTRANT)->where(array(
-                'contractInfoPid' => $ctDetail->contractInfoPid,
+                'contractDetailInfoPid' => $ctDetail->pid,
                 'sharerInfoPid' => $saveSharer->pid
             ))->findOne();
 
             if(!isset($regist) || $regist == null) {						
                 $regist = ORM::for_table(TBLCONTRACTREGISTRANT)->create();
                 $regist->contractInfoPid = $ctDetail->contractInfoPid;
+                $regist->contractDetailInfoPid = $ctDetail->pid;
                 $regist->sharerInfoPid = $saveSharer->pid;
                 setInsert($regist, $param->userId);
                 $regist->save();

@@ -57,7 +57,7 @@ if(isset($param->details)){
 				setInsert($detailSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
 				$action = 0;
 			}		
-			copyData($detail, $detailSave, array('pid', 'deleteUserId'));		
+			copyData($detail, $detailSave, array('pid', 'deleteUserId', 'registrants'));		
 			$detailSave->contractInfoPid = $contract->pid;
 			$detailSave->save();
 		}
@@ -70,20 +70,22 @@ if(isset($param->details)){
 				if($action == 2 || $detailSave->contractDataType === '02') {					
 
 					$regist = ORM::for_table(TBLCONTRACTREGISTRANT)
-									->where('contractInfoPid', $detailSave->pid)
+									->where('contractDetailInfoPid', $detailSave->pid)
 									->where_in('sharerInfoPid', $loc->sharerInfoPid)->delete_many();
 										
 				}
 				//契約詳細登録->仕入契約登記人情報登録
 				else if(sizeof($loc->sharerInfoPid) == 1) {				
 					$regist = ORM::for_table(TBLCONTRACTREGISTRANT)->where(array(
-						'contractInfoPid' => $detailSave->pid,
+						'contractInfoPid' => $detailSave->contractInfoPid,
+						'contractDetailInfoPid' => $detailSave->pid,
 						'sharerInfoPid' => $loc->sharerInfoPid[0]
 					))->findOne();
 
 					if(!isset($regist) || $regist == null) {						
 						$regist = ORM::for_table(TBLCONTRACTREGISTRANT)->create();
-						$regist->contractInfoPid = $detailSave->pid;
+						$regist->contractInfoPid = $detailSave->contractInfoPid;
+						$regist->contractDetailInfoPid = $detailSave->pid;
 						$regist->sharerInfoPid = $loc->sharerInfoPid[0];
 						setInsert($regist, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);
 						$regist->save();
