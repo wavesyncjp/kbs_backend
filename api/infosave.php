@@ -20,7 +20,7 @@ else {
 	$info = ORM::for_table(TBLINFORMATION)->create();
 	setInsert($info, $param->createUserId);
 }
-copyData($param, $info, array('pid'));
+copyData($param, $info, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 $info->save();
 
 $ret = ORM::for_table(TBLINFORMATION)->findOne($info->pid)->asArray();
