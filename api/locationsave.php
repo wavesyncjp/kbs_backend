@@ -32,7 +32,7 @@ if(isset($param->sharers)) {
     //所有者ループ
     $sharerPos = 1;
     foreach($param->sharers as $sharer){
-        if($sharer->pid > 0) {
+        if(isset($sharer->pid) && $sharer->pid > 0) {
             $sharerSave = ORM::for_table(TBLSHARERINFO)->find_one($sharer->pid);
             setUpdate($sharerSave, $param->updateUserId);
         }
@@ -40,7 +40,7 @@ if(isset($param->sharers)) {
             $sharerSave = ORM::for_table(TBLSHARERINFO)->create();
             setInsert($sharerSave, $param->createUserId > 0 ? $param->createUserId : $param->updateUserId );
         }
-        copyData($sharer, $sharerSave, null);	
+        copyData($sharer, $sharerSave, array());	
         $sharerSave->registPosition = $sharerPos;
         $sharerSave->tempLandInfoPid = $loc->tempLandInfoPid;
         $sharerSave->locationInfoPid = $loc->pid;

@@ -41,13 +41,13 @@ if(isset($param->details)){
 		
 		$action = -1;
 		//削除
-		if($detail->deleteUserId > 0) {
+		if(isset($detail->deleteUserId) && $detail->deleteUserId > 0) {
 			$detailSave = ORM::for_table(TBLCONTRACTDETAILINFO)->find_one($detail->pid);
 			$detailSave->delete();	
 			$action = 2;		
 		}
 		else {
-			if($detail->pid > 0){
+			if(isset($detail->pid) && $detail->pid > 0){
 				$detailSave = ORM::for_table(TBLCONTRACTDETAILINFO)->find_one($detail->pid);
 				setUpdate($detailSave, $param->updateUserId);
 				$action = 1;			
@@ -90,6 +90,40 @@ if(isset($param->details)){
 						setInsert($regist, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);
 						$regist->save();
 					}
+				}
+				//複数
+				else {
+					$shares = [];
+					foreach($detail->registrants as $regist){
+						$shares[] = $regist->sharerInfoPid;
+					}
+
+					//削除
+					ORM::for_table(TBLCONTRACTREGISTRANT)
+									->where('contractDetailInfoPid', $detailSave->pid)
+									->where_not_in('sharerInfoPid', $shares)->delete_many();
+
+					$regists = ORM::for_table(TBLCONTRACTREGISTRANT)->where('contractDetailInfoPid', $detailSave->pid)->select('sharerInfoPid')->find_array();
+					//データベースにあるデータ
+					foreach($shares as $share) {
+						$already = false;
+						foreach($regists as $regist) {
+							if($share == $regist['sharerInfoPid']) {
+								$already = true;
+								break;
+							}
+						}
+
+						//まだ登録されてない→登録
+						if(!$already) {
+							$regist = ORM::for_table(TBLCONTRACTREGISTRANT)->create();
+							$regist->contractInfoPid = $detailSave->contractInfoPid;
+							$regist->contractDetailInfoPid = $detailSave->pid;
+							$regist->sharerInfoPid = $share;
+							setInsert($regist, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);
+							$regist->save();
+						}
+					}					
 				}				
 
 				break;
@@ -104,11 +138,11 @@ if(isset($param->details)){
 if(isset($param->sellers)){
 	foreach ($param->sellers as $seller){		
 		//削除
-		if($seller->deleteUserId > 0) {
+		if(isset($seller->deleteUserId) && $seller->deleteUserId > 0) {
 			ORM::for_table(TBLCONTRACTSELLERINFO)->find_one($seller->pid)->delete();			
 		}
 		else {
-			if($seller->pid > 0){
+			if(isset($seller->pid) && $seller->pid > 0){
 				$sellerSave = ORM::for_table(TBLCONTRACTSELLERINFO)->find_one($seller->pid);
 				setUpdate($sellerSave, $param->updateUserId);			
 			}
