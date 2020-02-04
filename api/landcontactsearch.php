@@ -53,7 +53,7 @@ foreach($lands as $land){
 
 	//地番
 	$address = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $land['pid'])->where_not_null('blockNumber')->where_not_equal('blockNumber', '')->where_null('deleteDate')->select('blockNumber')->findOne();
-	if(isset($address) && sizeof($address) > 0){
+	if(isset($address)){
 		$land['remark2'] = $address['blockNumber'];		
 	}
 	else {
