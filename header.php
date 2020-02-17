@@ -34,7 +34,8 @@ ORM::configure('id_column_overrides', array(
 		'tblcode'=>array('code', 'codeDetail'),
 		'tblcodenamemst' => 'code',
 		'tblcontractsellerinfo'=>'pid',
-		'tblcontractregistrant'=>'pid'
+		'tblcontractregistrant'=>'pid',
+		'tblpaymenttype'=>'paymentCode'
 ) );
 
 $FILE_PATH = 'uploads';
@@ -57,5 +58,6 @@ define('TBLCODE', 'tblcode');
 define('TBLCODENAMEMST', 'tblcodenamemst');
 define('TBLCONTRACTSELLERINFO', 'tblcontractsellerinfo');
 define('TBLCONTRACTREGISTRANT', 'tblcontractregistrant');
+define('TBLPAYMENTTYPE', 'tblpaymenttype');
 
 ?>
