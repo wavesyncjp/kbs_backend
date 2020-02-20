@@ -1,7 +1,7 @@
 <?php
+require("../vendor/autoload.php");
 require '../header.php';
 require '../util.php';
-require("../vendor/autoload.php");
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 	echo 'NOT SUPPORT';
@@ -18,24 +18,148 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 $fullPath  = __DIR__ . '/../template';
-$filePath = $fullPath.'/template1.xlsx'; 
+$filePath = $fullPath.'/contract/landBuilding/売買契約書【土地建物・即決和解あり・公簿・不可分あり・等価交換あり】.xlsx'; 
 
 //Excel操作
 $reader = new PhpOffice\PhpSpreadsheet\Reader\Xlsx();
 $spreadsheet = $reader->load($filePath);
 $sheet = $spreadsheet->getSheet(0);
 
+
+//契約者
+$pos = 28;
+$sellers = $contract['sellers'];
+if(isset($sellers)) {
+    $seller = $sellers[0];
+    $cellName = "A".$pos;
+    $str = $sheet->getCell($cellName)->getValue();
+    $sheet->setCellValue($cellName, str_replace('$contractorName$', $seller['contractorName'], $str));
+
+    for($index = 1 ; $index <= 7 ; $index++) {
+        $pos = $pos - 2;
+        $cellName = "A".$pos;
+        if(isset($contract['sellers'][$index])) {
+            $obj = $sellers[$index];
+            $sheet->setCellValue($cellName, $obj['contractorName'].'様');
+        }
+        else {
+            $sheet->setCellValue($cellName, '');
+        }        
+    }
+}
+
+//A43 契約者名
+bindCell('A43', $sheet, 'contractorName', $seller['contractorName']);
+
 // 売買代金
-$str = $sheet->getCell('A76')->getValue();
-$sheet->setCellValue("A76", str_replace('$tradingPrice$', formatNumber($contract['tradingPrice'], true), $str));
+bindCell('A64', $sheet, 'tradingPrice', formatNumber($contract['tradingPrice'], true));
 
 // 売買代金（土地）
-$str = $sheet->getCell('A77')->getValue();
-$sheet->setCellValue("A77", str_replace('$tradingLandPrice$', formatNumber($contract['tradingLandPrice'], true), $str));
+bindCell('A65', $sheet, 'tradingLandPrice', formatNumber($contract['tradingLandPrice'], true));
 
-//$sheet->insertNewRowBefore(232, 4); // 232行目から4行追加
+// 和解成立後
+bindCell('A70', $sheet, 'settlementAfter', $contract['settlementAfter']);
+
+// 売買代金
+bindCell('A71', $sheet, 'tradingPrice', formatNumber($contract['tradingPrice'], true));
+
+//明渡期日
+$val = '';
+if(isset($contract['vacationDay']) && $contract['vacationDay'] !== '') {
+    $val = date('Y年m月d日', strtotime($contract['vacationDay']));
+}
+bindCell('A87', $sheet, 'vacationDay', $val);
+bindCell('A92', $sheet, 'vacationDay', $val);
+
+//優先分譲面積
+bindCell('A115', $sheet, 'prioritySalesArea', formatNumber($contract['prioritySalesArea'], false));
+
+//優先分譲戸数（階）
+bindCell('A116', $sheet, 'prioritySalesFloor', formatNumber($contract['prioritySalesFloor'], false));
+
+//優先分譲予定価格
+bindCell('A118', $sheet, 'prioritySalesPlanPrice', formatNumber($contract['prioritySalesPlanPrice'], false));
+
+$increaseRow = 0;
+$ownerPos = 258;
+if(sizeof($sellers) > 1) {
+    $blockCount = 5;
+    copyBlock($sheet, $ownerPos, $blockCount, (sizeof($sellers) - 1));
+    for($cursor = 0 ; $cursor < sizeof($sellers) ; $cursor++){
+        $seller = $sellers[$cursor];
+        $cellName = 'A' . ($ownerPos + $cursor * $blockCount);
+        bindCell($cellName, $sheet, ['contractorAddress', 'contractorName'], [$seller['contractorAddress'], $seller['contractorName']]);
+    }
+    $increaseRow += $blockCount * (sizeof($sellers) - 1);
+}
 
 
+//末尾
+//土地
+$landPos = 272;
+$owners = [];
+$belongs = [];
+$detailIds = [];
+foreach($contract['details'] as $detail) {
+    if($detail['contractDataType'] == '01') {
+        $owners[] = $detail;
+        $detailIds[] = $detail['locationInfoPid'];
+    }
+    else if($detail['contractDataType'] === '03') {
+        $belongs[] = $detail;
+    }
+}
+
+
+//荷主所有地(土地)
+$locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)
+                                       ->where('locationType', '01')
+                                       ->order_by_asc('locationType')
+                                       ->order_by_asc('pid')->findArray();
+
+$codeList = ORM::for_table(TBLCODE)->where('code', '002')->where_null('deleteDate')->findArray();
+//土地荷主あり
+$landPos += $increaseRow;
+$cellName = 'A' . $landPos;
+if(isset($locs) && sizeof($locs) > 0) {
+    $blockCount = 6;
+    copyBlock($sheet, $landPos, $blockCount, (sizeof($locs) - 1), true);
+
+    //データ出力（ループ）
+    $registIncrease = 0; //複数登記のカウントアップ
+    for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++){
+        $loc = $locs[$cursor];
+
+        //登記名義人
+        $regists = getRegistrants($contract['details'], $loc);
+        $blockPos = $landPos + $cursor * $blockCount + $registIncrease;
+        $cellName = 'A' . $blockPos;
+        bindCell($cellName, $sheet, ['address', 'blockNumber', 'landCategory', 'area', 'sharer'], 
+            [$loc['address'], $loc['blockNumber'], getCodeTitle($codeList, $loc['landCategory']), $loc['area'], sizeof($regists) > 0 ?  $regists[0] : "" ]); 
+
+        //登記名義人複数
+        $repeatePos = $landPos + ($cursor + 1) * $blockCount - 1;
+        if(sizeof($regists) > 1) {
+            $increase = sizeof($regists) - 1;
+            $registIncrease += $increase;
+
+            $sheet->insertNewRowBefore($repeatePos, $increase);
+            $sheet->setCellValue('A' .  $repeatePos, 'BBBB');
+        }
+        else {
+            $sheet->setCellValue('A' .  $repeatePos, '');
+        }
+
+    }
+    $increaseRow += $blockCount * (sizeof($landPos) - 1) + $registIncrease;
+}
+//土地荷主なし
+else {
+    bindCell($cellName, $sheet, ['address', 'blockNumber', 'landCategory', 'area', 'sharer'], ['', '', '', '', '']);
+}
+
+
+/*
 //不可分
 $dependBuilds = [];
 $dependLands = [];
@@ -120,6 +244,9 @@ foreach($dependLands as $build) {
 
     $index++;
 }
+
+*/
+
 
 //保存
 $filename = date("YmdHis") . 'xlsx';

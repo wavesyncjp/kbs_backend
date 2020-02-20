@@ -151,7 +151,124 @@ function formatNumber($number, $is2Byte) {
 	if(isset($is2Byte) && $is2Byte) {
 		return mb_convert_kana($ret, 'KVRN');
 	}
-	return ret;
+	return $ret;
+}
+
+//-----------------------出力-----------------------------
+
+//セルに値設定
+function bindCell($cellName, $sheet, $keywords, $vals) {
+    $str = $sheet->getCell($cellName)->getValue();
+
+    if(is_array($keywords)) {
+        for($i = 0; $i < sizeof($keywords); $i++) {
+            $str = str_replace('$'. $keywords[$i] . '$', $vals[$i], $str);
+        }
+    }    
+    else {
+        $str = str_replace('$'. $keywords . '$', $vals, $str);
+    }
+    $sheet->setCellValue($cellName, $str);
+}
+
+//ブロックコピー
+function copyBlock($sheet, $startPos, $blockRowCount, $copyCount, $hasSingleRow = false) {
+
+	$styleArray = [
+		'font' => [
+			'size' => 10.5,
+			'name' => 'ＭＳ 明朝'
+		],
+		'alignment' => [
+			'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+			'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_JUSTIFY,
+			'wrapText' => true
+		]
+	];
+
+	if(isset($hasSingleRow) && $hasSingleRow == true) {
+		$single = $sheet->getCell('A' . ($startPos + $blockRowCount ))->getValue();
+	}
+
+	$str = $sheet->getCell('A' . $startPos)->getValue();
+	$sheet->insertNewRowBefore($startPos, $blockRowCount * $copyCount);
+	$lastPos = $startPos + ($blockRowCount * $copyCount);		
+	for($cursor = 0 ; $cursor < $copyCount ; $cursor++) {
+
+		$copyPos = $startPos  + $blockRowCount * $cursor;
+		copyRows($sheet, $lastPos, $copyPos, $blockRowCount, 1);	
+		$sheet->setCellValue('A'. $copyPos, $str);		
+		$range = 'A'. $copyPos . ':A' . ($copyPos + $blockRowCount - 1);
+		$sheet->getStyle($range)->applyFromArray($styleArray);
+
+		if(isset($hasSingleRow) && $hasSingleRow == true) {
+			$sheet->setCellValue('A'. ($copyPos + $blockRowCount), $single);
+		}
+
+	}	
+
+}
+
+//cellコピー
+function copyRows($sheet,$srcRow,$dstRow,$height,$width) {
+    for ($row = 0; $row < $height; $row++) {
+        for ($col = 0; $col < $width; $col++) {
+            $cell = $sheet->getCellByColumnAndRow($col, $srcRow + $row);
+			$style = $sheet->getStyleByColumnAndRow($col, $srcRow + $row);						
+			$dstCell = 'A' . (string)($dstRow + $row);		
+            $sheet->setCellValue($dstCell, $cell->getValue());
+            $sheet->duplicateStyle($style, $dstCell);
+        }
+
+        $h = $sheet->getRowDimension($srcRow + $row)->getRowHeight();
+        $sheet->getRowDimension($dstRow + $row)->setRowHeight($h);
+    }
+    foreach ($sheet->getMergeCells() as $mergeCell) {
+        $mc = explode(":", $mergeCell);
+        $col_s = preg_replace("/[0-9]*/", "", $mc[0]);
+        $col_e = preg_replace("/[0-9]*/", "", $mc[1]);
+        $row_s = ((int)preg_replace("/[A-Z]*/", "", $mc[0])) - $srcRow;
+        $row_e = ((int)preg_replace("/[A-Z]*/", "", $mc[1])) - $srcRow;
+
+        if (0 <= $row_s && $row_s < $height) {
+            $merge = $col_s . (string)($dstRow + $row_s) . ":" . $col_e . (string)($dstRow + $row_e);
+            $sheet->mergeCells($merge);
+        } 
+    }
+}
+
+function getCodeTitle($lst, $codeDetail) {
+	foreach($lst as $code) {
+		if($code['codeDetail'] === $codeDetail){
+			return $code['name'];
+		}
+	}
+	return '';
+}
+
+function getRegistrants($details, $loc) {
+	$ctDetail = null;
+	$ret = [];
+	foreach($details as $detail) {
+		if($detail['locationInfoPid'] === $loc['pid']) {
+			$ctDetail = $detail;
+			break;
+		}
+	}
+	if(!isset($ctDetail)) {
+		return $ret;
+	}
+
+	$ids = [];
+	foreach($ctDetail['registrants'] as $regist) {
+		$ids[] = $regist['sharerInfoPid'];
+	}
+
+	$lst = ORM::for_table(TBLSHARERINFO)->where_in('pid', $ids)->order_by_asc('pid')->select('sharer')->findArray();
+	foreach($lst as $item) {
+		$ret[] = $item['sharer'];
+	}
+	return $ret;
 }
 
 ?>
