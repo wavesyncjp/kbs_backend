@@ -37,7 +37,8 @@ ORM::configure('id_column_overrides', array(
 		'tblcontractregistrant'=>'pid',
 		'tblpaymenttype'=>'paymentCode',
 		'tblplan'=>'pid',
-		'tblpaycontract'=>'pid'
+		'tblpaycontract'=>'pid',
+		'tblpaycontractdetail'=>'pid'
 ) );
 
 $FILE_PATH = 'uploads';
@@ -63,5 +64,6 @@ define('TBLCONTRACTREGISTRANT', 'tblcontractregistrant');
 define('TBLPAYMENTTYPE', 'tblpaymenttype');
 define('TBLPLAN', 'tblplan');
 define('TBLPAYCONTRACT', 'tblpaycontract');
+define('TBLPAYCONTRACTDETAIL', 'tblpaycontractdetail');
 
 ?>

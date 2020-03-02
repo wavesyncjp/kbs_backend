@@ -271,4 +271,32 @@ function getRegistrants($details, $loc) {
 	return $ret;
 }
 
+/**
+ * 支払管理情報取得
+ * @param unknown $pid
+ */
+function getPayContractInfo($pid){
+	$paycontract = ORM::for_table(TBLPAYCONTRACT)->findOne($pid)->asArray();
+	
+	$detailList = [];
+	$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $pid)->where_null('deleteDate')->findArray();
+	if(isset($details)){	
+
+		// foreach($details as $detail){
+		// 	$registrants = ORM::for_table(TBLCONTRACTREGISTRANT)->where('payContractPid', $detail['pid'])->where_null('deleteDate')->findArray();			
+		// 	$detail['registrants'] = $registrants;	
+		// 	$detailList[] = $detail;		
+		// }
+
+		//$paycontract['details'] = $detailList;
+
+		$paycontract['details'] = $details;
+	}
+	else {
+		$paycontract['details'] = [];
+	}
+
+	return $paycontract;
+}
+
 ?>
