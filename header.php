@@ -38,7 +38,10 @@ ORM::configure('id_column_overrides', array(
 		'tblpaymenttype'=>'paymentCode',
 		'tblplan'=>'pid',
 		'tblpaycontract'=>'pid',
-		'tblpaycontractdetail'=>'pid'
+		'tblpaycontractdetail'=>'pid',
+		//20200309 S_Add
+		'tbltax'=>'pid'
+		//20200309 E_Add
 ) );
 
 $FILE_PATH = 'uploads';
@@ -65,5 +68,7 @@ define('TBLPAYMENTTYPE', 'tblpaymenttype');
 define('TBLPLAN', 'tblplan');
 define('TBLPAYCONTRACT', 'tblpaycontract');
 define('TBLPAYCONTRACTDETAIL', 'tblpaycontractdetail');
-
+//20200309 S_Add
+define('TBLTAX', 'tbltax');
+//20200309 E_Add
 ?>

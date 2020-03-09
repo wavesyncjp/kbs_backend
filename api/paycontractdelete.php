@@ -21,7 +21,8 @@ if(isset($param->pid) && $param->pid != ''){
 	if(isset($details)){
 		foreach($details as $detail){
 			$detailSave = ORM::for_table(TBLPAYCONTRACTDETAIL)->find_one($detail['pid']);
-			$detailSave->delete();
+			setDelete($detailSave, $param->deleteUserId);
+			$detailSave->save();
 		}
 	}
 	else {

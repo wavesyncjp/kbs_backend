@@ -23,17 +23,17 @@ $query = $query->where_null('p1.deleteDate');
 if(isset($param->bukkenNo)  && $param->bukkenNo !== ''){
 	$query = $query->where('p2.bukkenNo', $param->bukkenNo);
 }
-if(isset($param->bukkenName) && $param->bukkenName > 0){
-	$query = $query->where('p2.bukkenName', $param->bukkenName);
+if(isset($param->bukkenName) && $param->bukkenName !== ''){
+	$query = $query->where_like('p2.bukkenName', '%'.$param->bukkenName.'%');
 }
-if(isset($param->supplierName) && $param->supplierName > 0){
-	$query = $query->where_like('p1.supplierName', $param->supplierName.'%');
+if(isset($param->supplierName) && $param->supplierName !== ''){
+	$query = $query->where_like('p1.supplierName', '%'.$param->supplierName.'%');
 }
-if(isset($param->contractDay) && $param->contractDay > 0){
-	$query = $query->where('p1.contractDay', $param->contractDay);
+if(isset($param->contractDay) && $param->contractDay != ''){
+	$query = $query->where_raw(" TIMESTAMPDIFF(day, contractDay, '" . $param->contractDay . "') = 0");
 }
-if(isset($param->contractFixDay) && $param->contractFixDay > 0){
-	$query = $query->where('p1.contractFixDay', $param->contractFixDay);
+if(isset($param->contractFixDay) && $param->contractFixDay != ''){
+	$query = $query->where_raw(" TIMESTAMPDIFF(day, contractFixDay, '" . $param->contractFixDay . "') = 0");
 }
 
 $contracts = $query->find_array();

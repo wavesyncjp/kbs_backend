@@ -21,7 +21,7 @@ else {
 	setInsert($paycontract, $param->createUserId);
 }
 
-copyData($param, $paycontract, array('pid', 'details', 'contractDayMap','contractFixDayMap','taxEffectiveDayMap'));
+copyData($param, $paycontract, array('pid', 'details', 'land', 'contractDayMap','contractFixDayMap','taxEffectiveDayMap', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 $paycontract->save();
 
 //支払管理詳細
@@ -41,8 +41,11 @@ if(isset($param->details)){
 				$detailSave = ORM::for_table(TBLPAYCONTRACTDETAIL)->create();
 				setInsert($detailSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
 			}		
-			copyData($detail, $detailSave, array('pid', 'deleteUserId'));		
+			copyData($detail, $detailSave, array('pid', 'deleteUserId', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));		
 			$detailSave->payContractPid = $paycontract->pid;
+			if($paycontract->tempLandInfoPid > 0){
+				$detailSave->tempLandInfoPid = $paycontract->tempLandInfoPid;
+			}
 			$detailSave->save();
 		}
 	}
