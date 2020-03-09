@@ -187,7 +187,7 @@ function copyBlock($sheet, $startPos, $blockRowCount, $copyCount, $hasSingleRow 
 	];
 
 	if(isset($hasSingleRow) && $hasSingleRow == true) {
-		$single = $sheet->getCell('A' . ($startPos + $blockRowCount ))->getValue();
+		$single = $sheet->getCell('A' . ($startPos + $blockRowCount - 1 ))->getValue();
 	}
 
 	$str = $sheet->getCell('A' . $startPos)->getValue();
@@ -196,28 +196,48 @@ function copyBlock($sheet, $startPos, $blockRowCount, $copyCount, $hasSingleRow 
 	for($cursor = 0 ; $cursor < $copyCount ; $cursor++) {
 
 		$copyPos = $startPos  + $blockRowCount * $cursor;
-		copyRows($sheet, $lastPos, $copyPos, $blockRowCount, 1);	
+		copyRows($sheet, $lastPos, $copyPos, $blockRowCount, 1);
+		
 		$sheet->setCellValue('A'. $copyPos, $str);		
+
 		$range = 'A'. $copyPos . ':A' . ($copyPos + $blockRowCount - 1);
 		$sheet->getStyle($range)->applyFromArray($styleArray);
 
 		if(isset($hasSingleRow) && $hasSingleRow == true) {
-			$sheet->setCellValue('A'. ($copyPos + $blockRowCount), $single);
+			$sheet->setCellValue('A'. ($copyPos + $blockRowCount -1), $single);
 		}
+		
 
 	}	
 
 }
 
 //cellコピー
-function copyRows($sheet,$srcRow,$dstRow,$height,$width) {
+function copyRows($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false) {
+
+	$styleArray = [
+		'font' => [
+			'size' => 10.5,
+			'name' => 'ＭＳ 明朝'
+		],
+		'alignment' => [
+			'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+			'wrapText' => true
+		]
+	];
+
     for ($row = 0; $row < $height; $row++) {
         for ($col = 0; $col < $width; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $srcRow + $row);
 			$style = $sheet->getStyleByColumnAndRow($col, $srcRow + $row);						
 			$dstCell = 'A' . (string)($dstRow + $row);		
             $sheet->setCellValue($dstCell, $cell->getValue());
-            $sheet->duplicateStyle($style, $dstCell);
+			$sheet->duplicateStyle($style, $dstCell);
+			
+			if($setStyle) {
+				$sheet->getStyle($dstCell)->applyFromArray($styleArray);
+			}
+
         }
 
         $h = $sheet->getRowDimension($srcRow + $row)->getRowHeight();
@@ -238,12 +258,14 @@ function copyRows($sheet,$srcRow,$dstRow,$height,$width) {
 }
 
 function getCodeTitle($lst, $codeDetail) {
+	$ret = [];
+	$strs = explode(',', $codeDetail);
 	foreach($lst as $code) {
-		if($code['codeDetail'] === $codeDetail){
-			return $code['name'];
+		if($code['codeDetail'] === $codeDetail || in_array($code['codeDetail'], $strs)){
+			$ret[] = $code['name'];
 		}
 	}
-	return '';
+	return implode(',', $ret);
 }
 
 function getRegistrants($details, $loc) {
@@ -297,6 +319,35 @@ function getPayContractInfo($pid){
 	}
 
 	return $paycontract;
+}
+
+function searchCellPos($sheet, $keyword, $startPos) {
+
+	if(strpos('$', $keyword) === false) {
+		$keyword = '$' . $keyword . '$';
+	}
+	$str = $sheet->getCell('A'.$startPos)->getValue();
+	
+	$hasKeyword = false;
+	do {
+		if(!isset($str) || $str === '' || strpos($str, $keyword) === false) {
+			$startPos++;
+			$str = $sheet->getCell('A'.$startPos)->getValue();			
+		}
+		else {		
+			$hasKeyword = true;	
+			break;
+		}
+		
+	}
+	while(!$hasKeyword || $startPos < 450);
+
+	if(!$hasKeyword) {
+		return -1;
+	}
+	
+
+	return $startPos;
 }
 
 ?>
