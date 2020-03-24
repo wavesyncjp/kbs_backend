@@ -37,6 +37,7 @@ ORM::configure('id_column_overrides', array(
 		'tblcontractregistrant'=>'pid',
 		'tblpaymenttype'=>'paymentCode',
 		'tblplan'=>'pid',
+		'tblplandetail'=>'pid',
 		'tblpaycontract'=>'pid',
 		'tblpaycontractdetail'=>'pid',
 		//20200309 S_Add
@@ -66,8 +67,10 @@ define('TBLCONTRACTSELLERINFO', 'tblcontractsellerinfo');
 define('TBLCONTRACTREGISTRANT', 'tblcontractregistrant');
 define('TBLPAYMENTTYPE', 'tblpaymenttype');
 define('TBLPLAN', 'tblplan');
+define('TBLPLANDETAIL', 'tblplandetail');
 define('TBLPAYCONTRACT', 'tblpaycontract');
 define('TBLPAYCONTRACTDETAIL', 'tblpaycontractdetail');
+
 //20200309 S_Add
 define('TBLTAX', 'tbltax');
 //20200309 E_Add
