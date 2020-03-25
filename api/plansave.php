@@ -11,10 +11,11 @@ $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
 //更新
-if(isset($param->pid) && $param->pid > 0){
+if($param->updateUserId > 0){
 	$plan = ORM::for_table(TBLPLAN)->find_one($param->pid);
 	setUpdate($plan, $param->updateUserId);
 }
+
 //登録
 else {
 	$plan = ORM::for_table(TBLPLAN)->create();	
@@ -22,8 +23,8 @@ else {
 }
 /*画面に入力項目があって（.ts）planのカラムにないものを('')で除外。
 'updateUserId', 'updateDate', 'createUserId', 'createDate'は上でセットしているので*/
-copyData($param, $plan, array('siteAreaBuyTsubo', 'siteAreaCheckTsubo', 'buildAreaTsubo', 'entranceTsubo','parkingTsubo','underAreaTsubo', 'totalAreaTsubo','salesAreaTsubo',
-'cratedDayMap','startDayMap','upperWingDayMap','completionDayMap','scheduledDayMap','details','updateUserId', 'updateDate', 'createUserId', 'createDate'));
+copyData($param, $plan, array('cratedDayMap','startDayMap','upperWingDayMap','completionDayMap',
+'scheduledDayMap','details','updateUserId', 'updateDate', 'createUserId', 'createDate'));
 $plan->save();
 
 //事業収支詳細
@@ -43,8 +44,7 @@ if(isset($param->details)){
 				$detailSave = ORM::for_table(TBLPLANDETAIL)->create();
 				setInsert($detailSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
 			}		
-			copyData($detail, $detailSave, array('siteAreaBuyTsubo', 'siteAreaCheckTsubo', 'buildAreaTsubo', 'entranceTsubo','parkingTsubo','underAreaTsubo', 'totalAreaTsubo','salesAreaTsubo',
-			'cratedDayMap','startDayMap','upperWingDayMap','completionDayMap','scheduledDayMap','details','updateUserId', 'updateDate', 'createUserId', 'createDate'));		
+			copyData($detail, $detailSave, array('updateUserId', 'updateDate', 'createUserId', 'createDate'));		
 			$detailSave->planPid = $plan->pid;
 			if($plan->tempLandInfoPid > 0){
 				$detailSave->tempLandInfoPid = $plan->tempLandInfoPid;
@@ -52,7 +52,7 @@ if(isset($param->details)){
 			$detailSave->save();
 		}
 	}
-}
+}*/
 
 echo json_encode(getPlanInfo($plan->pid));
 
