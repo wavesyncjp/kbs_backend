@@ -23,7 +23,7 @@ else {
 }
 /*画面に入力項目があって（.ts）planのカラムにないものを('')で除外。
 'updateUserId', 'updateDate', 'createUserId', 'createDate'は上でセットしているので*/
-copyData($param, $plan, array('cratedDayMap','startDayMap','upperWingDayMap','completionDayMap',
+copyData($param, $plan, array('pid','cratedDayMap','startDayMap','upperWingDayMap','completionDayMap',
 'scheduledDayMap','details','updateUserId', 'updateDate', 'createUserId', 'createDate'));
 $plan->save();
 
@@ -44,7 +44,7 @@ if(isset($param->details)){
 				$detailSave = ORM::for_table(TBLPLANDETAIL)->create();
 				setInsert($detailSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
 			}		
-			copyData($detail, $detailSave, array('updateUserId', 'updateDate', 'createUserId', 'createDate'));		
+			copyData($detail, $detailSave, array('pid','updateUserId', 'updateDate', 'createUserId', 'createDate','deleteUserId'));		
 			$detailSave->planPid = $plan->pid;
 			if($plan->tempLandInfoPid > 0){
 				$detailSave->tempLandInfoPid = $plan->tempLandInfoPid;

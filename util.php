@@ -321,6 +321,25 @@ function getPayContractInfo($pid){
 	return $paycontract;
 }
 
+/**
+ * 事業収支情報取得
+ * @param unknown $pid
+ */
+function getPlan($pid){
+	$plan = ORM::for_table(TBLPLAN)->findOne($pid)->asArray();
+	
+	$detailList = [];
+	$details = ORM::for_table(TBLPLANDETAIL)->where('planPid', $pid)->where_null('deleteDate')->findArray();
+	if(isset($details)){	
+
+		$plan['details'] = $details;
+	}
+	else {
+		$plan['details'] = [];
+	}
+
+	return $plan;
+}
 function searchCellPos($sheet, $keyword, $startPos) {
 
 	if(strpos('$', $keyword) === false) {
