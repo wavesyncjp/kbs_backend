@@ -52,7 +52,7 @@ if(isset($param->details)){
 			$detailSave->save();
 		}
 	}
-}*/
+}
 
 echo json_encode(getPlanInfo($plan->pid));
 
