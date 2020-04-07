@@ -11,7 +11,7 @@ $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
 //更新
-if($param->updateUserId > 0){
+if(isset($param->updateUserId) && $param->updateUserId > 0){
 	$plan = ORM::for_table(TBLPLAN)->find_one($param->pid);
 	setUpdate($plan, $param->updateUserId);
 }
@@ -54,6 +54,7 @@ if(isset($param->details)){
 	}
 }
 
-echo json_encode(getPlanInfo($plan->pid));
+$plan = getPlanInfo($plan->pid);
+echo json_encode($param );
 
 ?>
