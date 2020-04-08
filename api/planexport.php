@@ -33,6 +33,7 @@ foreach($plan as $key => $value) {
     $data[$key] = $value;
 }
 $data['bukkenName'] = $bukken['bukkenName'];
+$data['address'] = $bukken['residence'];
 foreach($details as $detail) {
     $data['price_' . $detail['backNumber']] = $detail['price'];
     $data['unitPrice_' . $detail['backNumber']] = $detail['unitPrice'];
