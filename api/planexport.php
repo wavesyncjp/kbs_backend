@@ -31,7 +31,26 @@ $spreadsheet = $reader->load($filePath);
 $data = array();
 foreach($plan as $key => $value) {
     $data[$key] = $value;
+
+    if(($key === 'startDay' || $key === 'upperWingDay' || $key === 'completionDay') && isset($value) && $value !== '') {
+        $data[$key] = date_create($value)->format('Y/m/d');
+    }
 }
+//periodName
+if(isset($plan['period']) && $plan['period'] !== '') {
+    $code = ORM::for_table(TBLCODE)->where('code', '017')->where('codeDetail', $plan['period'])->where_null('deleteDate')->findOne();
+    if(isset($code)) {
+        $data['periodName'] = $code['name'];
+    }
+}
+//structureScaleName
+if(isset($plan['structureScale']) && $plan['structureScale'] !== '') {
+    $code = ORM::for_table(TBLCODE)->where('code', '018')->where('codeDetail', $plan['structureScale'])->where_null('deleteDate')->findOne();
+    if(isset($code)) {
+        $data['structureScaleName'] = $code['name'];
+    }
+}
+
 $data['bukkenName'] = $bukken['bukkenName'];
 $data['address'] = $bukken['residence'];
 foreach($details as $detail) {
@@ -49,7 +68,7 @@ foreach($details as $detail) {
 $sheetPos = array(
 'AE2' => 'settlement',
 'AA3' => 'bukkenName',
-'AE3' => 'period',
+'AE3' => 'periodName',
 'AB4' => 'landOwner',
 'AE4' => 'rightsRelationship',
 'AB5' => 'landContract',
@@ -58,7 +77,7 @@ $sheetPos = array(
 'AC7' => 'designOffice',
 'J8' => 'siteAreaBuy',
 'R8' => 'groundType',
-'X8' => 'structureScale',
+'X8' => 'structureScaleName',
 'AC8' => 'construction',
 'J9' => 'siteAreaCheck',
 'R9' => 'restrictedArea',
