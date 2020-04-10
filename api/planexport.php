@@ -51,6 +51,10 @@ if(isset($plan['structureScale']) && $plan['structureScale'] !== '') {
     }
 }
 
+//PaymentType
+$types = ORM::for_table(TBLPAYMENTTYPE)->where('addFlg', '1')->where_null('deleteDate')->select('paymentCode')->select('paymentName')->findArray();
+$nums = array(6, 7, 8, 9, 10, 19, 20, 21, 22, 23, 35, 36);
+
 $data['bukkenName'] = $bukken['bukkenName'];
 $data['address'] = $bukken['residence'];
 foreach($details as $detail) {
@@ -62,6 +66,19 @@ foreach($details as $detail) {
     $data['dismantlingMonth_' . $detail['backNumber']] = $detail['dismantlingMonth'];
     $data['totalMonths_' . $detail['backNumber']] = $detail['totalMonths'];
     $data['valuation_' . $detail['backNumber']] = $detail['valuation'];
+
+    if(in_array($detail['backNumber'], $nums) && isset($detail['paymentCode']) && $detail['paymentCode'] !== '' ) {
+
+        $payName = '';
+        foreach($types as $type) {
+            if($type['paymentCode'] === $detail['paymentCode']){
+                $payName = $type['paymentName'];
+                break;
+            }
+        }
+        $data['paymentName_' . $detail['backNumber']] = $payName;
+    }
+
 }
 
 
@@ -147,7 +164,20 @@ $sheetPos = array(
 'H73' => 'price_37',
 'L73' => 'commissionRate_37',
 'H74' => 'price_38',
-'H75' => 'price_39');
+'H75' => 'price_39',
+
+'G27' => 'paymentName_6',
+'G28' => 'paymentName_7',
+'G29' => 'paymentName_8',
+'G30' => 'paymentName_9',
+'G31' => 'paymentName_10',
+'G45' => 'paymentName_19',
+'G46' => 'paymentName_20',
+'G47' => 'paymentName_21',
+'G48' => 'paymentName_22',
+'G49' => 'paymentName_23',
+'G71' => 'paymentName_35',
+'G72' => 'paymentName_36');
 
 //NOI利回り検討
 $sheet = $spreadsheet->getSheet(0);
@@ -156,10 +186,93 @@ foreach ($sheetPos as $key => $value) {
     $sheet->setCellValue($key, isset($data[$value]) ? $data[$value] : '');
 }
 
+$sheetPos2 = array(
+    'AE2' => 'settlement',
+    'AA3' => 'bukkenName',
+    'AE3' => 'periodName',
+    'AB4' => 'landOwner',
+    'AE4' => 'rightsRelationship',
+    'AB5' => 'landContract',
+    'H7' => 'address',
+    'L7' => 'traffic',
+    'AC7' => 'designOffice',
+    'J8' => 'siteAreaBuy',
+    'R8' => 'groundType',
+    'X8' => 'structureScaleName',
+    'AC8' => 'construction',
+    'J9' => 'siteAreaCheck',
+    'R9' => 'restrictedArea',
+    'X9' => 'ground',
+    'AB9' => 'startDay',
+    'J10' => 'buildArea',
+    'R10' => 'floorAreaRate',
+    'X10' => 'underground',
+    'AB10' => 'upperWingDay',
+    'J11' => 'entrance',
+    'R11' => 'coverageRate',
+    'X11' => 'totalUnits',
+    'AB11' => 'completionDay',
+    'J12' => 'parking',
+    'X12' => 'buysellUnits',
+    'J13' => 'underArea',
+    'X13' => 'parkingIndoor',
+    'Z13' => 'parkingOutdoor',
+    'J14' => 'totalArea',
+    'Z14' => 'mechanical',
+    'J15' => 'salesArea',
+    'I18' => 'jvRatio',
+    'H20' => 'price_1',
+    'L20' => 'routePrice_1',
+    'H22' => 'price_2',
+    'H23' => 'price_3',
+    'H24' => 'price_4',
+    'H25' => 'price_5',
+    'L25' => 'burdenDays_5',
+    'H27' => 'price_6',
+    'H28' => 'price_7',
+    'H29' => 'price_8',
+    'H30' => 'price_9',
+    'H31' => 'price_10',
+    'H33' => 'price_11',
+    'L33' => 'unitPrice_11',
+    'H36' => 'price_12',
+    'H37' => 'price_13',
+    'H38' => 'price_14',
+    'H39' => 'price_15',
+    'H41' => 'price_16',
+    'H42' => 'price_17',
+    'H43' => 'price_18',
+    'H45' => 'price_19',
+    'H46' => 'price_20',
+    'H47' => 'price_21',
+    'H48' => 'price_22',
+    'H49' => 'price_23',
+    'H52' => 'price_24',
+    'L52' => 'complePriceMonth_24',
+    'H54' => 'price_25',
+    'L54' => 'dismantlingMonth_25',
+    'H55' => 'price_26',
+    'H56' => 'price_27',
+    'H59' => 'price_28',
+    'H60' => 'price_29',
+    'H64' => 'price_30',
+    'H66' => 'price_31',
+    'L66' => 'valuation_31',
+    'H67' => 'price_32',
+    'H68' => 'price_33',
+    'L68' => 'rent_33',
+    'H69' => 'price_34',
+    'L69' => 'totalMonths_34',
+    'H71' => 'price_35',
+    'H72' => 'price_36',
+    'H73' => 'price_37',
+    'L73' => 'commissionRate_37',
+    'H74' => 'price_38',
+    'H75' => 'price_39');
 
 //表面利回り検討 
 $sheet = $spreadsheet->getSheet(1);
-foreach ($sheetPos as $key => $value) {
+foreach ($sheetPos2 as $key => $value) {
     $sheet->setCellValue($key, isset($data[$value]) ? $data[$value] : '');
 }
 
