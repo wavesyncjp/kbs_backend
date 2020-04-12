@@ -56,7 +56,7 @@ $types = ORM::for_table(TBLPAYMENTTYPE)->where('addFlg', '1')->where_null('delet
 $nums = array(6, 7, 8, 9, 10, 19, 20, 21, 22, 23, 35, 36);
 
 $data['bukkenName'] = $bukken['bukkenName'];
-$data['address'] = $bukken['residence'];
+$data['address'] = $plan['address'];
 foreach($details as $detail) {
     $data['price_' . $detail['backNumber']] = $detail['price'];
     $data['unitPrice_' . $detail['backNumber']] = $detail['unitPrice'];
@@ -66,6 +66,8 @@ foreach($details as $detail) {
     $data['dismantlingMonth_' . $detail['backNumber']] = $detail['dismantlingMonth'];
     $data['totalMonths_' . $detail['backNumber']] = $detail['totalMonths'];
     $data['valuation_' . $detail['backNumber']] = $detail['valuation'];
+    $data['rent_' . $detail['backNumber']] = $detail['rent'];
+    $data['commissionRate_' . $detail['backNumber']] = $detail['commissionRate'];
 
     if(in_array($detail['backNumber'], $nums) && isset($detail['paymentCode']) && $detail['paymentCode'] !== '' ) {
 
@@ -268,7 +270,20 @@ $sheetPos2 = array(
     'H73' => 'price_37',
     'L73' => 'commissionRate_37',
     'H74' => 'price_38',
-    'H75' => 'price_39');
+    'H75' => 'price_39',
+    
+    'G27' => 'paymentName_6',
+    'G28' => 'paymentName_7',
+    'G29' => 'paymentName_8',
+    'G30' => 'paymentName_9',
+    'G31' => 'paymentName_10',
+    'G45' => 'paymentName_19',
+    'G46' => 'paymentName_20',
+    'G47' => 'paymentName_21',
+    'G48' => 'paymentName_22',
+    'G49' => 'paymentName_23',
+    'G71' => 'paymentName_35',
+    'G72' => 'paymentName_36');
 
 //表面利回り検討 
 $sheet = $spreadsheet->getSheet(1);
