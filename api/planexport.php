@@ -51,6 +51,14 @@ if(isset($plan['structureScale']) && $plan['structureScale'] !== '') {
     }
 }
 
+//rightsRelationship
+if(isset($plan['rightsRelationship']) && $plan['rightsRelationship'] !== '') {
+    $code = ORM::for_table(TBLCODE)->where('code', '011')->where('codeDetail', $plan['rightsRelationship'])->where_null('deleteDate')->findOne();
+    if(isset($code)) {
+        $data['rightsRelationshipName'] = $code['name'];
+    }
+}
+
 //PaymentType
 $types = ORM::for_table(TBLPAYMENTTYPE)->where('addFlg', '1')->where_null('deleteDate')->select('paymentCode')->select('paymentName')->findArray();
 $nums = array(6, 7, 8, 9, 10, 19, 20, 21, 22, 23, 35, 36);
@@ -179,7 +187,10 @@ $sheetPos = array(
 'G48' => 'paymentName_22',
 'G49' => 'paymentName_23',
 'G71' => 'paymentName_35',
-'G72' => 'paymentName_36');
+'G72' => 'paymentName_36',
+
+'T72' => 'residentialRate',
+'T76' => 'buildValuation');
 
 //NOI利回り検討
 $sheet = $spreadsheet->getSheet(0);
@@ -283,7 +294,10 @@ $sheetPos2 = array(
     'G48' => 'paymentName_22',
     'G49' => 'paymentName_23',
     'G71' => 'paymentName_35',
-    'G72' => 'paymentName_36');
+    'G72' => 'paymentName_36',
+
+    'T72' => 'residentialRate',
+    'T76' => 'buildValuation');
 
 //表面利回り検討 
 $sheet = $spreadsheet->getSheet(1);
