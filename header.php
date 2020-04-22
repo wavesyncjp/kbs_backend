@@ -40,6 +40,8 @@ ORM::configure('id_column_overrides', array(
 		'tblplandetail'=>'pid',
 		'tblpaycontract'=>'pid',
 		'tblpaycontractdetail'=>'pid',
+		'tblplanrentroll' => 'pid',
+		'tblplanrentrolldetail' => 'pid',
 		//20200309 S_Add
 		'tbltax'=>'pid'
 		//20200309 E_Add
@@ -70,6 +72,9 @@ define('TBLPLAN', 'tblplan');
 define('TBLPLANDETAIL', 'tblplandetail');
 define('TBLPAYCONTRACT', 'tblpaycontract');
 define('TBLPAYCONTRACTDETAIL', 'tblpaycontractdetail');
+
+define('TBLPLANRENTROLL', 'tblplanrentroll');
+define('TBLPLANRENTROLLDETAIL', 'tblplanrentrolldetail');
 
 //20200309 S_Add
 define('TBLTAX', 'tbltax');

@@ -357,6 +357,23 @@ function getPlanInfo($pid){
 		$plan['details'] = [];
 	}
 
+	$rent = ORM::for_table(TBLPLANRENTROLL)->where('planPid', $pid)->where_null('deleteDate')->findOne();
+	if(isset($rent) ){	
+		$plan['rent'] = $rent->asArray();
+	}
+	else {
+		$plan['rent'] = ORM::for_table(TBLPLANRENTROLL)->create()->asArray();
+	}
+
+	$rentdetails = ORM::for_table(TBLPLANRENTROLLDETAIL)->where('planPid', $pid)->where_null('deleteDate')->findArray();
+	if(isset($rentdetails)){	
+
+		$plan['rentdetails'] = $rentdetails;
+	}
+	else {
+		$plan['rentdetails'] = [];
+	}
+
 	return $plan;
 }
 
