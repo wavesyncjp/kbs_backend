@@ -357,12 +357,12 @@ function getPlanInfo($pid){
 		$plan['details'] = [];
 	}
 
-	$rent = ORM::for_table(TBLPLANRENTROLL)->where('planPid', $pid)->where_null('deleteDate')->findOne();
-	if(isset($rent) ){	
-		$plan['rent'] = $rent->asArray();
+	$rent = ORM::for_table(TBLPLANRENTROLL)->where('planPid', $pid)->where_null('deleteDate')->findArray();
+	if(isset($rent) && sizeof($rent) > 0 ){	
+		$plan['rent'] = $rent[0];
 	}
 	else {
-		$plan['rent'] = ORM::for_table(TBLPLANRENTROLL)->create()->asArray();
+		$plan['rent'] = null;
 	}
 
 	$rentdetails = ORM::for_table(TBLPLANRENTROLLDETAIL)->where('planPid', $pid)->where_null('deleteDate')->findArray();
