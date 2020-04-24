@@ -12,9 +12,11 @@ $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
 
-$plan = getPlanInfo($param->pid);
+$plan = ORM::for_table(TBLPLAN)->findOne($param->pid)->asArray();
 $details = ORM::for_table(TBLPLANDETAIL)->where('planPid', $param->pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
 $bukken = ORM::for_table(TBLTEMPLANDINFO)->where('pid', $plan['tempLandInfoPid'])->where_null('deleteDate')->findOne();
+$rent = ORM::for_table(TBLPLANRENTROLL)->where('planPid', $param->pid)->where_null('deleteDate')->findOne()->asArray();
+$rentDetails = ORM::for_table(TBLPLANRENTROLLDETAIL)->where('planPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
 
 header("Content-disposition: attachment; filename=sample.xlsx");
 header("Content-Type: application/vnd.ms-excel");
@@ -91,6 +93,20 @@ foreach($details as $detail) {
 
 }
 
+//RENT
+foreach($rent as $key => $value) {
+    $data[$key] = $value;
+}
+
+$pos = 1;
+foreach($rentDetails as $rentDetail) {
+
+    $data['targetArea_' . $pos] = $rentDetail['targetArea'];
+    $data['space_' . $pos] = $rentDetail['space'];
+    $data['rentUnitPrice_' . $pos] = $rentDetail['rentUnitPrice'];
+    $data['securityDeposit_' . $pos] = $rentDetail['securityDeposit'];
+    $pos++;
+}
 
 $sheetPos = array(
 'AE2' => 'settlement',
@@ -190,7 +206,94 @@ $sheetPos = array(
 'G72' => 'paymentName_36',
 
 'T72' => 'residentialRate',
-'T76' => 'buildValuation');
+'T76' => 'buildValuation',
+
+//20200424 追加
+'F78' => 'landInterest',
+'L78' => 'landLoan',
+'L79' => 'landPeriod',
+'F80' => 'buildInterest',
+'L80' => 'buildLoan',
+'L81' => 'buildPeriod',
+'T19' => 'occupancyRate',
+'AD19' => 'salesProfits',
+'T23' => 'expenseRatio1',
+'X23' => 'expenseRatio2',
+'AA23' => 'expenseRatio3',
+'AD23' => 'expenseRatio4',
+'Q43' => 'targetArea_1',
+'Q44' => 'targetArea_2',
+'Q45' => 'targetArea_3',
+'Q46' => 'targetArea_4',
+'Q47' => 'targetArea_5',
+'Q48' => 'targetArea_6',
+'Q49' => 'targetArea_7',
+'Q50' => 'targetArea_8',
+'Q51' => 'targetArea_9',
+'Q52' => 'targetArea_10',
+'Q53' => 'targetArea_11',
+'Q54' => 'targetArea_12',
+'Q55' => 'targetArea_13',
+'Q56' => 'targetArea_14',
+'Q57' => 'targetArea_15',
+'S43' => 'space_1',
+'S44' => 'space_2',
+'S45' => 'space_3',
+'S46' => 'space_4',
+'S47' => 'space_5',
+'S48' => 'space_6',
+'S49' => 'space_7',
+'S50' => 'space_8',
+'S51' => 'space_9',
+'S52' => 'space_10',
+'S53' => 'space_11',
+'S54' => 'space_12',
+'S55' => 'space_13',
+'S56' => 'space_14',
+'S57' => 'space_15',
+'S59' => 'space_17',
+'S60' => 'space_18',
+'S61' => 'space_19',
+'W43' => 'rentUnitPrice_1',
+'W44' => 'rentUnitPrice_2',
+'W45' => 'rentUnitPrice_3',
+'W46' => 'rentUnitPrice_4',
+'W47' => 'rentUnitPrice_5',
+'W48' => 'rentUnitPrice_6',
+'W49' => 'rentUnitPrice_7',
+'W50' => 'rentUnitPrice_8',
+'W51' => 'rentUnitPrice_9',
+'W52' => 'rentUnitPrice_10',
+'W53' => 'rentUnitPrice_11',
+'W54' => 'rentUnitPrice_12',
+'W55' => 'rentUnitPrice_13',
+'W56' => 'rentUnitPrice_14',
+'W57' => 'rentUnitPrice_15',
+'W58' => 'rentUnitPrice_16',
+'W59' => 'rentUnitPrice_17',
+'W60' => 'rentUnitPrice_18',
+'W61' => 'rentUnitPrice_19',
+'AA43' => 'securityDeposit_1',
+'AA44' => 'securityDeposit_2',
+'AA45' => 'securityDeposit_3',
+'AA46' => 'securityDeposit_4',
+'AA47' => 'securityDeposit_5',
+'AA48' => 'securityDeposit_6',
+'AA49' => 'securityDeposit_7',
+'AA50' => 'securityDeposit_8',
+'AA51' => 'securityDeposit_9',
+'AA52' => 'securityDeposit_10',
+'AA53' => 'securityDeposit_11',
+'AA54' => 'securityDeposit_12',
+'AA55' => 'securityDeposit_13',
+'AA56' => 'securityDeposit_14',
+'AA57' => 'securityDeposit_15',
+'AA58' => 'securityDeposit_16',
+'AA59' => 'securityDeposit_17',
+'AA60' => 'securityDeposit_18',
+'AA61' => 'securityDeposit_19',
+'AF64' => 'commonFee',
+'AB66' => 'monthlyOtherIncome');
 
 //NOI利回り検討
 $sheet = $spreadsheet->getSheet(0);
@@ -297,7 +400,110 @@ $sheetPos2 = array(
     'G72' => 'paymentName_36',
 
     'T72' => 'residentialRate',
-    'T76' => 'buildValuation');
+    'T76' => 'buildValuation',
+
+    //20200424 追加
+    'F78' => 'landInterest',
+    'L78' => 'landLoan',
+    'L79' => 'landPeriod',
+    'F80' => 'buildInterest',
+    'L80' => 'buildLoan',
+    'L81' => 'buildPeriod',
+    'T19' => 'occupancyRate',    
+    'Q43' => 'targetArea_1',
+    'Q44' => 'targetArea_2',
+    'Q45' => 'targetArea_3',
+    'Q46' => 'targetArea_4',
+    'Q47' => 'targetArea_5',
+    'Q48' => 'targetArea_6',
+    'Q49' => 'targetArea_7',
+    'Q50' => 'targetArea_8',
+    'Q51' => 'targetArea_9',
+    'Q52' => 'targetArea_10',
+    'Q53' => 'targetArea_11',
+    'Q54' => 'targetArea_12',
+    'Q55' => 'targetArea_13',
+    'Q56' => 'targetArea_14',
+    'Q57' => 'targetArea_15',
+    'S43' => 'space_1',
+    'S44' => 'space_2',
+    'S45' => 'space_3',
+    'S46' => 'space_4',
+    'S47' => 'space_5',
+    'S48' => 'space_6',
+    'S49' => 'space_7',
+    'S50' => 'space_8',
+    'S51' => 'space_9',
+    'S52' => 'space_10',
+    'S53' => 'space_11',
+    'S54' => 'space_12',
+    'S55' => 'space_13',
+    'S56' => 'space_14',
+    'S57' => 'space_15',
+    'S59' => 'space_17',
+    'S60' => 'space_18',
+    'S61' => 'space_19',
+    'W43' => 'rentUnitPrice_1',
+    'W44' => 'rentUnitPrice_2',
+    'W45' => 'rentUnitPrice_3',
+    'W46' => 'rentUnitPrice_4',
+    'W47' => 'rentUnitPrice_5',
+    'W48' => 'rentUnitPrice_6',
+    'W49' => 'rentUnitPrice_7',
+    'W50' => 'rentUnitPrice_8',
+    'W51' => 'rentUnitPrice_9',
+    'W52' => 'rentUnitPrice_10',
+    'W53' => 'rentUnitPrice_11',
+    'W54' => 'rentUnitPrice_12',
+    'W55' => 'rentUnitPrice_13',
+    'W56' => 'rentUnitPrice_14',
+    'W57' => 'rentUnitPrice_15',
+    'W58' => 'rentUnitPrice_16',
+    'W59' => 'rentUnitPrice_17',
+    'W60' => 'rentUnitPrice_18',
+    'W61' => 'rentUnitPrice_19',
+    'AA43' => 'securityDeposit_1',
+    'AA44' => 'securityDeposit_2',
+    'AA45' => 'securityDeposit_3',
+    'AA46' => 'securityDeposit_4',
+    'AA47' => 'securityDeposit_5',
+    'AA48' => 'securityDeposit_6',
+    'AA49' => 'securityDeposit_7',
+    'AA50' => 'securityDeposit_8',
+    'AA51' => 'securityDeposit_9',
+    'AA52' => 'securityDeposit_10',
+    'AA53' => 'securityDeposit_11',
+    'AA54' => 'securityDeposit_12',
+    'AA55' => 'securityDeposit_13',
+    'AA56' => 'securityDeposit_14',
+    'AA57' => 'securityDeposit_15',
+    'AA58' => 'securityDeposit_16',
+    'AA59' => 'securityDeposit_17',
+    'AA60' => 'securityDeposit_18',
+    'AA61' => 'securityDeposit_19',
+    'AF64' => 'commonFee',
+    'AB66' => 'monthlyOtherIncome',
+    'R27' => 'salesExpenseName1A',
+
+    'T27' => 'salesExpense1A',
+    'X27' => 'salesExpense1B',
+    'AA27' => 'salesExpense1C',
+    'AD27' => 'salesExpense1D',
+    'R29' => 'salesExpenseName2A',
+    'T29' => 'salesExpense2A',
+    'X29' => 'salesExpense2B',
+    'AA29' => 'salesExpense2C',
+    'AD29' => 'salesExpense2D',
+    'R31' => 'salesExpenseName3A',
+    'T31' => 'salesExpense3A',
+    'X31' => 'salesExpense3B',
+    'AA31' => 'salesExpense3C',
+    'AD31' => 'salesExpense31D',
+    'T39' => 'profitsA',
+    'X39' => 'profitsB',
+    'AA39' => 'profitsC',
+    'AD39' => 'profitsD'
+);
 
 //表面利回り検討 
 $sheet = $spreadsheet->getSheet(1);
@@ -352,7 +558,13 @@ $sheet4Pos = array(
     'G30' => 'price_37',
     'I30' => 'commissionRate_37',
     'G31' => 'price_38',
-    'G32' => 'price_39'
+    'G32' => 'price_39',
+
+    //20200424 追加
+    'E53' => 'tsuboUnitPriceA',
+    'G53' => 'tsuboUnitPriceB',
+    'H53' => 'tsuboUnitPriceC',
+    'I53' => 'tsuboUnitPriceD'
 );
 foreach ($sheet4Pos as $key => $value) {
     $sheet->setCellValue($key, isset($data[$value]) ? $data[$value] : '');
