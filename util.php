@@ -407,4 +407,25 @@ function searchCellPos($sheet, $keyword, $startPos) {
 	return $startPos;
 }
 
+/**
+ * 物件プラン取得
+ */
+function getLandPlan($pid) {
+	$data = new stdClass();
+
+	$land = ORM::for_table(TBLTEMPLANDINFO)->findOne($pid)->asArray();
+	$data->land = $land;
+	
+	$plans = ORM::for_table(TBLBUKKENPLANINFO)->where('tempLandInfoPid', $pid)->order_by_asc('pid')->findArray();
+	if(isset($plans)){
+		$data->plans = $plans;
+	}
+	
+	$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $pid)->order_by_asc('pid')->findArray();
+	if(isset($sales)){
+		$data->sales = $sales;
+	}
+	return $data;
+}
+
 ?>
