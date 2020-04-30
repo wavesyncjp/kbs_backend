@@ -257,6 +257,80 @@ function copyRows($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false) {
     }
 }
 
+/**
+ * 行と値コピー
+ */
+function copyBlockWithValue($sheet, $startPos, $blockRowCount, $copyCount, $colums) {
+
+	$styleArray = [
+		'font' => [
+			'size' => 10.5,
+			'name' => 'ＭＳ 明朝'
+		],
+		'alignment' => [
+			'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+			'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_JUSTIFY,
+			'wrapText' => true
+		]
+	];
+
+	$sheet->insertNewRowBefore($startPos, $blockRowCount * $copyCount);
+	$lastPos = $startPos + ($blockRowCount * $copyCount);		
+	for($cursor = 0 ; $cursor < $copyCount ; $cursor++) {
+
+		$copyPos = $startPos  + $blockRowCount * $cursor;
+		copyRowsWithValue($sheet, $lastPos, $copyPos, $blockRowCount, $colums);		
+
+		$range = 'A'. $copyPos . ':A' . ($copyPos + $blockRowCount - 1);
+		$sheet->getStyle($range)->applyFromArray($styleArray);		
+	}	
+
+}
+
+function copyRowsWithValue($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false) {
+
+	$styleArray = [
+		'font' => [
+			'size' => 10.5,
+			'name' => 'ＭＳ 明朝'
+		],
+		'alignment' => [
+			'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+			'wrapText' => true
+		]
+	];
+
+    for ($row = 0; $row < $height; $row++) {
+        for ($col = 0; $col < $width; $col++) {
+            $cell = $sheet->getCellByColumnAndRow($col, $srcRow + $row);
+			$style = $sheet->getStyleByColumnAndRow($col, $srcRow + $row);						
+			$dstCell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::stringFromColumnIndex($col) . ($dstRow + $row);//'A' . (string)($dstRow + $row);		
+            $sheet->setCellValue($dstCell, $cell->getValue());
+			$sheet->duplicateStyle($style, $dstCell);
+			
+			if($setStyle) {
+				$sheet->getStyle($dstCell)->applyFromArray($styleArray);
+			}
+
+        }
+
+        $h = $sheet->getRowDimension($srcRow + $row)->getRowHeight();
+        $sheet->getRowDimension($dstRow + $row)->setRowHeight($h);
+    }
+    foreach ($sheet->getMergeCells() as $mergeCell) {
+        $mc = explode(":", $mergeCell);
+        $col_s = preg_replace("/[0-9]*/", "", $mc[0]);
+        $col_e = preg_replace("/[0-9]*/", "", $mc[1]);
+        $row_s = ((int)preg_replace("/[A-Z]*/", "", $mc[0])) - $srcRow;
+        $row_e = ((int)preg_replace("/[A-Z]*/", "", $mc[1])) - $srcRow;
+
+        if (0 <= $row_s && $row_s < $height) {
+            $merge = $col_s . (string)($dstRow + $row_s) . ":" . $col_e . (string)($dstRow + $row_e);
+            $sheet->mergeCells($merge);
+        } 
+    }
+}
+
 function getCodeTitle($lst, $codeDetail) {
 	$ret = [];
 	$strs = explode(',', $codeDetail);
@@ -426,6 +500,34 @@ function getLandPlan($pid) {
 		$data->sales = $sales;
 	}
 	return $data;
+}
+
+
+function convert_jpdt($date) {
+	if(!isset($date) || $date == '') return '';
+	if ($date >= 20190501) {        //令和元年（2019年5月1日以降）
+		$name = "R";		
+	} else if ($date >= 19890108) { //平成元年（1989年1月8日以降）
+		$name = "H";		
+	} else if ($date >= 19261225) { //昭和元年（1926年12月25日以降）
+		$name = "S";
+	} else if ($date >= 19120730) { //大正元年（1912年7月30日以降）
+		$name = "T";		
+	} else if ($date >= 18680125) { //明治元年（1868年1月25日以降）
+		$name = "M";
+	} else {
+		$name = 'AD';
+	}
+	$day = new DateTime($date);
+	return $name.'.'.date_format($day, 'm.d');
+}
+
+function notNull($val) {
+	return isset($val) && $val != '';
+}
+
+function equalVal($obj, $key, $val) {
+	return isset($obj[$key]) && $obj[$key] == $val;
 }
 
 ?>
