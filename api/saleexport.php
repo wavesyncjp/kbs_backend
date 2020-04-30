@@ -72,7 +72,7 @@ foreach($contracts as $contract) {
     $depositDay = getDepositDay($contract);
     $area = getArea($locs);
     $newList[] = array(
-        'landOwnerName' => $contractors[0], 
+        'contractorName' => $contractors[0], 
         'contractor' => $contractors[1], 
         'status' => $status, 
         'pid' => $contract['pid'],
@@ -88,7 +88,7 @@ foreach($contracts as $contract) {
     $sheet->setCellValue('D'.$contractPos, $address); //所在地
     $sheet->getStyle('D'.$contractPos)->getAlignment()->setWrapText(true);    
     $sheet->setCellValue('E'.$contractPos, $contractors[0]); //地権者
-    $sheet->setCellValue('F'.$contractPos, convert_jpdt($contract['contractDay'])); //契約日
+    $sheet->setCellValue('F'.$contractPos, $status !== 'メトロス買取済' ? convert_jpdt($contract['contractDay']) : ''); //契約日
 
     if($status == '解除（等価交換）' || $status == '解除') {
         $sheet->setCellValue('G'.$contractPos, ''); //金額
@@ -102,17 +102,24 @@ foreach($contracts as $contract) {
     $sheet->setCellValue('I'.$contractPos, $depositDay); //内金（手付）支払日
     $sheet->getStyle('I'.$contractPos)->getAlignment()->setWrapText(true);
 
-    $sheet->setCellValue('J'.$contractPos, $contract['decisionPrice']); //決済代金
-    $sheet->setCellValue('L'.$contractPos, $contract['fixedTax']); //固都税清算金
-    $sheet->setCellValue('N'.$contractPos, convert_jpdt($contract['decisionDay'])); //決済日
+    $sheet->setCellValue('J'.$contractPos, emptyStatus($status, $contract['decisionPrice'])); //決済代金
+    $sheet->setCellValue('L'.$contractPos, emptyStatus($status, $contract['fixedTax'])); //固都税清算金
+    //引渡期日
+    $sheet->setCellValue('N'.$contractPos, emptyStatus($status, convert_jpdt($contract['decisionDay']))); //決済日
 
-    $sheet->setCellValue('O'.$contractPos, $contract['promptDecideFlg'] == '0' ? '無' : $contract['promptDecideFlg'] == '1' ? '有' : '（旧所有者：' . $contractors[0] . '）'); //即決和解の有無等
+    $promptDecideFlg = '';
+    if($status === "解除（等価交換）" || $status === "解除") $promptDecideFlg = '';
+    else if ($contract['promptDecideFlg'] == '0') $promptDecideFlg = '無';
+    else if ($contract['promptDecideFlg'] == '1') $promptDecideFlg = '有';
+    else $promptDecideFlg = '（旧所有者：' . $contractors[0] . '）';
+        
+    $sheet->setCellValue('O'.$contractPos, $promptDecideFlg); //即決和解の有無等
 
-    $sheet->setCellValue('P'.$contractPos, $contract['retainage']); //留保金
-    $sheet->setCellValue('Q'.$contractPos, convert_jpdt($contract['vacationDay'])); //明渡期日
-    $sheet->setCellValue('R'.$contractPos, convert_jpdt($contract['retainageDay'])); //留保金支払（明渡）日
+    $sheet->setCellValue('P'.$contractPos, emptyStatus($status, $contract['retainage'])); //留保金
+    $sheet->setCellValue('Q'.$contractPos, emptyStatus($status, convert_jpdt($contract['vacationDay']))); //明渡期日
+    $sheet->setCellValue('R'.$contractPos, emptyStatus($status, convert_jpdt($contract['retainageDay']))); //留保金支払（明渡）日
 
-    $sheet->setCellValue('S'.$contractPos, $area); //売買面積（㎡）
+    $sheet->setCellValue('S'.$contractPos, emptyStatus($status, $area)); //売買面積（㎡）
     $sheet->getStyle('S'.$contractPos)->getAlignment()->setWrapText(true);   
 
     $contractPos++;
@@ -192,7 +199,7 @@ foreach($contracts as $contract) {
         continue;
     }
     $data = getContractData($newList, $contract['pid']);
-    $names = $data['landOwnerName'];
+    $names = $data['contractorName'];
     if(!notNull($names)) {
         continue;
     }
@@ -215,12 +222,12 @@ foreach($contracts as $contract) {
         $clonedWorksheet->setCellValue('C'.$contractPos, $data['status']); //売却・等価交換    
         $clonedWorksheet->setCellValue('D'.$contractPos, $data['address']); //所在地
         $clonedWorksheet->getStyle('D'.$contractPos)->getAlignment()->setWrapText(true);    
-        $clonedWorksheet->setCellValue('E'.$contractPos, $data['landOwnerName']); //地権者
+        $clonedWorksheet->setCellValue('E'.$contractPos, $data['contractorName']); //地権者
         $clonedWorksheet->setCellValue('F'.$contractPos, convert_jpdt($contract['contractDay'])); //契約日
         $clonedWorksheet->setCellValue('G'.$contractPos, $contract['tradingPrice']); //金額            
-        $clonedWorksheet->setCellValue('H'.$contractPos, $data['deposit']); //内金（手付等）
+        $clonedWorksheet->setCellValue('H'.$contractPos, getDeposit2($contract)); //内金（手付等）
         $clonedWorksheet->getStyle('H'.$contractPos)->getAlignment()->setWrapText(true);
-        $clonedWorksheet->setCellValue('I'.$contractPos, $data['depositDay']); //内金（手付）支払日
+        $clonedWorksheet->setCellValue('I'.$contractPos, getDepositDay2($contract)); //内金（手付）支払日
         $clonedWorksheet->getStyle('I'.$contractPos)->getAlignment()->setWrapText(true);
         $clonedWorksheet->setCellValue('J'.$contractPos, $contract['tradingBalance']); //残代金
         $clonedWorksheet->setCellValue('L'.$contractPos, $contract['fixedTax']); //固都税清算金
@@ -255,7 +262,7 @@ foreach($contracts as $contract) {
             else {
                 $clonedWorksheet->setCellValue('J'.$payPos, convert_jpdt($payDetail['contractFixDay']));
             }        
-            $clonedWorksheet->setCellValue('K'.$payPos, $data['landOwnerName']); //契約者
+            $clonedWorksheet->setCellValue('K'.$payPos, $data['contractorName']); //契約者
             $clonedWorksheet->setCellValue('N'.$payPos, $payDetail['detailRemarks']); //備考
             $payPos++;
         }
@@ -375,6 +382,28 @@ function getDepositDay($contract) {
     return implode(chr(10), $depositDay);
 }
 
+function getDeposit2($contract) { 
+    $deposit = [];
+    if($contract['deposit1DayChk']=='1' && $contract['deposit1'] > 0) $deposit[] = "¥".number_format($contract['deposit1']);
+    else  $deposit[] = "－";
+    if($contract['deposit2DayChk']=='1' && $contract['deposit2'] > 0) $deposit[] = "¥".number_format($contract['deposit2']);
+    else  $deposit[] = "－";
+    if($contract['earnestPriceDayChk']=='1' && $contract['earnestPrice'] > 0) $deposit[] = "¥".number_format($contract['earnestPrice']);
+    else  $deposit[] = "－";
+    return implode(chr(10), $deposit);
+}
+
+function getDepositDay2($contract) {    
+    $depositDay = [];
+    if($contract['deposit1DayChk']=='1' && isset($contract['deposit1Day']) && $contract['deposit1Day'] != '') $depositDay[] = convert_jpdt($contract['deposit1Day']);
+    else  $depositDay[] = "－";
+    if($contract['deposit2DayChk']=='1' && isset($contract['deposit2Day']) && $contract['deposit2Day'] != '') $depositDay[] = convert_jpdt($contract['deposit2Day']);
+    else  $depositDay[] = "－";
+    if($contract['earnestPriceDayChk']=='1' && isset($contract['earnestPriceDay']) && $contract['earnestPriceDay'] != '') $depositDay[] = convert_jpdt($contract['earnestPriceDay']);
+    else  $depositDay[] = "－";
+    return implode(chr(10), $depositDay);
+}
+
 function getInfoOffer($offer) {
     if(!isset($offer) || $offer == '') return '';
     $ids = explode(',', $offer);
@@ -420,7 +449,7 @@ function isCancel($lst, $payDetail) {
 function getContractor($lst, $payDetail) {
     foreach($lst as $contract) {
         if($contract['contractor'] == $payDetail['contractor']) {
-            return $contract['landOwnerName'];
+            return $contract['contractorName'];
         }
     }    
     return '';
@@ -438,5 +467,12 @@ function getContractData($lst, $pid) {
     return '';
 }
 
+/**
+ * 対象ステータスで値表示
+ */
+function emptyStatus($status, $val) {
+    if($status === "解除（等価交換）" || $status === "解除" || $status === "メトロス買取済") return '';
+    return $val;
+}
 
 ?>
