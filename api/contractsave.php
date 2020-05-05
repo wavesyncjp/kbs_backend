@@ -67,7 +67,7 @@ if(isset($param->details)){
 		foreach($param->locations as $loc) {			
 			if($detailSave->locationInfoPid == $loc->locationInfoPid) {								
 				//契約詳細削除->仕入契約登記人情報削除
-				if($action == 2 || $detailSave->contractDataType === '02') {					
+				if($action === 2 || $detailSave->contractDataType === '02') {					
 
 					$regist = ORM::for_table(TBLCONTRACTREGISTRANT)
 									->where('contractDetailInfoPid', $detailSave->pid)

@@ -12,7 +12,7 @@ $param = json_decode($postparam);
 
 ORM::get_db()->beginTransaction();
 //更新
-if($param->pid > 0){
+if(isset($param->pid) && $param->pid > 0){
 	$loc = ORM::for_table(TBLLOCATIONINFO)->find_one($param->pid);
 	setUpdate($loc, $param->updateUserId);
 }

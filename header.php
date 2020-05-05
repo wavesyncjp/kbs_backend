@@ -44,7 +44,8 @@ ORM::configure('id_column_overrides', array(
 		'tblplanrentrolldetail' => 'pid',		
 		'tbltax'=>'pid',
 		'tblbukkenplaninfo' =>'pid',
-		'tblbukkensalesinfo'=>'pid'
+		'tblbukkensalesinfo'=>'pid',
+		'tblcontracttypefix'=>'pid'
 ) );
 
 $FILE_PATH = 'uploads';
@@ -78,5 +79,7 @@ define('TBLPLANRENTROLLDETAIL', 'tblplanrentrolldetail');
 define('TBLTAX', 'tbltax');
 define('TBLBUKKENPLANINFO', 'tblbukkenplaninfo');
 define('TBLBUKKENSALESINFO', 'tblbukkensalesinfo');
+
+define('TBLCONTRACTTYPEFIX', 'tblcontracttypefix');
 
 ?>

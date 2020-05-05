@@ -1,6 +1,11 @@
 <?php
 require '../header.php';
 
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+	echo 'NOT SUPPORT';
+	exit;
+}
+
 $postparam = file_get_contents("php://input");
 
 $param = json_decode($postparam);

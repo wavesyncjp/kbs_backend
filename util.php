@@ -162,7 +162,7 @@ function bindCell($cellName, $sheet, $keywords, $vals) {
 
     if(is_array($keywords)) {
         for($i = 0; $i < sizeof($keywords); $i++) {
-            $str = str_replace('$'. $keywords[$i] . '$', $vals[$i], $str);
+            $str = str_replace('$'. $keywords[$i] . '$', isset($vals[$i])? $vals[$i] : '' , $str);
         }
     }    
     else {
@@ -360,10 +360,12 @@ function getRegistrants($details, $loc) {
 		$ids[] = $regist['sharerInfoPid'];
 	}
 
-	$lst = ORM::for_table(TBLSHARERINFO)->where_in('pid', $ids)->order_by_asc('pid')->select('sharer')->findArray();
-	foreach($lst as $item) {
-		$ret[] = $item['sharer'];
-	}
+	if(sizeof($ids) > 0) {
+		$lst = ORM::for_table(TBLSHARERINFO)->where_in('pid', $ids)->order_by_asc('pid')->select('sharer')->findArray();
+		foreach($lst as $item) {
+			$ret[] = $item['sharer'];
+		}
+	}	
 	return $ret;
 }
 
@@ -528,6 +530,16 @@ function notNull($val) {
 
 function equalVal($obj, $key, $val) {
 	return isset($obj[$key]) && $obj[$key] == $val;
+}
+
+function showDay($day) {
+	if(isset($day) && $day !== '') {
+		$val = date('Y年m月d日', strtotime($day));
+	}
+	else {
+		$val = '';
+	}
+	return $val;
 }
 
 ?>
