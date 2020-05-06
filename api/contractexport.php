@@ -681,7 +681,7 @@ if(sizeof($locs) > 0) {
         $loc = $locs[$cursor];
 
         //登記名義人
-        $regists = getRegistrants($contract['details'], $loc);
+        $regists = getSharers($loc);
 
         $keyword = 'p_address';
         $pos = searchCellPos($sheet, $keyword, $pos);

@@ -369,6 +369,20 @@ function getRegistrants($details, $loc) {
 	return $ret;
 }
 
+
+/**
+ * ロケーションのSharer
+ */
+function getSharers($loc) {
+	$ret = [];
+	
+	$lst = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $loc['pid'])->order_by_asc('pid')->select('sharer')->findArray();
+	foreach($lst as $item) {
+		$ret[] = $item['sharer'];
+	}
+	return $ret;
+}
+
 /**
  * 支払管理情報取得
  * @param unknown $pid
