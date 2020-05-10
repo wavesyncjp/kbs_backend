@@ -104,14 +104,14 @@ foreach($contracts as $contract) {
 
     $sheet->setCellValue('J'.$contractPos, emptyStatus($status, $contract['decisionPrice'])); //決済代金
     $sheet->setCellValue('L'.$contractPos, emptyStatus($status, $contract['fixedTax'])); //固都税清算金
-    //引渡期日
+    $sheet->setCellValue('M'.$contractPos, emptyStatus($status, convert_jpdt($contract['deliveryFixedDay']))); //引渡期日
     $sheet->setCellValue('N'.$contractPos, emptyStatus($status, convert_jpdt($contract['decisionDay']))); //決済日
 
     $promptDecideFlg = '';
     if($status === "解除（等価交換）" || $status === "解除") $promptDecideFlg = '';
+    else if($status === 'メトロス買取済') $promptDecideFlg = '（旧所有者：' . $contractors[0] . '）';
     else if ($contract['promptDecideFlg'] == '0') $promptDecideFlg = '無';
-    else if ($contract['promptDecideFlg'] == '1') $promptDecideFlg = '有';
-    else $promptDecideFlg = '（旧所有者：' . $contractors[0] . '）';
+    else if ($contract['promptDecideFlg'] == '1') $promptDecideFlg = '有';    
         
     $sheet->setCellValue('O'.$contractPos, $promptDecideFlg); //即決和解の有無等
 
@@ -231,10 +231,12 @@ foreach($contracts as $contract) {
         $clonedWorksheet->getStyle('I'.$contractPos)->getAlignment()->setWrapText(true);
         $clonedWorksheet->setCellValue('J'.$contractPos, $contract['tradingBalance']); //残代金
         $clonedWorksheet->setCellValue('L'.$contractPos, $contract['fixedTax']); //固都税清算金
-        //残代金支払期日
-        //支払完了日
-        $clonedWorksheet->setCellValue('O'.$contractPos, $data['area']); //売買面積（㎡）
-        $clonedWorksheet->getStyle('O'.$contractPos)->getAlignment()->setWrapText(true); 
+        $clonedWorksheet->setCellValue('M'.$contractPos, convert_jpdt($contract['decisionDay'])); //支払完了日
+        $clonedWorksheet->setCellValue('N'.$contractPos, $contract['retainage']); //留保金
+        $clonedWorksheet->setCellValue('O'.$contractPos, convert_jpdt($contract['vacationDay'])); //明渡期日
+        $clonedWorksheet->setCellValue('P'.$contractPos, convert_jpdt($contract['retainageDay'])); //留保金支払（明渡）日
+        $clonedWorksheet->setCellValue('Q'.$contractPos, $data['area']); //売買面積（㎡）
+        $clonedWorksheet->getStyle('Q'.$contractPos)->getAlignment()->setWrapText(true); 
 
         //手数料等費用一覧
         $payPos = 9;
