@@ -37,10 +37,21 @@ if(isset($param->address) && $param->address != ''){
 	$query = $query->where_like('p2.address', '%'.$param->address.'%');
 }
 
-if(isset($param->pickDate) && $param->pickDate != ''){
-	$query = $query->where_raw(" TIMESTAMPDIFF(day, p1.pickDate, '" . $param->pickDate . "') <= 0");
+//情報収集日(pickDate)
+if(isset($param->pickDate_From) && $param->pickDate_From != ''){
+	$query = $query->where_gte('p1.pickDate', date_format(date_create($param->pickDate_From), 'Ymd'));
+}
+if(isset($param->pickDate_To) && $param->pickDate_To != ''){
+	$query = $query->where_lte('p1.pickDate', date_format(date_create($param->pickDate_To), 'Ymd'));
 }
 
+//測量依頼日(surveyRequestedDay)
+if(isset($param->surveyRequestedDay_From) && $param->surveyRequestedDay_From != ''){
+	$query = $query->where_gte('p1.surveyRequestedDay', date_format(date_create($param->surveyRequestedDay_From), 'Ymd'));
+}
+if(isset($param->surveyRequestedDay_To) && $param->surveyRequestedDay_To != ''){
+	$query = $query->where_lte('p1.surveyRequestedDay', date_format(date_create($param->surveyRequestedDay_To), 'Ymd'));
+}
 
 $lands = $query->find_array();
 $ret = array();
