@@ -53,7 +53,7 @@ if(isset($param->surveyRequestedDay_To) && $param->surveyRequestedDay_To != ''){
 	$query = $query->where_lte('p1.surveyRequestedDay', date_format(date_create($param->surveyRequestedDay_To), 'Ymd'));
 }
 
-$lands = $query->find_array();
+$lands = $query->order_by_desc('pid')->find_array();
 $ret = array();
 foreach($lands as $land){
 
