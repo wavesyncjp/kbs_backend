@@ -38,19 +38,19 @@ if(isset($param->address) && $param->address != ''){
 }
 
 //情報収集日(pickDate)
-if(isset($param->pickDate_From) && $param->pickDate_From != ''){
-	$query = $query->where_gte('p1.pickDate', $param->pickDate_From);
+if(isset($param->pickDateSearch_From) && $param->pickDateSearch_From != ''){
+	$query = $query->where_gte('p1.pickDate', $param->pickDateSearch_From);
 }
-if(isset($param->pickDate_To) && $param->pickDate_To != ''){
-	$query = $query->where_lte('p1.pickDate', $param->pickDate_To);
+if(isset($param->pickDateSearch_To) && $param->pickDateSearch_To != ''){
+	$query = $query->where_lte('p1.pickDate', $param->pickDateSearch_To);
 }
 
 //測量依頼日(surveyRequestedDay)
-if(isset($param->surveyRequestedDay_From) && $param->surveyRequestedDay_From != ''){
-	$query = $query->where_gte('p1.surveyRequestedDay', $param->surveyRequestedDay_From);
+if(isset($param->surveyRequestedDaySearch_From) && $param->surveyRequestedDaySearch_From != ''){
+	$query = $query->where_gte('p1.surveyRequestedDay', $param->surveyRequestedDaySearch_From);
 }
-if(isset($param->surveyRequestedDay_To) && $param->surveyRequestedDay_To != ''){
-	$query = $query->where_lte('p1.surveyRequestedDay', $param->surveyRequestedDay_To);
+if(isset($param->surveyRequestedDaySearch_To) && $param->surveyRequestedDaySearch_To != ''){
+	$query = $query->where_lte('p1.surveyRequestedDay', $param->surveyRequestedDaySearch_To);
 }
 
 $lands = $query->order_by_desc('pid')->find_array();
