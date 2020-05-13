@@ -189,6 +189,8 @@ foreach($payList2 as $payDetail) {
         $sheet->setCellValue('I'.$payPos, convert_jpdt($payDetail['contractFixDay']));
     }     
     $sheet->setCellValue('J'.$payPos, $payDetail['detailRemarks']); //備考
+
+    $payPos++;
 }
 
 //ﾒﾄﾛｽ買取シート
@@ -278,7 +280,7 @@ $spreadsheet->removeSheetByIndex(1);
 
 
 //保存
-$filename = date("YmdHis") . 'xlsx';
+$filename = "売買取引管理表_" . date("YmdHis") . 'xlsx';
 $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 $savePath = $fullPath.'/'.$filename;
 $writer->save($savePath);
