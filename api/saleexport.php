@@ -57,6 +57,7 @@ foreach($sales as $sale) {
 
 //契約ブロック
 $contractPos = 12 + 5 * (sizeof($sales) - 1);
+$firstContractPos = $contractPos;
 if(sizeof($contracts) > 1) {
     copyBlockWithValue($sheet, $contractPos, 1, sizeof($contracts) - 1, 20);
 }
@@ -119,11 +120,15 @@ foreach($contracts as $contract) {
     $sheet->setCellValue('Q'.$contractPos, emptyStatus($status, convert_jpdt($contract['vacationDay']))); //明渡期日
     $sheet->setCellValue('R'.$contractPos, emptyStatus($status, convert_jpdt($contract['retainageDay']))); //留保金支払（明渡）日
 
-    $sheet->setCellValue('S'.$contractPos, emptyStatus($status, $area)); //売買面積（㎡）
+    //$sheet->setCellValue('S'.$contractPos, emptyStatus($status, $area)); //売買面積（㎡）
+    $sheet->setCellValue('S'.$contractPos, $area); //売買面積（㎡）
     $sheet->getStyle('S'.$contractPos)->getAlignment()->setWrapText(true);   
 
     $contractPos++;
 }
+
+//合計の計算式
+$sheet->setCellValue('S'.$contractPos, '=SUM(S' . $firstContractPos . ':S' . ($contractPos - 1) .')');
 
 $sheet->setCellValue('P'.($contractPos + 2), getInfoOffer($bukken['infoOffer'])); //情報提供者
 
@@ -332,15 +337,15 @@ function getAddress($lst) {
 }
 
 function getArea($lst) {
-    $ret = [];
+    $ret = 0;
     if(isset($lst)) {
         foreach($lst as $data) {
             if(isset($data['area']) && $data['area'] != '') {
-                $ret[] = $data['area'];
+                $ret += $data['area'];
             }             
         }
     }
-    return implode(chr(10), $ret);
+    return $ret;
 }
 
 function getSellerName($contractPid) {
