@@ -14,7 +14,7 @@ if(isset($param->paymentName) && $param->paymentName !== ''){
 	$query = $query->where_like('paymentName', '%'.$param->paymentName.'%');
 }
 
-$ret = $query->find_array();
+$ret = $query->order_by_asc('paymentCode')->find_array();
 echo json_encode($ret);
 
 ?>
