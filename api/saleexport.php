@@ -128,6 +128,8 @@ foreach($contracts as $contract) {
 }
 
 //合計の計算式
+$sheet->setCellValue('G'.$contractPos, '=SUM(G' . $firstContractPos . ':G' . ($contractPos - 1) .')');
+$sheet->setCellValue('J'.$contractPos, '=SUM(J' . $firstContractPos . ':K' . ($contractPos - 1) .')');
 $sheet->setCellValue('S'.$contractPos, '=SUM(S' . $firstContractPos . ':S' . ($contractPos - 1) .')');
 
 $sheet->setCellValue('P'.($contractPos + 2), getInfoOffer($bukken['infoOffer'])); //情報提供者
@@ -136,6 +138,7 @@ $sheet->setCellValue('P'.($contractPos + 2), getInfoOffer($bukken['infoOffer']))
 $payList1 = [];
 $payList2 = [];
 $payPos = $contractPos + 5;
+$firstPayPos = $payPos;
 foreach($payContracts as $pay) {
     $details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $pay['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
     if(isset($details) && sizeof($details) > 0) {
@@ -175,8 +178,12 @@ foreach($payList1 as $payDetail) {
     $payPos++;
 }
 
+//合計の計算式
+$sheet->setCellValue('H'.$payPos, '=SUM(H' . $firstPayPos . ':H' . ($payPos - 1) .')');
+
 //水道光熱費
 $payPos += 4;
+$firstPayPos = $payPos;
 if(sizeof($payList2) > 1) {
     copyBlockWithValue($sheet, $payPos, 1, sizeof($payList2) - 1, 20);
 }
@@ -197,6 +204,9 @@ foreach($payList2 as $payDetail) {
 
     $payPos++;
 }
+
+//合計の計算式
+$sheet->setCellValue('G'.$payPos, '=SUM(G' . $firstPayPos . ':G' . ($payPos - 1) .')');
 
 //ﾒﾄﾛｽ買取シート
 $hasBaikai = false;
@@ -236,7 +246,7 @@ foreach($contracts as $contract) {
         $clonedWorksheet->getStyle('H'.$contractPos)->getAlignment()->setWrapText(true);
         $clonedWorksheet->setCellValue('I'.$contractPos, getDepositDay2($contract)); //内金（手付）支払日
         $clonedWorksheet->getStyle('I'.$contractPos)->getAlignment()->setWrapText(true);
-        $clonedWorksheet->setCellValue('J'.$contractPos, $contract['tradingBalance']); //残代金
+        $clonedWorksheet->setCellValue('J'.$contractPos, $contract['decisionPrice']); //決済代金
         $clonedWorksheet->setCellValue('L'.$contractPos, $contract['fixedTax']); //固都税清算金
         $clonedWorksheet->setCellValue('M'.$contractPos, convert_jpdt($contract['decisionDay'])); //支払完了日
         $clonedWorksheet->setCellValue('N'.$contractPos, $contract['retainage']); //留保金
