@@ -124,6 +124,19 @@ foreach($contracts as $contract) {
     $sheet->setCellValue('S'.$contractPos, $area); //売買面積（㎡）
     $sheet->getStyle('S'.$contractPos)->getAlignment()->setWrapText(true);   
 
+    //塗りつぶし・文字色
+    if($status === 'メトロス買取済') {
+        //塗りつぶし：黄色
+        $sheet->getStyle('C'.$contractPos.':S'.$contractPos)->getFill()
+              ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('FFFFCC');                        
+    }
+    else if($status === "解除（等価交換）" || $status === "解除") {
+        //塗りつぶし：グレー
+        $sheet->getStyle('C'.$contractPos.':S'.$contractPos)->getFill()
+              ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('BFBFBF');
+        $sheet->getStyle('C'.$contractPos)->getFont()->getColor()->applyFromArray(['rgb' => 'FF0000']);
+    }
+
     $contractPos++;
 }
 
@@ -169,6 +182,12 @@ foreach($payList1 as $payDetail) {
     //支払日
     if(isCancel($newList, $payDetail)) {
         $sheet->setCellValue('K'.$payPos, '解除');
+
+        //塗りつぶしグレーかつ、赤文字
+        $sheet->getStyle('K'.$payPos)->getFill()
+              ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('BFBFBF');
+        $sheet->getStyle('K'.$payPos)->getFont()->getColor()->applyFromArray(['rgb' => 'FF0000']);
+
     }
     else {
         $sheet->setCellValue('K'.$payPos, convert_jpdt($payDetail['contractFixDay']));
@@ -196,6 +215,11 @@ foreach($payList2 as $payDetail) {
     //支払日
     if(isCancel($newList, $payDetail)) {
         $sheet->setCellValue('I'.$payPos, '解除');
+
+        //塗りつぶしグレーかつ、赤文字
+        $sheet->getStyle('I'.$payPos)->getFill()
+              ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('BFBFBF');
+        $sheet->getStyle('I'.$payPos)->getFont()->getColor()->applyFromArray(['rgb' => 'FF0000']);
     }
     else {
         $sheet->setCellValue('I'.$payPos, convert_jpdt($payDetail['contractFixDay']));
@@ -223,10 +247,12 @@ foreach($contracts as $contract) {
     $hasBaikai = true;
     
     //契約者をループ
-    $nameList = explode('、', $names);
-    foreach($nameList as $name) {
+    //$nameList = explode('、', $names);
+    $newName = str_replace('、', '・', $names);
+    //foreach($nameList as $name) 
+    {
         $clonedWorksheet = clone $spreadsheet->getSheet(1);
-        $clonedWorksheet->setTitle('ﾒﾄﾛｽ買取(' . $name . '様)');
+        $clonedWorksheet->setTitle('ﾒﾄﾛｽ買取(' . $newName . '様)');
         $spreadsheet->addSheet($clonedWorksheet);
 
         $clonedWorksheet->setCellValue("A2", $bukken['contractBukkenNo']);
