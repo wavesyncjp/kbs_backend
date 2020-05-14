@@ -475,11 +475,13 @@ function searchCellPos($sheet, $keyword, $startPos) {
 	}
 	$str = $sheet->getCell('A'.$startPos)->getValue();
 	
+	$loop = 0;
 	$hasKeyword = false;
 	do {
 		if(!isset($str) || $str === '' || strpos($str, $keyword) === false) {
 			$startPos++;
-			$str = $sheet->getCell('A'.$startPos)->getValue();			
+			$str = $sheet->getCell('A'.$startPos)->getValue();		
+			$loop++;	
 		}
 		else {		
 			$hasKeyword = true;	
@@ -487,7 +489,7 @@ function searchCellPos($sheet, $keyword, $startPos) {
 		}
 		
 	}
-	while(!$hasKeyword || $startPos < 450);
+	while((!$hasKeyword || $startPos < 450) && $loop < 100);
 
 	if(!$hasKeyword) {
 		return -1;

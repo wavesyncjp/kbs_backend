@@ -183,6 +183,7 @@ if(sizeof($detailIds) > 0) {
     $count = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('buildingNotyet', 1)->where_null('deleteDate')->count();
 }
 //$specialTerms7_start$
+if($pos < 200) $pos = 200;
 $keyword = 'specialTerms7_start';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
 $keyword = 'specialTerms7_end';
