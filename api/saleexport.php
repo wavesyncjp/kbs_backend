@@ -56,6 +56,7 @@ foreach($sales as $sale) {
 }
 //データが存在しない場合
 if(sizeof($sales) == 0) {
+    $sheet->setCellValue("C".$pos, '');
     $sheet->setCellValue("F".$pos, '');
     $sheet->setCellValue("I".$pos, '');
     $sheet->setCellValue("J".$pos, '');
@@ -72,7 +73,7 @@ if(sizeof($sales) == 0) {
 }
 
 //契約ブロック
-$contractPos = 12 + 5 * (sizeof($sales) - 1);
+$contractPos = 12 + 5 * (sizeof($sales) >= 1 ? sizeof($sales) - 1 : 1);
 $firstContractPos = $contractPos;
 if(sizeof($contracts) > 1) {
     copyBlockWithValue($sheet, $contractPos, 1, sizeof($contracts) - 1, 20);
