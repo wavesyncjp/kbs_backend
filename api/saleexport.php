@@ -376,14 +376,14 @@ foreach($contracts as $contract) {
         }
         //データが存在しない場合
         if(sizeof($subPayList) == 0) {
-            $sheet->setCellValue('C'.$payPos, ''); //支払先
-            $sheet->setCellValue('F'.$payPos, ''); //摘要
-            $sheet->setCellValue('G'.$payPos, ''); //支払金額
-            $sheet->setCellValue('H'.$payPos, ''); //支払時期
-            $sheet->setCellValue('I'.$payPos, ''); //支払予定日
-            $sheet->setCellValue('J'.$payPos, ''); //支払日
-            $sheet->setCellValue('K'.$payPos, ''); //契約者
-            $sheet->setCellValue('N'.$payPos, ''); //備考
+            $clonedWorksheet->setCellValue('C'.$payPos, ''); //支払先
+            $clonedWorksheet->setCellValue('F'.$payPos, ''); //摘要
+            $clonedWorksheet->setCellValue('G'.$payPos, ''); //支払金額
+            $clonedWorksheet->setCellValue('H'.$payPos, ''); //支払時期
+            $clonedWorksheet->setCellValue('I'.$payPos, ''); //支払予定日
+            $clonedWorksheet->setCellValue('J'.$payPos, ''); //支払日
+            $clonedWorksheet->setCellValue('K'.$payPos, ''); //契約者
+            $clonedWorksheet->setCellValue('N'.$payPos, ''); //備考
             $payPos++;
         }
     }
