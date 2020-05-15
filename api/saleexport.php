@@ -73,7 +73,7 @@ if(sizeof($sales) == 0) {
 }
 
 //契約ブロック
-$contractPos = 12 + 5 * (sizeof($sales) >= 1 ? sizeof($sales) - 1 : 1);
+$contractPos = 12 + 5 * (sizeof($sales) >= 1 ? sizeof($sales) - 1 : 0);
 $firstContractPos = $contractPos;
 if(sizeof($contracts) > 1) {
     copyBlockWithValue($sheet, $contractPos, 1, sizeof($contracts) - 1, 20);
@@ -374,12 +374,23 @@ foreach($contracts as $contract) {
             $clonedWorksheet->setCellValue('N'.$payPos, $payDetail['detailRemarks']); //備考
             $payPos++;
         }
+        //データが存在しない場合
+        if(sizeof($subPayList) == 0) {
+            $sheet->setCellValue('C'.$payPos, ''); //支払先
+            $sheet->setCellValue('F'.$payPos, ''); //摘要
+            $sheet->setCellValue('G'.$payPos, ''); //支払金額
+            $sheet->setCellValue('H'.$payPos, ''); //支払時期
+            $sheet->setCellValue('I'.$payPos, ''); //支払予定日
+            $sheet->setCellValue('J'.$payPos, ''); //支払日
+            $sheet->setCellValue('K'.$payPos, ''); //契約者
+            $sheet->setCellValue('N'.$payPos, ''); //備考
+            $payPos++;
+        }
     }
 }
 
 //コピー元買取シート削除
 $spreadsheet->removeSheetByIndex(1);
-
 
 //保存
 $filename = "売買取引管理表_" . date("YmdHis") . 'xlsx';
