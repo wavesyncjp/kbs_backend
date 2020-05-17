@@ -21,7 +21,7 @@ header("Expires: 0");
 
 
 $fullPath  = __DIR__ . '/../template';
-$filePath = $fullPath.'/売買契約.xlsx'; 
+//$filePath = $fullPath.'/売買契約.xlsx'; 
 $filePath = $fullPath.$template['reportFormPath'].$template['reportFormName'];
 
 //Excel操作
