@@ -18,7 +18,7 @@ $csvDetails = ORM::for_table(TBLCSVINFODETAIL)->where('csvCode', $param->csvCode
 
 $columns = [];
 foreach($csvDetails as $csvDetail) {
-    $columns[] = $csvDetail['itemTable'].'.'.$csvDetail['itemColumn'];
+    $columns[] = strtolower($csvDetail['itemTable']).'.'.$csvDetail['itemColumn'];
 }
 
 //地権者一覧
