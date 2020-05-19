@@ -37,17 +37,27 @@ $rows = array();
 
 $ret = [];
 
+//ヘッダー
+$header = [];
+foreach($csvDetails as $csvDetail) {
+    $header[] = $csvDetail['itemName'];
+}
+$ret[] = implode(',', $header);
+
+//データ取得
 while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
     
     $line = convertCsv($row, $csvDetails);
     $ret[] = implode(',', $line);
 }
 
+//行結合
 $csv = array('data' => implode('\r\n', $ret));
 
 echo json_encode($csv);
 exit;
 
+//データ変換
 function convertCsv($row, $csvDetails) {
     $ret = [];
     foreach($csvDetails as $csvDetail) {
