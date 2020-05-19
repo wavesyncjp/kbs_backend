@@ -27,7 +27,8 @@ if($param->csvCode == '0102') {
             INNER JOIN tbllocationinfo ON tblsharerinfo.locationInfoPid = tbllocationinfo.pid
             INNER JOIN tbltemplandinfo ON tblsharerinfo.tempLandInfoPid = tbltemplandinfo.pid 
                     AND tbllocationinfo.tempLandInfoPid = tbltemplandinfo.pid
-            WHERE tblsharerinfo.tempLandInfoPid = 19';
+            WHERE tblsharerinfo.tempLandInfoPid IN (' . $param->ids . ') 
+            ORDER BY tblsharerinfo.tempLandInfoPid, tblsharerinfo.locationInfoPid';
 }
 
 $res = ORM::raw_execute($query);
