@@ -489,7 +489,7 @@ function searchCellPos($sheet, $keyword, $startPos) {
 		}
 		
 	}
-	while((!$hasKeyword || $startPos < 450) && $loop < 100);
+	while((!$hasKeyword || $startPos < 450) && $loop < 200);
 
 	if(!$hasKeyword) {
 		return -1;
