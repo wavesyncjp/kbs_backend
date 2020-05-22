@@ -12,18 +12,18 @@ $sale = json_decode($postparam);
 
 
 if(isset($sale->deleteUserId) && $sale->deleteUserId > 0) {
-    ORM::for_table(TBLBUKKENSALESINFO)->find_one($sale->pid)->delete();			
+    ORM::for_table(TBLBUKKENSALESINFO)->find_one($sale->pid)->delete();
 }
 else {
     if(isset($sale->pid) && $sale->pid > 0){
         $saleSave = ORM::for_table(TBLBUKKENSALESINFO)->find_one($sale->pid);
-        setUpdate($saleSave, $sale->updateUserId);			
+        setUpdate($saleSave, $sale->updateUserId);
     }
     else {
         $saleSave = ORM::for_table(TBLBUKKENSALESINFO)->create();
-        setInsert($saleSave, isset($sale->updateUserId) && $sale->updateUserId ? $sale->updateUserId : $sale->createUserId);			
-    }		
-    copyData($sale, $saleSave, array('pid', 'salesContractDayMap', 'salesContractSchDayMap', 'salesDecisionSchDayMap', 'salesDecisionDayMap'));		
+        setInsert($saleSave, isset($sale->updateUserId) && $sale->updateUserId ? $sale->updateUserId : $sale->createUserId);
+    }
+    copyData($sale, $saleSave, array('pid', 'salesContractDayMap', 'salesContractSchDayMap', 'salesDecisionSchDayMap', 'salesDecisionDayMap', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
     $saleSave->save();
 }
 

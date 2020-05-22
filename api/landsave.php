@@ -27,7 +27,7 @@ else {
 }
 
 
-copyData($param, $land, array('pid', 'bukkenNo', 'locations', 'mapFiles', 'attachFiles'));
+copyData($param, $land, array('pid', 'bukkenNo', 'locations', 'mapFiles', 'attachFiles', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 $land->save();
 
 echo json_encode(getLandInfo($land->pid));
