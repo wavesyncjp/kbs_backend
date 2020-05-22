@@ -32,7 +32,7 @@ else {
 }
 
 
-copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'sellers', 'locations', 'contractFiles'));
+copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'sellers', 'locations', 'contractFiles', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 $contract->save();
 
 //契約詳細
@@ -44,30 +44,30 @@ if(isset($param->details)){
 		if(isset($detail->deleteUserId) && $detail->deleteUserId > 0) {
 			$detailSave = ORM::for_table(TBLCONTRACTDETAILINFO)->find_one($detail->pid);
 			$detailSave->delete();	
-			$action = 2;		
+			$action = 2;
 		}
 		else {
 			if(isset($detail->pid) && $detail->pid > 0){
 				$detailSave = ORM::for_table(TBLCONTRACTDETAILINFO)->find_one($detail->pid);
 				setUpdate($detailSave, $param->updateUserId);
-				$action = 1;			
+				$action = 1;
 			}
 			else {
 				$detailSave = ORM::for_table(TBLCONTRACTDETAILINFO)->create();
-				setInsert($detailSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
+				setInsert($detailSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);
 				$action = 0;
 			}		
-			copyData($detail, $detailSave, array('pid', 'deleteUserId', 'registrants'));		
+			copyData($detail, $detailSave, array('pid', 'deleteUserId', 'registrants', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 			$detailSave->contractInfoPid = $contract->pid;
 			$detailSave->save();
 		}
 		
 		//仕入契約登記人情報
 		
-		foreach($param->locations as $loc) {			
-			if($detailSave->locationInfoPid == $loc->locationInfoPid) {								
+		foreach($param->locations as $loc) {
+			if($detailSave->locationInfoPid == $loc->locationInfoPid) {
 				//契約詳細削除->仕入契約登記人情報削除
-				if($action === 2 || $detailSave->contractDataType === '02') {					
+				if($action === 2 || $detailSave->contractDataType === '02') {
 
 					$regist = ORM::for_table(TBLCONTRACTREGISTRANT)
 									->where('contractDetailInfoPid', $detailSave->pid)
@@ -75,14 +75,14 @@ if(isset($param->details)){
 										
 				}
 				//契約詳細登録->仕入契約登記人情報登録
-				else if(sizeof($loc->sharerInfoPid) == 1) {				
+				else if(sizeof($loc->sharerInfoPid) == 1) {
 					$regist = ORM::for_table(TBLCONTRACTREGISTRANT)->where(array(
 						'contractInfoPid' => $detailSave->contractInfoPid,
 						'contractDetailInfoPid' => $detailSave->pid,
 						'sharerInfoPid' => $loc->sharerInfoPid[0]
 					))->findOne();
 
-					if(!isset($regist) || $regist == null) {						
+					if(!isset($regist) || $regist == null) {
 						$regist = ORM::for_table(TBLCONTRACTREGISTRANT)->create();
 						$regist->contractInfoPid = $detailSave->contractInfoPid;
 						$regist->contractDetailInfoPid = $detailSave->pid;
@@ -123,8 +123,8 @@ if(isset($param->details)){
 							setInsert($regist, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);
 							$regist->save();
 						}
-					}					
-				}				
+					}
+				}
 
 				break;
 			}
@@ -136,24 +136,24 @@ if(isset($param->details)){
 
 //契約者
 if(isset($param->sellers)){
-	foreach ($param->sellers as $seller){		
+	foreach ($param->sellers as $seller){
 		//削除
 		if(isset($seller->deleteUserId) && $seller->deleteUserId > 0) {
-			ORM::for_table(TBLCONTRACTSELLERINFO)->find_one($seller->pid)->delete();			
+			ORM::for_table(TBLCONTRACTSELLERINFO)->find_one($seller->pid)->delete();
 		}
 		else {
 			if(isset($seller->pid) && $seller->pid > 0){
 				$sellerSave = ORM::for_table(TBLCONTRACTSELLERINFO)->find_one($seller->pid);
-				setUpdate($sellerSave, $param->updateUserId);			
+				setUpdate($sellerSave, $param->updateUserId);
 			}
 			else {
 				$sellerSave = ORM::for_table(TBLCONTRACTSELLERINFO)->create();
 				setInsert($sellerSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
-			}		
-			copyData($seller, $sellerSave, array('pid'));		
+			}
+			copyData($seller, $sellerSave, array('pid'));
 			$sellerSave->contractInfoPid = $contract->pid;
 			$sellerSave->save();
-		}		
+		}
 	}
 }
 
