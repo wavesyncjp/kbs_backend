@@ -4,7 +4,7 @@ require '../header.php';
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
-$query = ORM::for_table(TBLCODE);
+$query = ORM::for_table(TBLCODE)->where_null('deleteDate');
 
 if(isset($param->code)){
 	$query = $query->where_in('code', $param->code);
