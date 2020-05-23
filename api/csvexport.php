@@ -12,7 +12,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
-$csvInfo = ORM::for_table(TBLCSVINFO)->where('csvCode', $param->csvCode)->asArray();
+//$csvInfo = ORM::for_table(TBLCSVINFO)->where('csvCode', $param->csvCode)->asArray();
+$csvInfo = ORM::for_table(TBLCSVINFO)->where('csvCode', $param->csvCode)->find_one();
 
 $csvDetails = ORM::for_table(TBLCSVINFODETAIL)->where('csvCode', $param->csvCode)->order_by_asc('outputOrder')->findArray();
 
@@ -21,14 +22,46 @@ foreach($csvDetails as $csvDetail) {
     $columns[] = strtolower($csvDetail['itemTable']).'.'.$csvDetail['itemColumn'];
 }
 
-//地権者一覧
-if($param->csvCode == '0102') {
+// 対象テーブルが01:土地情報の場合
+if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '01') {
+    $query = 'SELECT ' . implode(',', $columns) . ' FROM tbltemplandinfo
+            WHERE tbltemplandinfo.pid IN (' . $param->ids . ')
+            ORDER BY tbltemplandinfo.pid';
+}
+// 対象テーブルが02:共有者情報の場合
+else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '02') {
     $query = 'SELECT ' . implode(',', $columns) . ' FROM tblsharerinfo
             INNER JOIN tbllocationinfo ON tblsharerinfo.locationInfoPid = tbllocationinfo.pid
-            INNER JOIN tbltemplandinfo ON tblsharerinfo.tempLandInfoPid = tbltemplandinfo.pid 
+            INNER JOIN tbltemplandinfo ON tblsharerinfo.tempLandInfoPid = tbltemplandinfo.pid
                     AND tbllocationinfo.tempLandInfoPid = tbltemplandinfo.pid
-            WHERE tblsharerinfo.tempLandInfoPid IN (' . $param->ids . ') 
+            WHERE tblsharerinfo.tempLandInfoPid IN (' . $param->ids . ')
             ORDER BY tblsharerinfo.tempLandInfoPid, tblsharerinfo.locationInfoPid';
+}
+// 対象テーブルが03:仕入契約情報の場合
+else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '03') {
+    $query = 'SELECT ' . implode(',', $columns) . ' FROM tblcontractinfo
+            INNER JOIN tbltemplandinfo ON tblcontractinfo.tempLandInfoPid = tbltemplandinfo.pid
+            WHERE tblsharerinfo.tempLandInfoPid IN (' . $param->ids . ')
+            AND EXISTS (
+                SELECT 1 FROM tblcontractdetailinfo
+                WHERE tblcontractinfo.tempLandInfoPid = tblcontractdetailinfo.tempLandInfoPid
+                AND tblcontractdetailinfo.contractDataType = \'01\'
+            )
+            ORDER BY tbltemplandinfo.pid, tblcontractinfo.contractNumber';
+}
+// 対象テーブルが04:支払契約詳細情報の場合
+else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '04') {
+    $query = 'SELECT ' . implode(',', $columns) . ' FROM tblpaycontractdetail
+            INNER JOIN tblpaycontract ON tblpaycontractdetail.payContractPid = tblpaycontract.pid
+            INNER JOIN tbltemplandinfo ON tblpaycontractdetail.tempLandInfoPid = tbltemplandinfo.pid
+            WHERE tblsharerinfo.tempLandInfoPid IN (' . $param->ids . ')
+            ORDER BY tblsharerinfo.tempLandInfoPid, tblsharerinfo.locationInfoPid';
+}
+// 対象テーブルが05:物件プラン情報の場合
+if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '05') {
+    $query = 'SELECT ' . implode(',', $columns) . ' FROM tbltemplandinfo
+            WHERE tbltemplandinfo.pid IN (' . $param->ids . ')
+            ORDER BY tbltemplandinfo.pid';
 }
 
 $res = ORM::raw_execute($query);
@@ -73,7 +106,7 @@ function convertCsv($row, $csvDetails) {
 function convertValue($val, $conversionType, $conversionCode) {
 
     if($conversionType == 1) {
-        return convertDate($val);    
+        return convertDate($val);
     }
 
     if($conversionType == 3) {
