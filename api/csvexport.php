@@ -54,8 +54,8 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
     $query = 'SELECT ' . implode(',', $columns) . ' FROM tblpaycontractdetail
             INNER JOIN tblpaycontract ON tblpaycontractdetail.payContractPid = tblpaycontract.pid
             INNER JOIN tbltemplandinfo ON tblpaycontractdetail.tempLandInfoPid = tbltemplandinfo.pid
-            WHERE tblsharerinfo.tempLandInfoPid IN (' . $param->ids . ')
-            ORDER BY tblsharerinfo.tempLandInfoPid, tblsharerinfo.locationInfoPid';
+            WHERE tblpaycontractdetail.pid IN (' . $param->ids . ')
+            ORDER BY tblpaycontractdetail.tempLandInfoPid, tblpaycontractdetail.pid';
 }
 // 対象テーブルが05:物件プラン情報の場合
 if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '05') {
