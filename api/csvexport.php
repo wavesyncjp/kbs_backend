@@ -58,7 +58,7 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
             ORDER BY tblpaycontractdetail.tempLandInfoPid, tblpaycontractdetail.pid';
 }
 // 対象テーブルが05:物件プラン情報の場合
-if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '05') {
+else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '05') {
     $query = 'SELECT ' . implode(',', $columns) . ' FROM tbltemplandinfo
             WHERE tbltemplandinfo.pid IN (' . $param->ids . ')
             ORDER BY tbltemplandinfo.pid';
