@@ -30,7 +30,7 @@ if(isset($param->bukkenName) && $param->bukkenName !== ''){
 }
 // 契約番号
 if(isset($param->contractNumber) && $param->contractNumber !== ''){
-	$raw = "(concat(p1.bukkenNo, '-', p2.contractNumber) LIKE  '%" . $param->contractNumber . "%')";
+	$raw = "(concat(p1.bukkenNo, '-', p2.contractNumber) LIKE  '" . $param->contractNumber . "%')";
     $query = $query->where_raw($raw);
 }
 // 明渡期日
