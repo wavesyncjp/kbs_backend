@@ -104,7 +104,7 @@ $ret = [];// 返却データ
 // ヘッダーを設定
 $header = [];
 foreach($csvDetails as $csvDetail) {
-    $header[] = $csvDetail['itemName'];
+    $header[] = '"' . $csvDetail['itemName'] . '"';
 }
 $ret[] = implode(',', $header);// 配列をカンマ区切りの文字列に変換
 
@@ -131,11 +131,11 @@ function convertCsv($row, $csvDetails) {
         
         // 複数区分に指定がある場合
         if($csvDetail['multipleType'] != '') {
-            $ret[] = convertValueMulti($row[$columnName], $csvDetail['multipleType'], $csvDetail['conversionType'], $csvDetail['conversionCode']);
+            $ret[] = '"' . convertValueMulti($row[$columnName], $csvDetail['multipleType'], $csvDetail['conversionType'], $csvDetail['conversionCode']) . '"';
         }
         // 複数区分に指定がない場合
         else {
-            $ret[] = convertValue($row[$columnName], $csvDetail['conversionType'], $csvDetail['conversionCode']);
+            $ret[] = '"' . convertValue($row[$columnName], $csvDetail['conversionType'], $csvDetail['conversionCode']) . '"';
         }
     }
     return $ret;
@@ -145,7 +145,7 @@ function convertCsv($row, $csvDetails) {
  * 値を変換（複数指定）
  */
 function convertValueMulti($val, $multipleType, $conversionType, $conversionCode) {
-    $lsts = explore(',', $val);// カンマ区切りの文字列を配列に変換
+    $lsts = explode(',', $val);// カンマ区切りの文字列を配列に変換
 
     $retVal = '';
 
