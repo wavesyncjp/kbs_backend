@@ -150,7 +150,7 @@ if(isset($param->sellers)){
 				$sellerSave = ORM::for_table(TBLCONTRACTSELLERINFO)->create();
 				setInsert($sellerSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
 			}
-			copyData($seller, $sellerSave, array('pid'));
+			copyData($seller, $sellerSave, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 			$sellerSave->contractInfoPid = $contract->pid;
 			$sellerSave->save();
 		}
