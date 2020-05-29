@@ -86,7 +86,7 @@ if($nextPos != -1) {
 $val = '';
 if(isset($contract['setlementPrice']) && $contract['setlementPrice'] !== '') {
     $val = $contract['setlementPrice'];
-    $val = $val / 1000;
+    $val = round($val / 1000, 4);
     $val = formatNumber($val, true);
 }
 

@@ -112,7 +112,7 @@ foreach($contracts as $contract) {
         $sheet->setCellValue('G'.$contractPos, ''); //金額
     }
     else {
-        $sheet->setCellValue('G'.$contractPos, $contract['tradingPrice']); //金額
+        $sheet->setCellValue('G'.$contractPos, $contract['tradingPrice'] > 0 ? "¥".number_format($contract['tradingPrice']) : ''); //金額
     }    
     $sheet->setCellValue('H'.$contractPos, $deposit); //内金（手付等）
     $sheet->getStyle('H'.$contractPos)->getAlignment()->setWrapText(true);
