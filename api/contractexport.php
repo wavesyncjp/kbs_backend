@@ -21,7 +21,7 @@ header("Expires: 0");
 
 
 $fullPath  = __DIR__ . '/../template';
-//$filePath = $fullPath.'/売買契約.xlsx'; 
+//$filePath = $fullPath.'/売買契約.xlsx';
 $filePath = $fullPath.$template['reportFormPath'].$template['reportFormName'];
 
 //Excel操作
@@ -79,43 +79,57 @@ if($nextPos != -1) {
         }
     }
 
-    bindCell('A'.$pos , $sheet, $keyword, $name);    
+    bindCell('A'.$pos , $sheet, $keyword, $name);
 }
 
+// 実測精算単価
+$val = '';
+if(isset($contract['setlementPrice']) && $contract['setlementPrice'] !== '') {
+    $val = $contract['setlementPrice'];
+    $val = $val / 1000;
+    $val = formatNumber($val, true);
+}
 
+$keyword = 'setlementPrice';
+$nextPos = searchCellPos($sheet, $keyword, $pos);
+if($nextPos != -1) {
+    $pos = $nextPos;
+    bindCell('A' . $pos, $sheet, $keyword, $val);
+}
+
+// 売買代金
 $keyword = 'tradingPrice';
 $nextPos = searchCellPos($sheet, $keyword , $pos);
 if($nextPos != -1) {
-    // 売買代金
     $pos = $nextPos;
-    bindCell('A' . $pos, $sheet, $keyword , formatNumber($contract[$keyword], true));    
+    bindCell('A' . $pos, $sheet, $keyword , formatNumber($contract[$keyword], true));
 }
 
+// 売買代金（土地）
 $keyword = 'tradingLandPrice';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
 if($nextPos != -1) {
-    // 売買代金（土地）
     $pos = $nextPos;
     bindCell('A'.$pos, $sheet, $keyword, formatNumber($contract[$keyword], true));
 }
 
+// 和解成立後
 $keyword = 'settlementAfter';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
 if($nextPos != -1) {
-    // 和解成立後
     $pos = $nextPos;
     bindCell('A' . $pos, $sheet, $keyword, $contract[$keyword]);
 }
 
+// 売買代金
 $keyword = 'tradingPrice';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
 if($nextPos != -1) {
-    // 売買代金
     $pos = $nextPos;
     bindCell('A' . $pos, $sheet, $keyword, formatNumber($contract[$keyword], true));
 }
 
-//明渡期日
+// 明渡期日
 $val = '';
 if(isset($contract['vacationDay']) && $contract['vacationDay'] !== '') {
     $val = date('Y年m月d日', strtotime($contract['vacationDay']));
@@ -130,14 +144,8 @@ if($nextPos != -1) {
     $pos = $nextPos;
     bindCell('A' . $pos, $sheet, $keyword, $val);
 }
-$nextPos = searchCellPos($sheet, $keyword, $pos);
-if($nextPos != -1) {
-    $pos = $nextPos;
-    bindCell('A' . $pos, $sheet, $keyword, $val);
-}
 
-
-//優先分譲面積
+// 優先分譲面積
 $keyword = 'prioritySalesArea';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
 if($nextPos != -1) {
@@ -145,7 +153,7 @@ if($nextPos != -1) {
     bindCell('A' . $pos, $sheet, $keyword, formatNumber($contract[$keyword], false));
 }
 
-//優先分譲戸数（階）
+// 優先分譲戸数（階）
 $keyword = 'prioritySalesFloor';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
 if($nextPos != -1) {
@@ -153,7 +161,7 @@ if($nextPos != -1) {
     bindCell('A' . $pos, $sheet, $keyword , formatNumber($contract[$keyword ], false));
 }
 
-//優先分譲予定価格
+// 優先分譲予定価格
 $keyword = 'prioritySalesPlanPrice';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
 if($nextPos != -1) {
@@ -161,10 +169,10 @@ if($nextPos != -1) {
     bindCell('A' . $pos, $sheet, $keyword, formatNumber($contract[$keyword], false));
 }
 
-//土地
-$belongIds = []; //不可分
-$detailIds = []; //売主
-$teichiIds = []; //底地
+// 土地
+$belongIds = []; // 不可分
+$detailIds = []; // 売主
+$teichiIds = []; // 底地
 foreach($contract['details'] as $detail) {
     if($detail['contractDataType'] == '01') {
         $detailIds[] = $detail['locationInfoPid'];
@@ -212,7 +220,7 @@ if($count > 0) {
     $matsubi1Comment[] = '※土地、　　　　　　　　　　　地番上に未登記建物あり';
 }
 else {
-    $sheet->removeRow($nextPos);        
+    $sheet->removeRow($nextPos);
 }
 $pos = $nextPos;
 
@@ -228,7 +236,7 @@ if(sizeof($sellers) >= 2) {
     bindCell('A' . $nextPos, $sheet, 'specialTerms9_1' , $str, false);
 }
 else {
-    $sheet->removeRow($nextPos);  
+    $sheet->removeRow($nextPos);
 }
 
 //specialTerms9_2
@@ -238,7 +246,7 @@ if(sizeof($sellers) >= 2) {
     bindCell('A' . $nextPos, $sheet, 'specialTerms9_2' , '', false);
 }
 else {
-    $sheet->removeRow($nextPos); 
+    $sheet->removeRow($nextPos);
 }
 $pos = $nextPos;
 
@@ -251,7 +259,7 @@ if(sizeof($sellers) > 0) {
         copyBlock($sheet, $pos, $blockCount, (sizeof($sellers) - 1));
     }    
     for($cursor = 0 ; $cursor < sizeof($sellers) ; $cursor++){
-        $seller = $sellers[$cursor];        
+        $seller = $sellers[$cursor];
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['contractorAddress', 'contractorName'], [$seller['contractorAdress'], $seller['contractorName']]);
         $pos += $blockCount;
@@ -305,7 +313,7 @@ else if($template['reportFormType'] == '04' || $template['reportFormType'] == '0
 $keyword = 'l_address';
 $pos = searchCellPos($sheet, $keyword, $pos);
 $blockCount = 6;
-if(isset($locs) && sizeof($locs) > 0) {    
+if(isset($locs) && sizeof($locs) > 0) {
 
     if(sizeof($locs) > 1) {
         copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
@@ -321,8 +329,8 @@ if(isset($locs) && sizeof($locs) > 0) {
         $keyword = 'l_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['l_address', 'blockNumber', 'landCategory', 'area', 'sharer'], 
-            [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area'], sizeof($regists) > 0 ?  $regists[0] : "" ]); 
+        bindCell($cellName, $sheet, ['l_address', 'blockNumber', 'landCategory', 'area', 'sharer'],
+            [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
 
         //[土地]文言削除
         if($cursor > 0) {
@@ -357,11 +365,11 @@ if(isset($locs) && sizeof($locs) > 0) {
     }
 }
 //土地荷主なし ->　削除
-else {    
-    //$sheet->removeRow($pos + $blockCount - 1); 
+else {
+    //$sheet->removeRow($pos + $blockCount - 1);
     for($i = 0 ; $i < $blockCount; $i++) {
-        $sheet->removeRow($pos);    
-    }        
+        $sheet->removeRow($pos);
+    }
 }
 
 
@@ -383,10 +391,10 @@ $keyword = 'b_address';
 $pos = searchCellPos($sheet, $keyword, $pos);
 $cellName = 'A' . $pos;
 $blockCount = 7;
-if(isset($locs) && sizeof($locs) > 0) {    
+if(isset($locs) && sizeof($locs) > 0) {
     if(sizeof($locs) > 1) {
         copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
-    }    
+    }
 
     //データ出力（ループ）
     for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++){
@@ -398,8 +406,8 @@ if(isset($locs) && sizeof($locs) > 0) {
         $keyword = 'b_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['b_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'], 
-            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), $loc['structure'], $loc['floorSpace'], sizeof($regists) > 0 ?  $regists[0] : "" ]); 
+        bindCell($cellName, $sheet, ['b_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
+            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), $loc['structure'], $loc['floorSpace'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
 
         //[土地]文言削除
         if($cursor > 0) {
@@ -430,17 +438,15 @@ if(isset($locs) && sizeof($locs) > 0) {
         else {
             $sheet->setCellValue('A' .  $pos, '');
         }
-
     }
 }
 //土地荷主なし
 else {
     //$sheet->removeRow($pos, $blockCount);
     for($i = 0 ; $i < $blockCount; $i++) {
-        $sheet->removeRow($pos);    
+        $sheet->removeRow($pos);
     }  
 }
-
 
 //（一棟の建物の表示）
 $keyword = 'ob_address';
@@ -466,15 +472,15 @@ if(sizeof($locs) > 0) {
         $keyword = 'ob_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], $loc['structure'], $loc['floorSpace']]); 
+        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], $loc['structure'], $loc['floorSpace']]);
     }
 
 }
 else {
     //$sheet->removeRow($pos-1, $blockCount+1);
     for($i = 0 ; $i < $blockCount + 1; $i++) {
-        $sheet->removeRow($pos-1);    
-    }     
+        $sheet->removeRow($pos-1);
+    }
 }
 
 //（専有部分の建物の表示）
@@ -483,7 +489,7 @@ $blockCount = 7;
 $pos = searchCellPos($sheet, $keyword, $pos);
 $locs = [];
 if(sizeof($detailIds) > 0 && $template['reportFormType'] != '01') {
-    $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();   
+    $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
 }
 if(sizeof($locs) > 0) {
 
@@ -501,8 +507,8 @@ if(sizeof($locs) > 0) {
         $keyword = 'p_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'], 
-            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), $loc['structure'], $loc['floorSpace'], sizeof($regists) > 0 ?  $regists[0] : "" ]); 
+        bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
+            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), $loc['structure'], $loc['floorSpace'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
 
         //登記名義人複数
         $pos = $pos + $blockCount - 1;
@@ -534,7 +540,7 @@ if(sizeof($locs) > 0) {
 else {
     //$sheet->removeRow($pos-1, $blockCount+1);
     for($i = 0 ; $i < $blockCount + 1; $i++) {
-        $sheet->removeRow($pos-1);    
+        $sheet->removeRow($pos-1);
     }    
 }
 
@@ -549,7 +555,7 @@ if(sizeof($matsubi1Comment) > 0) {
     }
     else {
         $sheet->setCellValue('A' . $pos, $matsubi1Comment[0]);
-    }    
+    }
 }
 else {
     $sheet->removeRow($pos+1);
@@ -566,7 +572,7 @@ if(sizeof($belongIds) > 0) {
 $keyword = 'fl_address';
 $pos = searchCellPos($sheet, $keyword, $pos);
 $blockCount = 4;
-if(isset($locs) && sizeof($locs) > 0) {    
+if(isset($locs) && sizeof($locs) > 0) {
 
     if(sizeof($locs) > 1) {
         copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
@@ -579,8 +585,8 @@ if(isset($locs) && sizeof($locs) > 0) {
         $keyword = 'fl_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['fl_address', 'blockNumber', 'landCategory', 'area'], 
-            [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area']]);         
+        bindCell($cellName, $sheet, ['fl_address', 'blockNumber', 'landCategory', 'area'],
+            [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area']]);
 
     }
 }
@@ -588,10 +594,9 @@ if(isset($locs) && sizeof($locs) > 0) {
 else {
     //$sheet->removeRow($pos - 1, $blockCount + 1);
     for($i = 0 ; $i < $blockCount + 1; $i++) {
-        $sheet->removeRow($pos-1);    
-    }    
+        $sheet->removeRow($pos-1);
+    }
 }
-
 
 //不可分所有地(建物)
 $locs = [];
@@ -601,7 +606,7 @@ if(sizeof($belongIds) > 0) {
 $keyword = 'fb_address';
 $pos = searchCellPos($sheet, $keyword, $pos);
 $blockCount = 5;
-if(isset($locs) && sizeof($locs) > 0) {    
+if(isset($locs) && sizeof($locs) > 0) {
 
     if(sizeof($locs) > 1) {
         copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
@@ -614,8 +619,8 @@ if(isset($locs) && sizeof($locs) > 0) {
         $keyword = 'fb_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['fb_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace'], 
-            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), $loc['structure'], $loc['floorSpace'] ]);         
+        bindCell($cellName, $sheet, ['fb_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace'],
+            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), $loc['structure'], $loc['floorSpace'] ]);
 
     }
 }
@@ -623,10 +628,9 @@ if(isset($locs) && sizeof($locs) > 0) {
 else {
     //$sheet->removeRow($pos - 1, $blockCount + 1);
     for($i = 0 ; $i < $blockCount + 1; $i++) {
-        $sheet->removeRow($pos-1);    
+        $sheet->removeRow($pos-1);
     }
 }
-
 
 //（一棟の建物の表示）
 $keyword = 'ob_address';
@@ -652,14 +656,13 @@ if(sizeof($locs) > 0) {
         $keyword = 'ob_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], $loc['structure'], $loc['floorSpace']]); 
+        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], $loc['structure'], $loc['floorSpace']]);
     }
-
 }
 else {
     //$sheet->removeRow($pos-1, $blockCount+1);
     for($i = 0 ; $i < $blockCount + 1; $i++) {
-        $sheet->removeRow($pos-1);    
+        $sheet->removeRow($pos-1);
     }
 }
 
@@ -669,7 +672,7 @@ $blockCount = 7;
 $pos = searchCellPos($sheet, $keyword, $pos);
 $locs = [];
 if(sizeof($belongIds) > 0) {
-    $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '04')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();   
+    $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '04')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
 }
 if(sizeof($locs) > 0) {
 
@@ -687,8 +690,8 @@ if(sizeof($locs) > 0) {
         $keyword = 'p_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'], 
-            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), $loc['structure'], $loc['floorSpace'], sizeof($regists) > 0 ?  $regists[0] : "" ]); 
+        bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
+            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), $loc['structure'], $loc['floorSpace'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
 
         //登記名義人複数
         $pos = $pos + $blockCount - 1;
@@ -719,7 +722,7 @@ if(sizeof($locs) > 0) {
 }
 else {
     for($i = 0 ; $i < $blockCount + 1; $i++) {
-        $sheet->removeRow($pos-1);    
+        $sheet->removeRow($pos-1);
     }
 }
 
@@ -727,15 +730,15 @@ else {
 if($contract['equiExchangeFlg'] == 1) {
     $keyword = 'siteArea';
     $pos = searchCellPos($sheet, $keyword, $pos);
-    bindCell('A' . $pos, $sheet, ['siteArea', 'siteAvailableArea'], [$contract['siteArea'], $contract['siteAvailableArea']]); 
+    bindCell('A' . $pos, $sheet, ['siteArea', 'siteAvailableArea'], [$contract['siteArea'], $contract['siteAvailableArea']]);
 
     $keyword = 'structure';
     $pos = searchCellPos($sheet, $keyword, $pos);
-    bindCell('A' . $pos, $sheet, 'structure', $contract['structure']); 
+    bindCell('A' . $pos, $sheet, 'structure', $contract['structure']);
 
     $keyword = 'scale';
     $pos = searchCellPos($sheet, $keyword, $pos);
-    bindCell('A' . $pos, $sheet, 'scale', $contract['scale']); 
+    bindCell('A' . $pos, $sheet, 'scale', $contract['scale']);
 
     $keyword = 'totalFloorArea';
     $pos = searchCellPos($sheet, $keyword, $pos);
@@ -766,7 +769,7 @@ else {
     $keyword = 'siteArea';
     $pos = searchCellPos($sheet, $keyword, $pos);
     for($i = 0 ; $i < 12; $i++) {
-        $sheet->removeRow($pos-1);    
+        $sheet->removeRow($pos-1);
     }
 }
 
