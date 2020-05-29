@@ -86,8 +86,9 @@ if($nextPos != -1) {
 $val = '';
 if(isset($contract['setlementPrice']) && $contract['setlementPrice'] !== '') {
     $val = $contract['setlementPrice'];
-    $val = round($val / 1000, 4);
-    $val = formatNumber($val, true);
+    $val = round($val / 10000, 4);
+    $val = number_format($val, 4);
+    $val = mb_convert_kana($val, 'KVRN');
 }
 
 $keyword = 'setlementPrice';
