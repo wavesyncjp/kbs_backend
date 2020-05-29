@@ -46,27 +46,27 @@ foreach($sales as $sale) {
     // 買主
     $sheet->setCellValue("F".$pos, $sale['salesName']);
     // 金額
-    $sheet->setCellValue("I".$pos, formatNumber($sale['salesTradingPrice']));
+    $sheet->setCellValue("I".$pos, "¥".formatNumber($sale['salesTradingPrice']));
     // 契約日
     $sheet->setCellValue("J".$pos, convert_jpdt($sale['salesContractDay']));
     // 決済日
     $sheet->setCellValue("K".$pos, convert_jpdt($sale['salesDecisionDay']));
     // 固都税清算金（土地）
-    $sheet->setCellValue("M".$pos, formatNumber($sale['salesFixedLandTax']));
+    $sheet->setCellValue("M".$pos, "¥".formatNumber($sale['salesFixedLandTax']));
     // 固都税清算金（建物）
-    $sheet->setCellValue("M".($pos + 1), formatNumber($sale['salesFixedBuildingTax']));
+    $sheet->setCellValue("M".($pos + 1), "¥".formatNumber($sale['salesFixedBuildingTax']));
     // 固都税清算金（消費税）
-    $sheet->setCellValue("M".($pos + 2), formatNumber($sale['salesFixedConsumptionTax']));
+    $sheet->setCellValue("M".($pos + 2), "¥".formatNumber($sale['salesFixedConsumptionTax']));
     // その他清算金１
-    $sheet->setCellValue("O".($pos + 0), formatNumber($sale['salesLiquidation1']));
+    $sheet->setCellValue("O".($pos + 0), "¥".formatNumber($sale['salesLiquidation1']));
     // その他清算金２
-    $sheet->setCellValue("O".($pos + 1), formatNumber($sale['salesLiquidation2']));
+    $sheet->setCellValue("O".($pos + 1), "¥".formatNumber($sale['salesLiquidation2']));
     // その他清算金３
-    $sheet->setCellValue("O".($pos + 2), formatNumber($sale['salesLiquidation3']));
+    $sheet->setCellValue("O".($pos + 2), "¥".formatNumber($sale['salesLiquidation3']));
     // その他清算金４
-    $sheet->setCellValue("O".($pos + 3), formatNumber($sale['salesLiquidation4']));
+    $sheet->setCellValue("O".($pos + 3), "¥".formatNumber($sale['salesLiquidation4']));
     // その他清算金５
-    $sheet->setCellValue("O".($pos + 4), formatNumber($sale['salesLiquidation5']));
+    $sheet->setCellValue("O".($pos + 4), "¥".formatNumber($sale['salesLiquidation5']));
     $pos += 5;
 }
 // データが存在しない場合
@@ -133,7 +133,7 @@ foreach($contracts as $contract) {
         $sheet->setCellValue('G'.$contractPos, '');
     }
     else {
-        $sheet->setCellValue('G'.$contractPos, formatNumber($contract['tradingPrice']));
+        $sheet->setCellValue('G'.$contractPos, "¥".formatNumber($contract['tradingPrice']));
     }
     // 内金（手付等）
     $sheet->setCellValue('H'.$contractPos, $deposit);
@@ -142,9 +142,9 @@ foreach($contracts as $contract) {
     $sheet->setCellValue('I'.$contractPos, $depositDay);
     $sheet->getStyle('I'.$contractPos)->getAlignment()->setWrapText(true);
     // 決済代金
-    $sheet->setCellValue('J'.$contractPos, emptyStatus($status, formatNumber($contract['decisionPrice'])));
+    $sheet->setCellValue('J'.$contractPos, emptyStatus($status, "¥".formatNumber($contract['decisionPrice'])));
     // 固都税清算金
-    $sheet->setCellValue('L'.$contractPos, emptyStatus($status, formatNumber($contract['fixedTax'])));
+    $sheet->setCellValue('L'.$contractPos, emptyStatus($status, "¥".formatNumber($contract['fixedTax'])));
     // 引渡期日
     $sheet->setCellValue('M'.$contractPos, emptyStatus($status, convert_jpdt($contract['deliveryFixedDay'])));
     // 決済日
@@ -157,7 +157,7 @@ foreach($contracts as $contract) {
     else if ($contract['promptDecideFlg'] == '1') $promptDecideFlg = '有';
     $sheet->setCellValue('O'.$contractPos, $promptDecideFlg);
     // 留保金
-    $sheet->setCellValue('P'.$contractPos, emptyStatus($status, formatNumber($contract['retainage'])));
+    $sheet->setCellValue('P'.$contractPos, emptyStatus($status, "¥".formatNumber($contract['retainage'])));
     // 明渡期日
     $sheet->setCellValue('Q'.$contractPos, emptyStatus($status, convert_jpdt($contract['vacationDay'])));
     // 留保金支払（明渡）日
@@ -247,9 +247,9 @@ foreach($payList1 as $payDetail) {
     // 摘要
     $sheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
     // 契約金額
-    $sheet->setCellValue('G'.$payPos, formatNumber($payDetail['contractPrice']));
+    $sheet->setCellValue('G'.$payPos, "¥".formatNumber($payDetail['contractPrice']));
     // 支払金額
-    $sheet->setCellValue('H'.$payPos, formatNumber($payDetail['payPrice']));
+    $sheet->setCellValue('H'.$payPos, "¥".formatNumber($payDetail['payPrice']));
     // 支払時期
     $sheet->setCellValue('I'.$payPos, $payDetail['paymentSeason']);
     // 支払予定日
@@ -301,7 +301,7 @@ foreach($payList2 as $payDetail) {
     // 摘要
     $sheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
     // 金額
-    $sheet->setCellValue('G'.$payPos, formatNumber($payDetail['payPrice']));
+    $sheet->setCellValue('G'.$payPos, "¥".formatNumber($payDetail['payPrice']));
     // 支払方法
     $sheet->setCellValue('H'.$payPos, getPayMethodName($payDetail['paymentMethod']));
     // 支払日
@@ -382,7 +382,7 @@ foreach($contracts as $contract) {
         // 契約日
         $clonedWorksheet->setCellValue('F'.$contractPos, convert_jpdt($contract['contractDay']));
         // 金額
-        $clonedWorksheet->setCellValue('G'.$contractPos, formatNumber($contract['tradingPrice']));
+        $clonedWorksheet->setCellValue('G'.$contractPos, "¥".formatNumber($contract['tradingPrice']));
         // 内金（手付等）
         $clonedWorksheet->setCellValue('H'.$contractPos, getDeposit2($contract));
         $clonedWorksheet->getStyle('H'.$contractPos)->getAlignment()->setWrapText(true);
@@ -390,13 +390,13 @@ foreach($contracts as $contract) {
         $clonedWorksheet->setCellValue('I'.$contractPos, getDepositDay2($contract));
         $clonedWorksheet->getStyle('I'.$contractPos)->getAlignment()->setWrapText(true);
         // 決済代金
-        $clonedWorksheet->setCellValue('J'.$contractPos, formatNumber($contract['decisionPrice']));
+        $clonedWorksheet->setCellValue('J'.$contractPos, "¥".formatNumber($contract['decisionPrice']));
         // 固都税清算金
-        $clonedWorksheet->setCellValue('L'.$contractPos, formatNumber($contract['fixedTax']));
+        $clonedWorksheet->setCellValue('L'.$contractPos, "¥".formatNumber($contract['fixedTax']));
         // 支払完了日
         $clonedWorksheet->setCellValue('M'.$contractPos, convert_jpdt($contract['decisionDay']));
         // 留保金
-        $clonedWorksheet->setCellValue('N'.$contractPos, formatNumber($contract['retainage']));
+        $clonedWorksheet->setCellValue('N'.$contractPos, "¥".formatNumber($contract['retainage']));
         // 明渡期日
         $clonedWorksheet->setCellValue('O'.$contractPos, convert_jpdt($contract['vacationDay']));
         // 留保金支払（明渡）日
@@ -423,7 +423,7 @@ foreach($contracts as $contract) {
             // 摘要
             $clonedWorksheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
             // 支払金額
-            $clonedWorksheet->setCellValue('G'.$payPos, formatNumber($payDetail['payPrice']));
+            $clonedWorksheet->setCellValue('G'.$payPos, "¥".formatNumber($payDetail['payPrice']));
             // 支払時期
             $clonedWorksheet->setCellValue('H'.$payPos, $payDetail['paymentSeason']);
             // 支払予定日
