@@ -312,6 +312,9 @@ foreach($contracts as $contract) {
     //契約者をループ
     //$nameList = explode('、', $names);
     $newName = str_replace('、', '・', $names);
+    if(strlen($newName) > 22) {
+        $newName = substr($newName, 0, 22);
+    }
     //foreach($nameList as $name) 
     {
         $clonedWorksheet = clone $spreadsheet->getSheet(1);
