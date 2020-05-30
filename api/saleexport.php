@@ -133,7 +133,8 @@ foreach($contracts as $contract) {
         $sheet->setCellValue('G'.$contractPos, '');
     }
     else {
-        $sheet->setCellValue('G'.$contractPos, formatYenNumber($contract['tradingPrice']));
+//        $sheet->setCellValue('G'.$contractPos, formatYenNumber($contract['tradingPrice']));
+        $sheet->setCellValue('G'.$contractPos, $contract['tradingPrice']);
     }
     // 内金（手付等）
     $sheet->setCellValue('H'.$contractPos, $deposit);
@@ -142,7 +143,8 @@ foreach($contracts as $contract) {
     $sheet->setCellValue('I'.$contractPos, $depositDay);
     $sheet->getStyle('I'.$contractPos)->getAlignment()->setWrapText(true);
     // 決済代金
-    $sheet->setCellValue('J'.$contractPos, emptyStatus($status, formatYenNumber($contract['decisionPrice'])));
+//    $sheet->setCellValue('J'.$contractPos, emptyStatus($status, formatYenNumber($contract['decisionPrice'])));
+    $sheet->setCellValue('J'.$contractPos, emptyStatus($status, $contract['decisionPrice']));
     // 固都税清算金
     $sheet->setCellValue('L'.$contractPos, emptyStatus($status, formatYenNumber($contract['fixedTax'])));
     // 引渡期日
@@ -249,7 +251,8 @@ foreach($payList1 as $payDetail) {
     // 契約金額
     $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['contractPrice']));
     // 支払金額
-    $sheet->setCellValue('H'.$payPos, formatYenNumber($payDetail['payPrice']));
+//    $sheet->setCellValue('H'.$payPos, formatYenNumber($payDetail['payPrice']));
+    $sheet->setCellValue('H'.$payPos, $payDetail['payPrice']);
     // 支払時期
     $sheet->setCellValue('I'.$payPos, $payDetail['paymentSeason']);
     // 支払予定日
@@ -301,7 +304,8 @@ foreach($payList2 as $payDetail) {
     // 摘要
     $sheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
     // 金額
-    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
+//    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
+    $sheet->setCellValue('G'.$payPos, $payDetail['payPrice']);
     // 支払方法
     $sheet->setCellValue('H'.$payPos, getPayMethodName($payDetail['paymentMethod']));
     // 支払日
@@ -423,7 +427,8 @@ foreach($contracts as $contract) {
             // 摘要
             $clonedWorksheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
             // 支払金額
-            $clonedWorksheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
+//            $clonedWorksheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
+            $clonedWorksheet->setCellValue('G'.$payPos, $payDetail['payPrice']);
             // 支払時期
             $clonedWorksheet->setCellValue('H'.$payPos, $payDetail['paymentSeason']);
             // 支払予定日
