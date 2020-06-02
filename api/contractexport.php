@@ -136,7 +136,7 @@ if(isset($contract['vacationDay']) && $contract['vacationDay'] !== '') {
     $val = date('Y年m月d日', strtotime($contract['vacationDay']));
 }
 else {
-    $val = '□□□年□□月□□日';
+    $val = '　　　年　　月　　日';
 }
 
 $keyword = 'vacationDay';
