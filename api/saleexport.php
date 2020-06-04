@@ -40,7 +40,7 @@ $sheet->setCellValue("D2", $bukken['residence']);
 $pos = 5;
 // データが複数ある場合、ブロックをコピー
 if(sizeof($sales) > 1) {
-    copyBlockWithValue($sheet, $pos, 5, sizeof($sales) - 1, 20);
+    copyBlockWithVal($sheet, $pos, 5, sizeof($sales) - 1, 20);
 }
 foreach($sales as $sale) {
     // 買主
@@ -90,9 +90,14 @@ if(sizeof($sales) == 0) {
 // 契約ブロック
 $contractPos = 12 + 5 * (sizeof($sales) >= 1 ? sizeof($sales) - 1 : 0);
 $firstContractPos = $contractPos;
+
+// 11行目に1行余白をいれる　※通貨・ユーザー定義の書式が不正になるバグの暫定対応
+copyBlockWithVal($sheet, $contractPos -2, 1, 1, 20);
+$contractPos += 1;
+
 // データが複数ある場合、ブロックをコピー
 if(sizeof($contracts) > 1) {
-    copyBlockWithValue($sheet, $contractPos, 1, sizeof($contracts) - 1, 20);
+    copyBlockWithVal($sheet, $contractPos, 1, sizeof($contracts) - 1, 20);
 }
 $newList = [];
 foreach($contracts as $contract) {
@@ -241,7 +246,7 @@ foreach($payContracts as $pay) {
 }
 // データが複数ある場合、ブロックをコピー
 if(sizeof($payList1) > 1) {
-    copyBlockWithValue($sheet, $payPos, 1, sizeof($payList1) - 1, 20);
+    copyBlockWithVal($sheet, $payPos, 1, sizeof($payList1) - 1, 20);
 }
 foreach($payList1 as $payDetail) {
     // 支払先
@@ -296,7 +301,7 @@ $sheet->setCellValue('H'.$payPos, '=SUM(H' . $firstPayPos . ':H' . ($payPos - 1)
 $payPos += 4;
 $firstPayPos = $payPos;
 if(sizeof($payList2) > 1) {
-    copyBlockWithValue($sheet, $payPos, 1, sizeof($payList2) - 1, 20);
+    copyBlockWithVal($sheet, $payPos, 1, sizeof($payList2) - 1, 20);
 }
 foreach($payList2 as $payDetail) {
     // 支払先
@@ -419,7 +424,7 @@ foreach($contracts as $contract) {
         }
         // データが複数ある場合、ブロックをコピー
         if(sizeof($subPayList) > 1) {
-            copyBlockWithValue($clonedWorksheet, $payPos, 1, sizeof($subPayList) - 1, 20);
+            copyBlockWithVal($clonedWorksheet, $payPos, 1, sizeof($subPayList) - 1, 20);
         }
         foreach($subPayList as $payDetail) {
             // 支払先
@@ -715,6 +720,18 @@ function formatYenNumber($number) {
     $ret = "¥" . number_format($number);
 
     return $ret;
+}
+
+/**
+ * 行と値コピー
+ */
+function copyBlockWithVal($sheet, $startPos, $blockRowCount, $copyCount, $colums) {
+    $sheet->insertNewRowBefore($startPos, $blockRowCount * $copyCount);
+    $lastPos = $startPos + ($blockRowCount * $copyCount);
+    for($cursor = 0 ; $cursor < $copyCount ; $cursor++) {
+        $copyPos = $startPos  + $blockRowCount * $cursor;
+        copyRowsWithValue($sheet, $lastPos, $copyPos, $blockRowCount, $colums);
+    }
 }
 
 ?>
