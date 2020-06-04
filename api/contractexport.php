@@ -145,6 +145,12 @@ if($nextPos != -1) {
     $pos = $nextPos;
     bindCell('A' . $pos, $sheet, $keyword, $val);
 }
+// ２か所存在する場合があるため
+$nextPos = searchCellPos($sheet, $keyword, $pos);
+if($nextPos != -1) {
+    $pos = $nextPos;
+    bindCell('A' . $pos, $sheet, $keyword, $val);
+}
 
 // 優先分譲面積
 $keyword = 'prioritySalesArea';
@@ -233,8 +239,9 @@ if(sizeof($sellers) >= 2) {
     for($cnt = 0 ; $cnt < sizeof($sellers) ; $cnt++) {
         $term9[] = '甲' . mb_convert_kana(($cnt + 1), 'N');
     }
-    $str = '６　本契約に基づく甲の義務について、' . implode('、', $term9) . 'は、連帯して乙に対して責任を負';
-    bindCell('A' . $nextPos, $sheet, 'specialTerms9_1' , $str, false);
+    $str = '　　  ６　本契約に基づく甲の義務について、' . implode('、', $term9) . 'は、連帯して乙に対して責任を負';
+//    bindCell('A' . $nextPos, $sheet, 'specialTerms9_1' , $str, false);
+    $sheet->setCellValue('A' . $nextPos, $str);
 }
 else {
     $sheet->removeRow($nextPos);
