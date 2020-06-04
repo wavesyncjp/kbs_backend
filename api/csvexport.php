@@ -81,10 +81,10 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
     // 【ノート】
     // 1:Nの項目を設定
 
-    // プラン依頼先
-    $selectContent = str_replace('tblbukkenplaninfo.planRequest', '(SELECT GROUP_CONCAT(planRequest) FROM tblbukkenplaninfo WHERE tbltemplandinfo.pid = tempLandInfoPid) as planRequest', $selectContent);
     // プラン依頼日
     $selectContent = str_replace('tblbukkenplaninfo.planRequestDay', '(SELECT GROUP_CONCAT(planRequestDay) FROM tblbukkenplaninfo WHERE tbltemplandinfo.pid = tempLandInfoPid) as planRequestDay', $selectContent);
+    // プラン依頼先
+    $selectContent = str_replace('tblbukkenplaninfo.planRequest', '(SELECT GROUP_CONCAT(planRequest) FROM tblbukkenplaninfo WHERE tbltemplandinfo.pid = tempLandInfoPid) as planRequest', $selectContent);
     // 取得予定日
     $selectContent = str_replace('tblbukkenplaninfo.planScheduledDay', '(SELECT GROUP_CONCAT(planScheduledDay) FROM tblbukkenplaninfo WHERE tbltemplandinfo.pid = tempLandInfoPid) as planScheduledDay', $selectContent);
     // プラン価格
