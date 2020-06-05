@@ -52,9 +52,9 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
     // 所在地
     $selectContent = str_replace('tbllocationinfo.address', '(SELECT GROUP_CONCAT(address) FROM tbllocationinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid AND EXISTS (SELECT 1 FROM tblcontractdetailinfo WHERE locationInfoPid = tbllocationinfo.pid AND contractInfoPid = tblcontractinfo.pid AND contractDataType = \'01\')) as address', $selectContent);
     // 地番
-    $selectContent = str_replace('tbllocationinfo.blockNumber', '(SELECT GROUP_CONCAT(blockNumber) FROM tbllocationinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid AND EXISTS (SELECT 1 FROM tblcontractdetailinfo WHERE locationInfoPid = tbllocationinfo.pid AND contractInfoPid = tblcontractinfo.pid AND contractDataType = \'01\')) as blockNumber', $selectContent);
+    $selectContent = str_replace('tbllocationinfo.blockNumber', '(SELECT GROUP_CONCAT(CONCAT(IFNULL(blockNumber, \'\'))) FROM tbllocationinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid AND EXISTS (SELECT 1 FROM tblcontractdetailinfo WHERE locationInfoPid = tbllocationinfo.pid AND contractInfoPid = tblcontractinfo.pid AND contractDataType = \'01\')) as blockNumber', $selectContent);
     // 家屋番号
-    $selectContent = str_replace('tbllocationinfo.buildingNumber', '(SELECT GROUP_CONCAT(buildingNumber) FROM tbllocationinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid AND EXISTS (SELECT 1 FROM tblcontractdetailinfo WHERE locationInfoPid = tbllocationinfo.pid AND contractInfoPid = tblcontractinfo.pid AND contractDataType = \'01\')) as buildingNumber', $selectContent);
+    $selectContent = str_replace('tbllocationinfo.buildingNumber', '(SELECT GROUP_CONCAT(CONCAT(IFNULL(buildingNumber, \'\'))) FROM tbllocationinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid AND EXISTS (SELECT 1 FROM tblcontractdetailinfo WHERE locationInfoPid = tbllocationinfo.pid AND contractInfoPid = tblcontractinfo.pid AND contractDataType = \'01\')) as buildingNumber', $selectContent);
     // 契約者名
     $selectContent = str_replace('tblcontractsellerinfo.contractorName', '(SELECT GROUP_CONCAT(contractorName) FROM tblcontractsellerinfo WHERE contractInfoPid = tblcontractinfo.pid) as contractorName', $selectContent);
 
@@ -146,6 +146,7 @@ function convertCsv($row, $csvDetails) {
  */
 function convertValueMulti($val, $multipleType, $conversionType, $conversionCode) {
     $lsts = explode(',', $val);// カンマ区切りの文字列を配列に変換
+//    $lsts = array_filter(explode(',', $val), 'strlen');
 
     $retVal = '';
     $index = 1;
