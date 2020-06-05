@@ -213,7 +213,7 @@ function copyBlock($sheet, $startPos, $blockRowCount, $copyCount, $hasSingleRow 
 }
 
 //cellコピー
-function copyRows($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false) {
+function copyRows($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false, $hasmerge = true) {
 
 	$styleArray = [
 		'font' => [
@@ -227,7 +227,7 @@ function copyRows($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false) {
 	];
 
     for ($row = 0; $row < $height; $row++) {
-        for ($col = 0; $col < $width; $col++) {
+        for ($col = 0; $col <= $width; $col++) {
             $cell = $sheet->getCellByColumnAndRow($col, $srcRow + $row);
 			$style = $sheet->getStyleByColumnAndRow($col, $srcRow + $row);						
 			$dstCell = 'A' . (string)($dstRow + $row);		
@@ -242,19 +242,70 @@ function copyRows($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false) {
 
         $h = $sheet->getRowDimension($srcRow + $row)->getRowHeight();
         $sheet->getRowDimension($dstRow + $row)->setRowHeight($h);
-    }
-    foreach ($sheet->getMergeCells() as $mergeCell) {
-        $mc = explode(":", $mergeCell);
-        $col_s = preg_replace("/[0-9]*/", "", $mc[0]);
-        $col_e = preg_replace("/[0-9]*/", "", $mc[1]);
-        $row_s = ((int)preg_replace("/[A-Z]*/", "", $mc[0])) - $srcRow;
-        $row_e = ((int)preg_replace("/[A-Z]*/", "", $mc[1])) - $srcRow;
+	}
+	if($hasmerge) {
+		foreach ($sheet->getMergeCells() as $mergeCell) {
+			$mc = explode(":", $mergeCell);
+			$col_s = preg_replace("/[0-9]*/", "", $mc[0]);
+			$col_e = preg_replace("/[0-9]*/", "", $mc[1]);
+			$row_s = ((int)preg_replace("/[A-Z]*/", "", $mc[0])) - $srcRow;
+			$row_e = ((int)preg_replace("/[A-Z]*/", "", $mc[1])) - $srcRow;
+	
+			if (0 <= $row_s && $row_s < $height) {
+				$merge = $col_s . (string)($dstRow + $row_s) . ":" . $col_e . (string)($dstRow + $row_e);
+				$sheet->mergeCells($merge);
+			} 
+		}
+	}
+    
+}
 
-        if (0 <= $row_s && $row_s < $height) {
-            $merge = $col_s . (string)($dstRow + $row_s) . ":" . $col_e . (string)($dstRow + $row_e);
-            $sheet->mergeCells($merge);
-        } 
-    }
+//cellコピー
+function copyRowsReverse($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false, $hasmerge = true) {
+
+	$styleArray = [
+		'font' => [
+			'size' => 10.5,
+			'name' => 'ＭＳ 明朝'
+		],
+		'alignment' => [
+			'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+			'wrapText' => true
+		]
+	];
+
+    for ($row = 0; $row < $height; $row++) {
+        for ($col = 0; $col <= $width; $col++) {
+            $cell = $sheet->getCellByColumnAndRow($col, $srcRow);
+			$style = $sheet->getStyleByColumnAndRow($col, $srcRow);						
+			$dstCell = 'A' . (string)($dstRow + $row);		
+            $sheet->setCellValue($dstCell, $cell->getValue());
+			$sheet->duplicateStyle($style, $dstCell);
+			
+			if($setStyle) {
+				$sheet->getStyle($dstCell)->applyFromArray($styleArray);
+			}
+
+        }
+
+        $h = $sheet->getRowDimension($srcRow + $row)->getRowHeight();
+        $sheet->getRowDimension($dstRow + $row)->setRowHeight($h);
+	}
+	if($hasmerge) {
+		foreach ($sheet->getMergeCells() as $mergeCell) {
+			$mc = explode(":", $mergeCell);
+			$col_s = preg_replace("/[0-9]*/", "", $mc[0]);
+			$col_e = preg_replace("/[0-9]*/", "", $mc[1]);
+			$row_s = ((int)preg_replace("/[A-Z]*/", "", $mc[0])) - $srcRow;
+			$row_e = ((int)preg_replace("/[A-Z]*/", "", $mc[1])) - $srcRow;
+	
+			if (0 <= $row_s && $row_s < $height) {
+				$merge = $col_s . (string)($dstRow + $row_s) . ":" . $col_e . (string)($dstRow + $row_e);
+				$sheet->mergeCells($merge);
+			} 
+		}
+	}
+    
 }
 
 /**

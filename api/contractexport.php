@@ -354,10 +354,10 @@ if(isset($locs) && sizeof($locs) > 0) {
             //登記人分をコピー
             $sharerStr = $sheet->getCell('A' .  $pos)->getValue();
             $sheet->insertNewRowBefore($pos, $increase);
-            copyRows($sheet,$pos + $increase, $pos, $increase - 1, 1, true);
-            
+            copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);   
+
             $keyword = 'repear_sharer';
-            $pos = searchCellPos($sheet, $keyword, $pos) - $increase - 1;
+            $pos = searchCellPos($sheet, $keyword, $pos) - 1;
 
             foreach($regists as $regist) {
                 $val = str_replace('$repear_sharer$', $regist, $sharerStr);
@@ -374,10 +374,10 @@ if(isset($locs) && sizeof($locs) > 0) {
 }
 //土地荷主なし ->　削除
 else {
-    //$sheet->removeRow($pos + $blockCount - 1);
-    for($i = 0 ; $i < $blockCount; $i++) {
+    for($i = 0 ; $i < $blockCount - 1; $i++) {
         $sheet->removeRow($pos);
     }
+    $sheet->setCellValue('A' .  $pos, '');
 }
 
 
@@ -431,10 +431,10 @@ if(isset($locs) && sizeof($locs) > 0) {
             //登記人分をコピー
             $sharerStr = $sheet->getCell('A' .  $pos)->getValue();
             $sheet->insertNewRowBefore($pos, $increase);
-            copyRows($sheet,$pos + $increase, $pos, $increase - 1, 1, true);
-            
+            copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);   
+
             $keyword = 'repear_sharer';
-            $pos = searchCellPos($sheet, $keyword, $pos) - $increase - 1;
+            $pos = searchCellPos($sheet, $keyword, $pos) - 1;
 
             foreach($regists as $regist) {
                 $val = str_replace('$repear_sharer$', $regist, $sharerStr);
@@ -450,10 +450,10 @@ if(isset($locs) && sizeof($locs) > 0) {
 }
 //土地荷主なし
 else {
-    //$sheet->removeRow($pos, $blockCount);
-    for($i = 0 ; $i < $blockCount; $i++) {
+    for($i = 0 ; $i < $blockCount-1; $i++) {
         $sheet->removeRow($pos);
-    }  
+    } 
+    $sheet->setCellValue('A' .  $pos, '');
 }
 
 //（一棟の建物の表示）
@@ -526,10 +526,10 @@ if(sizeof($locs) > 0) {
             //登記人分をコピー
             $sharerStr = $sheet->getCell('A' .  $pos)->getValue();
             $sheet->insertNewRowBefore($pos, $increase);
-            copyRows($sheet,$pos + $increase, $pos, $increase - 1, 1, true);
-            
+            copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);   
+
             $keyword = 'repear_sharer';
-            $pos = searchCellPos($sheet, $keyword, $pos) - $increase - 1;
+            $pos = searchCellPos($sheet, $keyword, $pos) - 1;
 
             foreach($regists as $regist) {
                 $val = str_replace('$repear_sharer$', $regist, $sharerStr);
@@ -709,10 +709,10 @@ if(sizeof($locs) > 0) {
             //登記人分をコピー
             $sharerStr = $sheet->getCell('A' .  $pos)->getValue();
             $sheet->insertNewRowBefore($pos, $increase);
-            copyRows($sheet,$pos + $increase, $pos, $increase - 1, 1, true);
-            
+            copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);   
+
             $keyword = 'repear_sharer';
-            $pos = searchCellPos($sheet, $keyword, $pos) - $increase - 1;
+            $pos = searchCellPos($sheet, $keyword, $pos) - 1;
 
             foreach($regists as $regist) {
                 $val = str_replace('$repear_sharer$', $regist, $sharerStr);
