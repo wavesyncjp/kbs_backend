@@ -34,11 +34,12 @@ $sheet = $spreadsheet->getSheet(0);
 $pos = searchCellPos($sheet, 'contractorName', 10);
 $sellers = $contract['sellers'];
 if(isset($sellers)) {
+    /*
     $seller = $sellers[0];
     $cellName = "A".$pos;
     $str = $sheet->getCell($cellName)->getValue();
     $sheet->setCellValue($cellName, str_replace('$contractorName$', $seller['contractorName'], $str));
-
+    
     for($index = 1 ; $index <= 7 ; $index++) {
         $pos = $pos - 2;
         $cellName = "A".$pos;
@@ -48,7 +49,26 @@ if(isset($sellers)) {
         }
         else {
             $sheet->setCellValue($cellName, '');
-        }        
+        }
+    }
+    */
+    $index = 1;
+
+    foreach($sellers as $seller) {
+        // 契約者が複数存在する場合
+        if($index > 1) {
+            $pos += 2;
+
+            // 行の挿入
+            $sheet->insertNewRowBefore($pos, 2);
+            // セル結合
+            $sheet->mergeCells('A' . $pos . ':A' . ($pos + 1));
+        }
+
+        $cellName = "A" . $pos;
+        $sheet->setCellValue($cellName, $seller['contractorName'] . '様');
+
+        $index++;
     }
 }
 
@@ -140,16 +160,13 @@ else {
 }
 
 $keyword = 'vacationDay';
-$nextPos = searchCellPos($sheet, $keyword, $pos);
-if($nextPos != -1) {
-    $pos = $nextPos;
-    bindCell('A' . $pos, $sheet, $keyword, $val);
-}
-// ２か所存在する場合があるため
-$nextPos = searchCellPos($sheet, $keyword, $pos);
-if($nextPos != -1) {
-    $pos = $nextPos;
-    bindCell('A' . $pos, $sheet, $keyword, $val);
+// ２か所存在する場合があるため２回実行
+for($i = 0 ; $i < 2; $i++) {
+    $nextPos = searchCellPos($sheet, $keyword, $pos);
+    if($nextPos != -1) {
+        $pos = $nextPos;
+        bindCell('A' . $pos, $sheet, $keyword, $val);
+    }
 }
 
 // 優先分譲面積
@@ -570,6 +587,16 @@ else {
     $sheet->removeRow($pos);
 }
 
+// 不可分が存在しない場合、末尾２　＜本計画地の表示＞を削除
+if(sizeof($belongIds) == 0) {
+    $keyword = 'fl_address';
+    $pos = searchCellPos($sheet, $keyword, $pos);
+    $pos -= 3;// 末尾２　＜本計画地の表示＞の位置を設定
+
+    for($i = 1 ; $i >= 0; $i--) {
+        $sheet->removeRow($pos + $i);
+    }
+}
 
 //不可分所有地(土地)
 $locs = [];
