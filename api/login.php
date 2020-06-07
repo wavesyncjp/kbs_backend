@@ -13,7 +13,7 @@ $param = json_decode($postparam);
 $user = ORM::for_table("tbluser")->where(array(
 		'loginId' => $param->id,
 		'password' => $param->pwd
-	))->find_one();
+	))->where_null('deleteDate')->find_one();
 
 
 $ret = new stdClass();
@@ -40,6 +40,7 @@ if($user != null){
 	$ret->password = $user->password;
 	$ret->userName = $user->userName;
 	$ret->token = $token->token;
+	$ret->authority = $user->authority;
 	echo json_encode($ret);
 }
 else{
