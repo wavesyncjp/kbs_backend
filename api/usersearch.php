@@ -21,7 +21,7 @@ if(isset($param->userName) && $param->userName !== ''){
 	$query = $query->where_like('userName', '%'.$param->userName.'%');
 }
 
-$deps = $query->find_array();
+$deps = $query->order_by_asc('userId')->find_array();
 echo json_encode($deps);
 
 ?>
