@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
-
+// 対象テーブル取得
 $plan = ORM::for_table(TBLPLAN)->findOne($param->pid)->asArray();
 $details = ORM::for_table(TBLPLANDETAIL)->where('planPid', $param->pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
 $bukken = ORM::for_table(TBLTEMPLANDINFO)->where('pid', $plan['tempLandInfoPid'])->where_null('deleteDate')->findOne();
@@ -26,38 +26,39 @@ header("Expires: 0");
 $fullPath  = __DIR__ . '/../template';
 $filePath = $fullPath.'/収支帳票.xlsx'; 
 
-//Excel操作
+// Excel操作
 $reader = new PhpOffice\PhpSpreadsheet\Reader\Xlsx();
 $spreadsheet = $reader->load($filePath);
 
 $data = array();
+// 計画情報(tblPlan)
 foreach($plan as $key => $value) {
     $data[$key] = $value;
-
+    // 着工日、上棟日、竣工日
     if(($key === 'startDay' || $key === 'upperWingDay' || $key === 'completionDay') && isset($value) && $value !== '') {
         $data[$key] = date_create($value)->format('Y/m/d');
     }
-
+    // 当社JV比率、土地関係金利、建物関係金利 
     if(($key === 'jvRatio' || $key === 'landInterest' || $key === 'buildInterest') && isset($value) && $value !== '') {
         $data[$key] = $value.'%';
     }
 }
-//periodName
+// コード値変換
+// 決済期別
 if(isset($plan['period']) && $plan['period'] !== '') {
     $code = ORM::for_table(TBLCODE)->where('code', '017')->where('codeDetail', $plan['period'])->where_null('deleteDate')->findOne();
     if(isset($code)) {
         $data['periodName'] = $code['name'];
     }
 }
-//structureScaleName
+// 構造規模
 if(isset($plan['structureScale']) && $plan['structureScale'] !== '') {
     $code = ORM::for_table(TBLCODE)->where('code', '018')->where('codeDetail', $plan['structureScale'])->where_null('deleteDate')->findOne();
     if(isset($code)) {
         $data['structureScaleName'] = $code['name'];
     }
 }
-
-//rightsRelationship
+// 権利関係
 if(isset($plan['rightsRelationship']) && $plan['rightsRelationship'] !== '') {
     $code = ORM::for_table(TBLCODE)->where('code', '011')->where('codeDetail', $plan['rightsRelationship'])->where_null('deleteDate')->findOne();
     if(isset($code)) {
@@ -65,12 +66,15 @@ if(isset($plan['rightsRelationship']) && $plan['rightsRelationship'] !== '') {
     }
 }
 
-//PaymentType
+// 支払種別取得
 $types = ORM::for_table(TBLPAYMENTTYPE)->where('addFlg', '1')->where_null('deleteDate')->select('paymentCode')->select('paymentName')->findArray();
+// 支払名称に変換する画面表示順を定義
 $nums = array(6, 7, 8, 9, 10, 19, 20, 21, 22, 23, 35, 36);
 
-$data['bukkenName'] = $bukken['bukkenName'];
-$data['address'] = $plan['address'];
+$data['bukkenName'] = $bukken['bukkenName'];// 物件名
+$data['address'] = $plan['address'];// 所在地
+
+// 計画詳細情報(tblPlanDetail)
 foreach($details as $detail) {
     $data['price_' . $detail['backNumber']] = $detail['price'];
     $data['unitPrice_' . $detail['backNumber']] = $detail['unitPrice'];
@@ -83,8 +87,8 @@ foreach($details as $detail) {
     $data['rent_' . $detail['backNumber']] = $detail['rent'];
     $data['commissionRate_' . $detail['backNumber']] = $detail['commissionRate'];
 
+    // 支払名称設定
     if(in_array($detail['backNumber'], $nums) && isset($detail['paymentCode']) && $detail['paymentCode'] !== '' ) {
-
         $payName = '';
         foreach($types as $type) {
             if($type['paymentCode'] === $detail['paymentCode']){
@@ -94,13 +98,12 @@ foreach($details as $detail) {
         }
         $data['paymentName_' . $detail['backNumber']] = $payName;
     }
-
 }
 
-//RENT
+// レントロール情報(tblPlanRentRoll)
 foreach($rent as $key => $value) {
     $data[$key] = $value;
-
+    // 稼働率、売却時想定利回り、経費率A、経費率B、経費率C、経費率D、利回りA、利回りB、利回りC、利回りD
     if(($key === 'occupancyRate' || $key === 'salesProfits'
         || $key === 'expenseRatio1' || $key === 'expenseRatio2' || $key === 'expenseRatio3' || $key === 'expenseRatio4'
         || $key === 'profitsA' || $key === 'profitsB' || $key === 'profitsC' || $key === 'profitsD')
@@ -109,22 +112,22 @@ foreach($rent as $key => $value) {
     }
 }
 
-$pos = 1;
+// レントロール詳細情報(tblPlanRentRollDetail)
 foreach($rentDetails as $rentDetail) {
-
-    $data['targetArea_' . $pos] = $rentDetail['targetArea'];
-    $data['space_' . $pos] = $rentDetail['space'];
-    $data['rentUnitPrice_' . $pos] = $rentDetail['rentUnitPrice'];
-    $data['securityDeposit_' . $pos] = $rentDetail['securityDeposit'];
-    $pos++;
+    $data['targetArea_' . $rentDetail['backNumber']] = $rentDetail['targetArea'];
+    $data['space_' . $rentDetail['backNumber']] = $rentDetail['space'];
+    $data['rentUnitPrice_' . $rentDetail['backNumber']] = $rentDetail['rentUnitPrice'];
+    $data['securityDeposit_' . $rentDetail['backNumber']] = $rentDetail['securityDeposit'];
 }
 
+// NOI利回り検討シート
+$sheet = $spreadsheet->getSheet(0);
 $sheetPos = array(
     'AE2' => 'settlement',
     'AA3' => 'bukkenName',
     'AE3' => 'periodName',
     'AB4' => 'landOwner',
-    'AE4' => 'rightsRelationship',
+    'AE4' => 'rightsRelationshipName',
     'AB5' => 'landContract',
     'H7' => 'address',
     'L7' => 'traffic',
@@ -231,7 +234,6 @@ $sheetPos = array(
     'Z80' => 'afterFixedTax',
     'Z81' => 'afterCityPlanTax',
 
-    //20200424 追加
     'F78' => 'landInterest',
     'L78' => 'landLoan',
     'L79' => 'landPeriod',
@@ -318,20 +320,18 @@ $sheetPos = array(
     'AF64' => 'commonFee',
     'AB66' => 'monthlyOtherIncome'
 );
-
-//NOI利回り検討
-$sheet = $spreadsheet->getSheet(0);
-
 foreach ($sheetPos as $key => $value) {
     $sheet->setCellValue($key, isset($data[$value]) ? $data[$value] : '');
 }
 
+// 表面利回り検討シート
+$sheet = $spreadsheet->getSheet(1);
 $sheetPos2 = array(
     'AE2' => 'settlement',
     'AA3' => 'bukkenName',
     'AE3' => 'periodName',
     'AB4' => 'landOwner',
-    'AE4' => 'rightsRelationship',
+    'AE4' => 'rightsRelationshipName',
     'AB5' => 'landContract',
     'H7' => 'address',
     'L7' => 'traffic',
@@ -438,14 +438,13 @@ $sheetPos2 = array(
     'Z80' => 'afterFixedTax',
     'Z81' => 'afterCityPlanTax',
 
-    //20200424 追加
     'F78' => 'landInterest',
     'L78' => 'landLoan',
     'L79' => 'landPeriod',
     'F80' => 'buildInterest',
     'L80' => 'buildLoan',
     'L81' => 'buildPeriod',
-    'T19' => 'occupancyRate',    
+    'T19' => 'occupancyRate',
     'Q43' => 'targetArea_1',
     'Q44' => 'targetArea_2',
     'Q45' => 'targetArea_3',
@@ -540,14 +539,11 @@ $sheetPos2 = array(
     'AA39' => 'profitsC',
     'AD39' => 'profitsD'
 );
-
-//表面利回り検討 
-$sheet = $spreadsheet->getSheet(1);
 foreach ($sheetPos2 as $key => $value) {
     $sheet->setCellValue($key, isset($data[$value]) ? $data[$value] : '');
 }
 
-//簡易版（利回り）
+// 簡易版（利回り）シート
 $sheet = $spreadsheet->getSheet(2);
 $sheet3Pos = array(
     'G6' => 'price_1',
@@ -575,7 +571,7 @@ foreach ($sheet3Pos as $key => $value) {
     $sheet->setCellValue($key, isset($data[$value]) ? $data[$value] : '');
 }
 
-//簡易版（土地売り）
+// 簡易版（土地売り）シート
 $sheet = $spreadsheet->getSheet(3);
 $sheet4Pos = array(
     'G6' => 'price_1',
@@ -596,7 +592,6 @@ $sheet4Pos = array(
     'G31' => 'price_38',
     'G32' => 'price_39',
 
-    //20200424 追加
     'E53' => 'tsuboUnitPriceA',
     'G53' => 'tsuboUnitPriceB',
     'H53' => 'tsuboUnitPriceC',
@@ -606,16 +601,16 @@ foreach ($sheet4Pos as $key => $value) {
     $sheet->setCellValue($key, isset($data[$value]) ? $data[$value] : '');
 }
 
-//保存
-$filename = date("YmdHis") . 'xlsx';
+// 保存
+$filename = "収支帳票_" . date("YmdHis") . 'xlsx';
 $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 $savePath = $fullPath.'/'.$filename;
 $writer->save($savePath);
 
-//ダウンロード
+// ダウンロード
 readfile($savePath);
 
-//削除
+// 削除
 unlink($savePath);
 
 ?>
