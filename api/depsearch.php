@@ -14,7 +14,7 @@ if(isset($param->depName) && $param->depName !== ''){
 	$query = $query->where_like('depName', '%'.$param->depName.'%');
 }
 
-$deps = $query->find_array();
+$deps = $query->order_by_asc('depCode')->find_array();
 echo json_encode($deps);
 
 ?>

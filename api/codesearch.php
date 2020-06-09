@@ -27,7 +27,7 @@ if(isset($param->name) && $param->name !== ''){
 	$query = $query->where_like('name', '%'.$param->name.'%');
 }
 
-$codes = $query->find_array();
+$codes = $query->order_by_asc('code')->order_by_asc('codeDetail')->find_array();
 echo json_encode($codes);
 
 ?>
