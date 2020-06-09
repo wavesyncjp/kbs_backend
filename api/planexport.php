@@ -546,6 +546,7 @@ foreach ($sheetPos2 as $key => $value) {
 // 簡易版（利回り）シート
 $sheet = $spreadsheet->getSheet(2);
 $sheet3Pos = array(
+    'D2' => 'address',
     'G6' => 'price_1',
     'I6' => 'routePrice_1',
     'G8' => 'price_3',
@@ -574,12 +575,14 @@ foreach ($sheet3Pos as $key => $value) {
 // 簡易版（土地売り）シート
 $sheet = $spreadsheet->getSheet(3);
 $sheet4Pos = array(
+    'D2' => 'address',
     'G6' => 'price_1',
     'I6' => 'routePrice_1',
     'G8' => 'price_3',
     'G9' => 'price_4',
     'G10' => 'price_5',
     'I10' => 'burdenDays_5',
+    'I13' => 'unitPrice_11',
     'G18' => 'price_24',
     'I18' => 'complePriceMonth_24',
     'G20' => 'price_25',
