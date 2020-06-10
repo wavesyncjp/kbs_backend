@@ -46,15 +46,17 @@ $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();
 foreach($lands as $land){
 
-	// 所在地
+	// 所在地・地番
 	$address = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $land['pid'])->where_not_null('address')->where_not_equal('address', '')->where_null('deleteDate')->select('address')->findOne();
 	if(isset($address) ){
 		$land['remark1'] = $address['address'];
+		$land['remark2'] = $address['blockNumber'];
 	}
 	else {
 		$land['remark1'] = '';
+		$land['remark2'] = '';
 	}
-
+/*
 	//地番
 	$address = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $land['pid'])->where_not_null('blockNumber')->where_not_equal('blockNumber', '')->where_null('deleteDate')->select('blockNumber')->findOne();
 	if(isset($address)){
@@ -63,7 +65,7 @@ foreach($lands as $land){
 	else {
 		$land['remark2'] = '';
 	}
-	
+*/	
 	//
 	$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $land['pid'])->where_null('deleteDate')->select_many('pid', 'locationType')->find_array();
 	if(isset($locs) && sizeof($locs) > 0){
