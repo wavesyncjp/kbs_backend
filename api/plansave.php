@@ -71,6 +71,7 @@ if(isset($param->rent)) {
 		$rentSave->tempLandInfoPid = $plan->tempLandInfoPid;
 	}
 	$rentSave->save();
+	$param->planRentRollPid = $rentSave->pid;
 }
 
 //rentdetail
@@ -91,6 +92,7 @@ if(isset($param->rentdetails)){
 		if($plan->tempLandInfoPid > 0){
 			$rentdetailSave->tempLandInfoPid = $plan->tempLandInfoPid;
 		}
+		$rentdetailSave->planRentRollPid = $param->planRentRollPid;
 		$rentdetailSave->save();
 	}
 }
