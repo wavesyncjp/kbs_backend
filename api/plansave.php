@@ -23,7 +23,7 @@ else {
 }
 /*画面に入力項目があって（.ts）planのカラムにないものを('')で除外。
 'updateUserId', 'updateDate', 'createUserId', 'createDate'は上でセットしているので*/
-copyData($param, $plan, array('pid','cratedDayMap','startDayMap','upperWingDayMap','completionDayMap',
+copyData($param, $plan, array('pid','createDayMap','startDayMap','upperWingDayMap','completionDayMap',
 'scheduledDayMap','details','rent','rentdetails','updateUserId', 'updateDate', 'createUserId', 'createDate'));
 $plan->save();
 
