@@ -62,7 +62,7 @@ if(isset($param->payDay_To) && $param->payDay_To != ''){
 	$query = $query->where_lte('p1.contractDay', $param->payDay_To);
 }
 
-$contracts = $query->order_by_desc('p3.pid')->find_array();
+$contracts = $query->order_by_desc('p3.bukkenNo')->find_array();
 
 $ret = [];
 foreach($contracts as $contract) {
