@@ -235,45 +235,53 @@ else {
 //specialTerms8
 $keyword = 'specialTerms8';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
-$count = 0;
-if(sizeof($detailIds) > 0) {
-    $count = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('inheritanceNotyet', 1)->where_null('deleteDate')->count();
+if($nextPos > 0) {
+    $count = 0;
+    if(sizeof($detailIds) > 0) {
+        $count = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('inheritanceNotyet', 1)->where_null('deleteDate')->count();
+    }
+    if($count > 0) {
+        bindCell('A' . $nextPos, $sheet, 'specialTerms8' , '', false);
+        $matsubi1Comment[] = '※土地、　　　　　　　　　　　地番上に未登記建物あり';
+    }
+    else {
+        $sheet->removeRow($nextPos);
+    }
+    $pos = $nextPos;
 }
-if($count > 0) {
-    bindCell('A' . $nextPos, $sheet, 'specialTerms8' , '', false);
-    $matsubi1Comment[] = '※土地、　　　　　　　　　　　地番上に未登記建物あり';
-}
-else {
-    $sheet->removeRow($nextPos);
-}
-$pos = $nextPos;
+
 
 //specialTerms9_1
 $keyword = 'specialTerms9_1';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
-if(sizeof($sellers) >= 2) {
-    $term9 = [];
-    for($cnt = 0 ; $cnt < sizeof($sellers) ; $cnt++) {
-        $term9[] = '甲' . mb_convert_kana(($cnt + 1), 'N');
+if($nextPos > 0) {
+    if(sizeof($sellers) >= 2) {
+        $term9 = [];
+        for($cnt = 0 ; $cnt < sizeof($sellers) ; $cnt++) {
+            $term9[] = '甲' . mb_convert_kana(($cnt + 1), 'N');
+        }
+        $str = '　　  ６　本契約に基づく甲の義務について、' . implode('、', $term9) . 'は、連帯して乙に対して責任を負';
+    //    bindCell('A' . $nextPos, $sheet, 'specialTerms9_1' , $str, false);
+        $sheet->setCellValue('A' . $nextPos, $str);
     }
-    $str = '　　  ６　本契約に基づく甲の義務について、' . implode('、', $term9) . 'は、連帯して乙に対して責任を負';
-//    bindCell('A' . $nextPos, $sheet, 'specialTerms9_1' , $str, false);
-    $sheet->setCellValue('A' . $nextPos, $str);
+    else {
+        $sheet->removeRow($nextPos);
+    }
 }
-else {
-    $sheet->removeRow($nextPos);
-}
+
 
 //specialTerms9_2
 $keyword = 'specialTerms9_2';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
-if(sizeof($sellers) >= 2) {
-    bindCell('A' . $nextPos, $sheet, 'specialTerms9_2' , '', false);
+if($nextPos > 0) {
+    if(sizeof($sellers) >= 2) {
+        bindCell('A' . $nextPos, $sheet, 'specialTerms9_2' , '', false);
+    }
+    else {
+        $sheet->removeRow($nextPos);
+    }
+    $pos = $nextPos;
 }
-else {
-    $sheet->removeRow($nextPos);
-}
-$pos = $nextPos;
 
 //契約者住所, 契約者名
 $keyword = 'contractorAddress';
@@ -287,12 +295,19 @@ if(sizeof($sellers) > 0) {
         $seller = $sellers[$cursor];
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['contractorAddress', 'contractorName'], [$seller['contractorAdress'], $seller['contractorName']]);
+
+        //$cellName = 'A' . ($pos + 3) ;
+        //bindCell($cellName, $sheet, ['contractorName'], [$seller['contractorName']]);
+
         $pos += $blockCount;
     }
 }
 else {
     $cellName = 'A' . $pos;
     bindCell($cellName, $sheet, ['contractorAddress', 'contractorName'], ['', '']);
+
+    //$cellName = 'A' . ($pos + 3) ;
+    //bindCell($cellName, $sheet, ['contractorName'], ['']);
 }
 
 
@@ -479,7 +494,8 @@ $blockCount = 3;
 $pos = searchCellPos($sheet, $keyword, $pos);
 $locs = [];
 if(sizeof($detailIds) > 0 && $template['reportFormType'] != '01') {
-    $tempLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_not_null('ridgePid')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+    $tempLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_not_null('ridgePid')
+                ->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
     foreach($tempLocs as $temp) {
         $locs[] = ORM::for_table(TBLLOCATIONINFO)->findOne($temp['ridgePid'])->asArray();
     }
@@ -502,7 +518,6 @@ if(sizeof($locs) > 0) {
 
 }
 else {
-    //$sheet->removeRow($pos-1, $blockCount+1);
     for($i = 0 ; $i < $blockCount + 1; $i++) {
         $sheet->removeRow($pos-1);
     }
@@ -571,21 +586,28 @@ else {
 
 //$matsubi1_comment$
 $keyword = 'matsubi1_comment';
+$lastPos = $pos;
 $pos = searchCellPos($sheet, $keyword, $pos);
-if(sizeof($matsubi1Comment) > 0) {
-    if(sizeof($matsubi1Comment) === 2) {
-        copyBlock($sheet, $pos, 1, 1, true);
-        $sheet->setCellValue('A' . $pos, $matsubi1Comment[0]);
-        $sheet->setCellValue('A' . ($pos + 1), $matsubi1Comment[1]);
+if($pos > 0) {
+    if(sizeof($matsubi1Comment) > 0) {
+        if(sizeof($matsubi1Comment) === 2) {
+            copyBlock($sheet, $pos, 1, 1, true);
+            $sheet->setCellValue('A' . $pos, $matsubi1Comment[0]);
+            $sheet->setCellValue('A' . ($pos + 1), $matsubi1Comment[1]);
+        }
+        else {
+            $sheet->setCellValue('A' . $pos, $matsubi1Comment[0]);
+        }
     }
     else {
-        $sheet->setCellValue('A' . $pos, $matsubi1Comment[0]);
+        $sheet->removeRow($pos+1);
+        $sheet->removeRow($pos);
     }
 }
 else {
-    $sheet->removeRow($pos+1);
-    $sheet->removeRow($pos);
+    $pos = $lastPos;
 }
+
 
 // 不可分が存在しない場合、末尾２　＜本計画地の表示＞を削除
 if(sizeof($belongIds) == 0) {
@@ -669,11 +691,13 @@ else {
 
 //（一棟の建物の表示）
 $keyword = 'ob_address';
-$blockCount = 3;
+$blockCount = 11;
 $pos = searchCellPos($sheet, $keyword, $pos);
 $locs = [];
 if(sizeof($belongIds) > 0) {
-    $tempLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '04')->where_not_null('ridgePid')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+    $tempLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '04')->where_not_null('ridgePid')->where_null('deleteDate')
+                ->order_by_asc('locationType')->order_by_asc('pid')
+                ->distinct()->select('ridgePid')->findArray();
     foreach($tempLocs as $temp) {
         $locs[] = ORM::for_table(TBLLOCATIONINFO)->findOne($temp['ridgePid'])->asArray();
     }
@@ -684,6 +708,8 @@ if(sizeof($locs) > 0) {
     if(sizeof($locs) > 1) {
         copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
     }
+
+    
     //データ出力（ループ）
     for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++){
         $loc = $locs[$cursor];
@@ -692,7 +718,73 @@ if(sizeof($locs) > 0) {
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], $loc['structure'], $loc['floorSpace']]);
+
+        //（専有部分の建物の表示）---------------------------------------------------------------------------
+        $keyword = 'p_address';
+        $subBlockCount = 7;
+        $pos = searchCellPos($sheet, $keyword, $pos);
+        $subLocs = [];
+        if(sizeof($belongIds) > 0) {
+            $subLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)
+                    ->where('locationType', '04')->where('ridgePid', $loc['pid'])
+                    ->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+        }
+        if(sizeof($subLocs) > 0) {
+
+            //ブロックコピー
+            if(sizeof($subLocs) > 1) {
+                copyBlock($sheet, $pos, $subBlockCount, (sizeof($subLocs) - 1), true);
+            }
+            //データ出力（ループ）
+            for($subCursor = 0 ; $subCursor < sizeof($subLocs) ; $subCursor++){
+                $subLoc = $subLocs[$subCursor];
+
+                //登記名義人
+                $regists = getSharers($subLoc);
+
+                $keyword = 'p_address';
+                $pos = searchCellPos($sheet, $keyword, $pos);
+                $cellName = 'A' . $pos;
+                bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
+                    [$subLoc['address'], $subLoc['buildingNumber'], getCodeTitle($codeTypeList, $subLoc['dependType']), $subLoc['structure'], 
+                    $subLoc['floorSpace'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
+
+                //登記名義人複数
+                $pos = $pos + $subBlockCount - 1;
+                if(sizeof($regists) > 1) {
+                    $increase = sizeof($regists) - 1;
+
+                    //登記人分をコピー
+                    $sharerStr = $sheet->getCell('A' .  $pos)->getValue();
+                    $sheet->insertNewRowBefore($pos, $increase);
+                    copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);   
+
+                    $keyword = 'repear_sharer';
+                    $pos = searchCellPos($sheet, $keyword, $pos) - 1;
+
+                    foreach($regists as $regist) {
+                        $val = str_replace('$repear_sharer$', $regist, $sharerStr);
+                        $sheet->setCellValue('A' .  $pos, $val);
+                        $pos++;
+                    }
+                    $sheet->setCellValue('A' .  $pos, '');
+                }
+                else {
+                    $sheet->setCellValue('A' .  $pos, '');
+                }                
+                $sheet->removeRow($pos);
+            }
+
+        }
+        else {
+            for($i = 0 ; $i < $subBlockCount + 1; $i++) {
+                $sheet->removeRow($pos-1);
+            }
+        }
+        //（専有部分の建物の表示）---------------------------------------------------------------------------
     }
+
+    
 }
 else {
     //$sheet->removeRow($pos-1, $blockCount+1);
@@ -701,6 +793,7 @@ else {
     }
 }
 
+/**********************************************************************************************
 //（専有部分の建物の表示）
 $keyword = 'p_address';
 $blockCount = 7;
@@ -760,6 +853,7 @@ else {
         $sheet->removeRow($pos-1);
     }
 }
+*************************************************************************/
 
 //敷地面積
 if($contract['equiExchangeFlg'] == 1) {
