@@ -447,7 +447,9 @@ if(isset($locs) && sizeof($locs) > 0) {
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['b_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
-            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), $loc['structure'], $loc['floorSpace'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), 
+            replaceNewLine($loc['structure'], 14, 1), 
+            replaceNewLine($loc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
 
         //[土地]文言削除
         if($cursor > 0) {
@@ -513,7 +515,9 @@ if(sizeof($locs) > 0) {
         $keyword = 'ob_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], $loc['structure'], $loc['floorSpace']]);
+        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], 
+        replaceNewLine($loc['structure'], 14, 1), 
+        replaceNewLine($loc['floorSpace'], 14, 1)]);
     }
 
 }
@@ -548,7 +552,9 @@ if(sizeof($locs) > 0) {
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
-            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), $loc['structure'], $loc['floorSpace'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), 
+            replaceNewLine($loc['structure'], 14, 1), 
+            replaceNewLine($loc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
 
         //登記名義人複数
         $pos = $pos + $blockCount - 1;
@@ -677,7 +683,9 @@ if(isset($locs) && sizeof($locs) > 0) {
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['fb_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace'],
-            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), $loc['structure'], $loc['floorSpace'] ]);
+            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), 
+            replaceNewLine($loc['structure'], 9, 1), 
+            replaceNewLine($loc['floorSpace'], 9, 1) ]);
 
     }
 }
@@ -706,7 +714,7 @@ if(sizeof($locs) > 0) {
 
     //ブロックコピー
     if(sizeof($locs) > 1) {
-        copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
+        copyBlock($sheet, $pos-1, $blockCount + 1, (sizeof($locs) - 1), true);
     }
 
     
@@ -717,7 +725,10 @@ if(sizeof($locs) > 0) {
         $keyword = 'ob_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], $loc['structure'], $loc['floorSpace']]);
+        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], 
+            replaceNewLine($loc['structure'], 14, 1), 
+            replaceNewLine($loc['floorSpace'], 14, 1)]
+        );
 
         //（専有部分の建物の表示）---------------------------------------------------------------------------
         $keyword = 'p_address';
@@ -746,8 +757,9 @@ if(sizeof($locs) > 0) {
                 $pos = searchCellPos($sheet, $keyword, $pos);
                 $cellName = 'A' . $pos;
                 bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
-                    [$subLoc['address'], $subLoc['buildingNumber'], getCodeTitle($codeTypeList, $subLoc['dependType']), $subLoc['structure'], 
-                    $subLoc['floorSpace'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
+                    [$subLoc['address'], $subLoc['buildingNumber'], getCodeTitle($codeTypeList, $subLoc['dependType']), 
+                    replaceNewLine($subLoc['structure'], 14, 1), 
+                    replaceNewLine($subLoc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
 
                 //登記名義人複数
                 $pos = $pos + $subBlockCount - 1;
@@ -913,4 +925,18 @@ readfile($savePath);
 
 //削除
 unlink($savePath);
+
+/**
+ * 改行を全角スペース＋半角スペースに変換
+ */
+function replaceNewLine($val, $zenSpace, $hanSpace) {
+    $str = PHP_EOL;
+    for($i = 0 ; $i < $zenSpace; $i++) {
+        $str .= '　';
+    }
+    for($i = 0 ; $i < $hanSpace; $i++) {
+        $str .= ' ';
+    }
+    return preg_replace("/\r|\n/", $str, $val);//str_replace('\r', $str, $val);
+}
 ?>
