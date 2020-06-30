@@ -705,9 +705,13 @@ $locs = [];
 if(sizeof($belongIds) > 0) {
     $tempLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '04')->where_not_null('ridgePid')->where_null('deleteDate')
                 ->order_by_asc('locationType')->order_by_asc('pid')
-                ->distinct()->select('ridgePid')->findArray();
+                ->distinct()->findArray();
+    $ids = [];
     foreach($tempLocs as $temp) {
-        $locs[] = ORM::for_table(TBLLOCATIONINFO)->findOne($temp['ridgePid'])->asArray();
+        if(!in_array($temp['ridgePid'], $ids)) {
+            $ids[] = $temp['ridgePid'];
+            $locs[] = ORM::for_table(TBLLOCATIONINFO)->findOne($temp['ridgePid'])->asArray();
+        }        
     }
 }
 if(sizeof($locs) > 0) {
