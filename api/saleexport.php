@@ -496,7 +496,7 @@ function contractStatus($contract) {
  * ユーザー名称取得
  */
 function getUserName($uesrCode) {
-    $lst = ORM::for_table(TBLUSER)->where('employeeCode', $uesrCode)->findArray();
+    $lst = ORM::for_table(TBLUSER)->where('userId', $uesrCode)->findArray();
     if(sizeof($lst) > 0) return $lst[0]['userName'];
     return '';
 }
