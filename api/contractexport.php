@@ -134,6 +134,14 @@ if($nextPos != -1) {
     bindCell('A'.$pos, $sheet, $keyword, formatNumber($contract[$keyword], true));
 }
 
+// 売買代金（借地権）
+$keyword = 'tradingLeasePrice';
+$nextPos = searchCellPos($sheet, $keyword, $pos);
+if($nextPos != -1) {
+    $pos = $nextPos;
+    bindCell('A'.$pos, $sheet, $keyword, formatNumber($contract[$keyword], true));
+}
+
 // 和解成立後
 $keyword = 'settlementAfter';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
