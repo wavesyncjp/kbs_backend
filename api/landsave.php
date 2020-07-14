@@ -19,7 +19,7 @@ if($param->pid > 0){
 else {
 	//000002
 	$land = ORM::for_table(TBLTEMPLANDINFO)->create();	
-	$maxNo = ORM::for_table(TBLTEMPLANDINFO)->max('bukkenNo');
+	$maxNo = ORM::for_table(TBLTEMPLANDINFO)->where_not_equal('createUserId', '9999')->max('bukkenNo');
 	$maxNum = intval(ltrim($maxNo, "0")) + 1;
 	$nextNo = str_pad($maxNum, 6, '0', STR_PAD_LEFT);
 	$land->bukkenNo = $nextNo;
