@@ -10,7 +10,8 @@ $query = ORM::for_table(TBLUSER)
 			->select('p1.*')
 			->select('p2.depName');
 
-$query = $query->inner_join(TBLDEPARTMENT, array('p1.depCode', '=', 'p2.depCode'), 'p2');
+//$query = $query->inner_join(TBLDEPARTMENT, array('p1.depCode', '=', 'p2.depCode'), 'p2');
+$query = $query->left_outer_join(TBLDEPARTMENT, array('p1.depCode', '=', 'p2.depCode'), 'p2');
 
 $query = $query->where_null('p1.deleteDate');
 
@@ -19,6 +20,12 @@ if(isset($param->userId) && $param->userId !== ''){
 }
 if(isset($param->userName) && $param->userName !== ''){
 	$query = $query->where_like('userName', '%'.$param->userName.'%');
+}
+if(isset($param->depCode) && $param->depCode !== ''){
+	$query = $query->where('depCode', $param->depCode);
+}
+if(isset($param->authority) && $param->authority !== ''){
+	$query = $query->where('authority', $param->authority);
 }
 
 $deps = $query->order_by_asc('userId')->find_array();
