@@ -574,21 +574,27 @@ function getLandPlan($pid) {
 
 function convert_jpdt($date) {
 	if(!isset($date) || $date == '') return '';
+	$year = substr($date, 0, 4);
 	if ($date >= 20190501) {        //令和元年（2019年5月1日以降）
-		$name = "R";		
+		$name = "R";
+		$year = $year - 2018;		
 	} else if ($date >= 19890108) { //平成元年（1989年1月8日以降）
-		$name = "H";		
+		$name = "H";	
+		$year = $year - 1988;	
 	} else if ($date >= 19261225) { //昭和元年（1926年12月25日以降）
 		$name = "S";
+		$year = $year - 1925;
 	} else if ($date >= 19120730) { //大正元年（1912年7月30日以降）
-		$name = "T";		
+		$name = "T";
+		$year = $year - 1911;	
 	} else if ($date >= 18680125) { //明治元年（1868年1月25日以降）
 		$name = "M";
+		$year = $year - 1867;
 	} else {
 		$name = 'AD';
 	}
 	$day = new DateTime($date);
-	return $name.'.'.date_format($day, 'm.d');
+	return $name.$year.'.'.date_format($day, 'm.d');
 }
 
 function notNull($val) {
