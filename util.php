@@ -489,7 +489,7 @@ function getPlanInfo($pid){
 	$plan = ORM::for_table(TBLPLAN)->findOne($pid)->asArray();
 	
 	$detailList = [];
-	$details = ORM::for_table(TBLPLANDETAIL)->where('planPid', $pid)->where_null('deleteDate')->findArray();
+	$details = ORM::for_table(TBLPLANDETAIL)->where('planPid', $pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
 	if(isset($details)){	
 
 		$plan['details'] = $details;
@@ -506,7 +506,7 @@ function getPlanInfo($pid){
 		$plan['rent'] = null;
 	}
 
-	$rentdetails = ORM::for_table(TBLPLANRENTROLLDETAIL)->where('planPid', $pid)->where_null('deleteDate')->findArray();
+	$rentdetails = ORM::for_table(TBLPLANRENTROLLDETAIL)->where('planPid', $pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
 	if(isset($rentdetails)){	
 
 		$plan['rentdetails'] = $rentdetails;
