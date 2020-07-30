@@ -41,6 +41,14 @@ if(isset($param->vacationDay) && $param->vacationDay != ''){
 if(isset($param->contractDay) && $param->contractDay != ''){
 	$query = $query->where('p2.contractDay', $param->contractDay);
 }
+// 契約日（開始）
+if(isset($param->contractDay_From) && $param->contractDay_From != ''){
+	$query = $query->where_gte('p2.contractDay', $param->contractDay_From);
+}
+// 契約日（終了）
+if(isset($param->contractDay_To) && $param->contractDay_To != ''){
+	$query = $query->where_lte('p2.contractDay', $param->contractDay_To);
+}
 
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();
