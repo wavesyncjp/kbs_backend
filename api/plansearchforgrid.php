@@ -21,7 +21,7 @@ $ret = array();
 
 foreach($plans as $plan){
 	$details = ORM::for_table(TBLPLANDETAIL)->where('planPid', $plan['pid'])
-			->where_null('deleteDate')->order_by_asc('backNumber')->find_array();
+			->where_null('deleteDate')->select('price')->order_by_asc('backNumber')->find_array();
 	$plan['details'] = $details;
 	$ret[] = $plan;
 }
