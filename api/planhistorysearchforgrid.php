@@ -12,7 +12,7 @@ if(isset($param->planPid) && $param->planPid !== ''){
 	$query = $query->where('planPid', $param->planPid);
 }
 
-$planhistorys = $query->order_by_desc('pid')->find_array();
+$planHistorys = $query->order_by_desc('pid')->find_array();
 $ret = array();
 
 foreach($planHistorys as $planHistory){
