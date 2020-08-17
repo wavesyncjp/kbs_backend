@@ -46,7 +46,13 @@ ORM::configure('id_column_overrides', array(
 		'tblpaycontract'=>'pid',
 		'tblpaycontractdetail'=>'pid',
 		'tblplanrentroll' => 'pid',
-		'tblplanrentrolldetail' => 'pid',		
+		'tblplanrentrolldetail' => 'pid',	
+		'tblplanhistory'=>'pid',
+		'tblplandetailhistory'=>'pid',
+		'tblpaycontracthistory'=>'pid',
+		'tblpaycontractdetailhistory'=>'pid',
+		'tblplanrentrollhistory' => 'pid',
+		'tblplanrentrolldetailhistory' => 'pid',	
 		'tbltax'=>'pid',
 		'tblbukkenplaninfo' =>'pid',
 		'tblbukkensalesinfo'=>'pid',
@@ -83,6 +89,10 @@ define('TBLPAYCONTRACTDETAIL', 'tblpaycontractdetail');
 
 define('TBLPLANRENTROLL', 'tblplanrentroll');
 define('TBLPLANRENTROLLDETAIL', 'tblplanrentrolldetail');
+define('TBLPLANHISTORY', 'tblplanhistory');
+define('TBLPLANDETAILHISTORY', 'tblplandetailhistory');
+define('TBLPLANRENTROLLHISTORY', 'tblplanrentrollhistory');
+define('TBLPLANRENTROLLDETAILHISTORY', 'tblplanrentrolldetailhistory');
 define('TBLTAX', 'tbltax');
 define('TBLBUKKENPLANINFO', 'tblbukkenplaninfo');
 define('TBLBUKKENSALESINFO', 'tblbukkensalesinfo');
