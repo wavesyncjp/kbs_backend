@@ -9,7 +9,8 @@ $query = ORM::for_table(TBLTEMPLANDINFO)
 			->table_alias('p1')
 			->distinct()
             ->select('p1.*')
-            ->left_outer_join(TBLPLAN, array('p1.pid', '=', 'p2.tempLandInfoPid'), 'p2');
+			->left_outer_join(TBLPLAN, array('p1.pid', '=', 'p2.tempLandInfoPid'), 'p2');
+//			->inner_join(TBLPLAN, array('p1.pid', '=', 'p2.tempLandInfoPid'), 'p2');
 
 $query = $query->where_null('p1.deleteDate');
 
@@ -32,6 +33,10 @@ if(isset($param->planName) && $param->planName !== ''){
 // 作成日
 if(isset($param->createDay) && $param->createDay != ''){
 	$query = $query->where('p2.createDay', $param->createDay);
+}
+// clct結果
+if(isset($param->clctResult) && $param->clctResult != ''){
+	$query = $query->where_in('p1.result', $param->clctResult);
 }
 
 $lands = $query->order_by_desc('pid')->find_array();
