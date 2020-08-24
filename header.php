@@ -46,19 +46,17 @@ ORM::configure('id_column_overrides', array(
 		'tblpaycontract'=>'pid',
 		'tblpaycontractdetail'=>'pid',
 		'tblplanrentroll' => 'pid',
-		'tblplanrentrolldetail' => 'pid',	
-		'tblplanhistory'=>'pid',
-		'tblplandetailhistory'=>'pid',
-		'tblpaycontracthistory'=>'pid',
-		'tblpaycontractdetailhistory'=>'pid',
-		'tblplanrentrollhistory' => 'pid',
-		'tblplanrentrolldetailhistory' => 'pid',	
+		'tblplanrentrolldetail' => 'pid',		
 		'tbltax'=>'pid',
 		'tblbukkenplaninfo' =>'pid',
 		'tblbukkensalesinfo'=>'pid',
 		'tblcontracttypefix'=>'pid',
 		'tblcsvinfo' => 'pid',
 		'tblcsvinfodetail' => 'pid'
+		'tblplanhistory'=>'pid',
+		'tblplandetailhistory'=>'pid',
+		'tblplanrentrollhistory' => 'pid',
+		'tblplanrentrolldetailhistory' => 'pid',
 ) );
 
 $FILE_PATH = 'uploads';
@@ -86,21 +84,17 @@ define('TBLPLAN', 'tblplan');
 define('TBLPLANDETAIL', 'tblplandetail');
 define('TBLPAYCONTRACT', 'tblpaycontract');
 define('TBLPAYCONTRACTDETAIL', 'tblpaycontractdetail');
-
 define('TBLPLANRENTROLL', 'tblplanrentroll');
 define('TBLPLANRENTROLLDETAIL', 'tblplanrentrolldetail');
+define('TBLTAX', 'tbltax');
+define('TBLBUKKENPLANINFO', 'tblbukkenplaninfo');
+define('TBLBUKKENSALESINFO', 'tblbukkensalesinfo');
+define('TBLCONTRACTTYPEFIX', 'tblcontracttypefix');
+define('TBLCSVINFO', 'tblcsvinfo');
+define('TBLCSVINFODETAIL', 'tblcsvinfodetail');
 define('TBLPLANHISTORY', 'tblplanhistory');
 define('TBLPLANDETAILHISTORY', 'tblplandetailhistory');
 define('TBLPLANRENTROLLHISTORY', 'tblplanrentrollhistory');
 define('TBLPLANRENTROLLDETAILHISTORY', 'tblplanrentrolldetailhistory');
-define('TBLTAX', 'tbltax');
-define('TBLBUKKENPLANINFO', 'tblbukkenplaninfo');
-define('TBLBUKKENSALESINFO', 'tblbukkensalesinfo');
-
-define('TBLCONTRACTTYPEFIX', 'tblcontracttypefix');
-
-define('TBLCSVINFO', 'tblcsvinfo');
-
-define('TBLCSVINFODETAIL', 'tblcsvinfodetail');
 
 ?>

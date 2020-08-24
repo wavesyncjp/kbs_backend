@@ -518,6 +518,43 @@ function getPlanInfo($pid){
 	return $plan;
 }
 
+/**
+ * 事業収支情報取得
+ * @param unknown $pid
+ */
+function getPlanInfoHistory($pid){
+	$plan = ORM::for_table(TBLPLANHISTORY)->findOne($pid)->asArray();
+	
+	$detailList = [];
+	$details = ORM::for_table(TBLPLANDETAILHISTORY)->where('planHistoryPid', $pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
+	if(isset($details)){	
+
+		$plan['details'] = $details;
+	}
+	else {
+		$plan['details'] = [];
+	}
+
+	$rent = ORM::for_table(TBLPLANRENTROLLHISTORY)->where('planHistoryPid', $pid)->where_null('deleteDate')->findArray();
+	if(isset($rent) && sizeof($rent) > 0 ){	
+		$plan['rent'] = $rent[0];
+	}
+	else {
+		$plan['rent'] = null;
+	}
+
+	$rentdetails = ORM::for_table(TBLPLANRENTROLLDETAILHISTORY)->where('planHistoryPid', $pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
+	if(isset($rentdetails)){	
+
+		$plan['rentdetails'] = $rentdetails;
+	}
+	else {
+		$plan['rentdetails'] = [];
+	}
+
+	return $plan;
+}
+
 
 function searchCellPos($sheet, $keyword, $startPos) {
 
