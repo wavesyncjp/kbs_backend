@@ -40,7 +40,10 @@ foreach($plan as $key => $value) {
     }
     // 当社JV比率、土地関係金利、建物関係金利 
     if(($key === 'jvRatio' || $key === 'landInterest' || $key === 'buildInterest') && isset($value) && $value !== '') {
-        $data[$key] = $value.'%';
+        // 20200826 S_Update
+//        $data[$key] = $value.'%';
+        $data[$key] = round($value / 100, 3);
+        // 20200826 E_Update
     }
 }
 // コード値変換
@@ -108,7 +111,10 @@ foreach($rent as $key => $value) {
         || $key === 'expenseRatio1' || $key === 'expenseRatio2' || $key === 'expenseRatio3' || $key === 'expenseRatio4'
         || $key === 'profitsA' || $key === 'profitsB' || $key === 'profitsC' || $key === 'profitsD')
         && isset($value) && $value !== '') {
-        $data[$key] = $value.'%';
+        // 20200826 S_Update
+//        $data[$key] = $value.'%';
+        $data[$key] = round($value / 100, 3);
+        // 20200826 E_Update
     }
 }
 
