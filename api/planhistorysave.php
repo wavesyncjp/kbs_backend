@@ -2,7 +2,7 @@
 require '../header.php';
 require '../util.php';
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+if ($_SERVER['REQUEST_METHOD'] !== 'POST'){
 	echo 'NOT SUPPORT';
 	exit;
 }
@@ -22,73 +22,79 @@ else {
 	setInsert($plan, $param->createUserId);
 }
 /*画面に入力項目があって（.ts）planのカラムにないものを('')で除外。
-'updateUserId', 'updateDate', 'createUserId', 'createDate'は上でセットしているので*/
-copyData($param, $plan, array('pid','createDayMap','startDayMap','upperWingDayMap','completionDayMap',
-'scheduledDayMap','details','rent','rentdetails','updateUserId', 'updateDate', 'createUserId', 'createDate'));
+'updateUserId', 'updateDate', 'createUserId', 'createDate'は上でセットしているので */
+copyData($param, $plan, array('pid','createUserId','createDate','updateUserId','updateDate','details','rent','rentdetails',
+//日付MAP
+'createDayMap','startDayMap','upperWingDayMap','completionDayMap','scheduledDayMap','createHistoryDayMap',
+//数値MAP
+'afterCityPlanTaxMap','afterFixedTaxMap','afterTaxationCityMap','afterTaxationMap','buildAreaMap',
+'buildInterestMap','buildLoanMap','buildPeriodMap','buildValuationMap','buysellUnitsMap','cityPlanTaxBuildMap','cityPlanTaxLandMap','createHistoryDayMap',
+'entranceMap','fixedTaxBuildMap','fixedTaxLandMap','groundMap','landEvaluationMap','landInterestMap',
+'landLoanMap','landPeriodMap','mechanicalMap','parkingIndoorMap','parkingMap','parkingOutdoorMap',
+'salesAreaMap','siteAreaBuyMap','siteAreaCheckMap','taxationCityMap','taxationMap','totalAreaMap','totalUnitsMap','underAreaMap','undergroundMap'
+
+));
 $plan->save();
 
 //事業収支詳細
+//detailhistory
 if(isset($param->details)){
 	foreach ($param->details as $detail){
-		//削除
-		if(isset($detail->deleteUserId) && $detail->deleteUserId > 0) {
-			$detailSave = ORM::for_table(TBLPLANDETAILHISTORY)->find_one($detail->pid);
-			$detailSave->delete();			
+		
+		$detailSave = ORM::for_table(TBLPLANDETAILHISTORY)->create();
+				
+		copyData($detail, $detailSave, array('pid','updateUserId','updateDate','createUserId','createDate','deleteUserId'
+		,'burdenDaysMap','commissionRateMap','complePriceMonthMap','dismantlingMonthMap'
+		,'priceMap','priceTaxMap','rentMap','routePriceMap','totalMonthsMap','unitPriceMap','valuationMap'));		
+
+		$detailSave->planHistoryPid = $plan->pid;
+		$detailSave->createUserId = $plan->createUserId;
+		$detailSave->createDate = $plan->createDate;
+
+		if($plan->tempLandInfoPid > 0){
+			$detailSave->tempLandInfoPid = $plan->tempLandInfoPid;
 		}
-		else {
-			if(isset($detail->pid) && $detail->pid > 0){
-				$detailSave = ORM::for_table(TBLPLANDETAILHISTORY)->find_one($detail->pid);
-				setUpdate($detailSave, $param->updateUserId);			
-			}
-			else {
-				$detailSave = ORM::for_table(TBLPLANDETAILHISTORY)->create();
-				setInsert($detailSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
-			}		
-			copyData($detail, $detailSave, array('pid','updateUserId', 'updateDate', 'createUserId', 'createDate','deleteUserId'));		
-			$detailSave->planPid = $plan->pid;
-			if($plan->tempLandInfoPid > 0){
-				$detailSave->tempLandInfoPid = $plan->tempLandInfoPid;
-			}
-			$detailSave->save();
-		}
+		$detailSave->save();
+		
 	}
 }
 
-//rent
+//rentrollhistory
 if(isset($param->rent)) {
 	$rent = $param->rent;
-	if(isset($rent->pid) && $rent->pid > 0){
-		$rentSave = ORM::for_table(TBLPLANRENTROLLHISTORY)->find_one($rent->pid);
-		setUpdate($rentSave, $param->updateUserId);			
-	}
-	else {
-		$rentSave = ORM::for_table(TBLPLANRENTROLLHISTORY)->create();
-		setInsert($rentSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
-	}		
-	copyData($rent, $rentSave, array('pid','updateUserId', 'updateDate', 'createUserId', 'createDate','deleteUserId'));		
-	$rentSave->planPid = $plan->pid;
+	
+	$rentSave = ORM::for_table(TBLPLANRENTROLLHISTORY)->create();
+		
+	copyData($rent, $rentSave, array('pid','updateUserId','updateDate','createUserId','createDate','deleteUserId'
+	,'commonFeeMap','monthlyOtherIncomeMap','salesExpense1AMap','salesExpense1BMap','salesExpense1CMap','salesExpense1DMap'
+	,'salesExpense2AMap','salesExpense2BMap','salesExpense2CMap','salesExpense2DMap'
+	,'salesExpense3AMap','salesExpense3BMap','salesExpense3CMap','salesExpense3DMap'
+	,'tsuboUnitPriceAMap','tsuboUnitPriceBMap','tsuboUnitPriceCMap','tsuboUnitPriceDMap'));	
+
+	$rentSave->planHistoryPid = $plan->pid;
+	$rentSave->createUserId = $plan->createUserId;
+	$rentSave->createDate = $plan->createDate;
 	if($plan->tempLandInfoPid > 0){
+
+	
 		$rentSave->tempLandInfoPid = $plan->tempLandInfoPid;
 	}
 	$rentSave->save();
 	$param->planRentRollPid = $rentSave->pid;
 }
 
-//rentdetail
+
+//rentdetailhistory
 if(isset($param->rentdetails)){
 	foreach ($param->rentdetails as $rentdetail){
-		//削除
 		
-		if(isset($rentdetail->pid) && $rentdetail->pid > 0){
-			$rentdetailSave = ORM::for_table(TBLPLANRENTROLLDETAILHISTORY)->find_one($rentdetail->pid);
-			setUpdate($rentdetailSave, $param->updateUserId);			
-		}
-		else {
-			$rentdetailSave = ORM::for_table(TBLPLANRENTROLLDETAILHISTORY)->create();
-			setInsert($rentdetailSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
-		}		
-		copyData($rentdetail, $rentdetailSave, array('pid','updateUserId', 'updateDate', 'createUserId', 'createDate','deleteUserId'));		
-		$rentdetailSave->planPid = $plan->pid;
+		$rentdetailSave = ORM::for_table(TBLPLANRENTROLLDETAILHISTORY)->create();
+		
+		copyData($rentdetail, $rentdetailSave, array('pid','updateUserId','updateDate','createUserId','createDate','deleteUserId','rentUnitPriceMap','securityDepositMap','spaceMap'));
+
+		$rentdetailSave->planHistoryPid = $plan->pid;
+		$rentdetailSave->createUserId = $plan->createUserId;
+		$rentdetailSave->createDate = $plan->createDate;
 		if($plan->tempLandInfoPid > 0){
 			$rentdetailSave->tempLandInfoPid = $plan->tempLandInfoPid;
 		}
@@ -98,7 +104,7 @@ if(isset($param->rentdetails)){
 }
 
 
-$plan = getPlanInfo($plan->pid);
+$plan = getPlanInfoHistory($plan->pid);
 echo json_encode($param );
 
 ?>
