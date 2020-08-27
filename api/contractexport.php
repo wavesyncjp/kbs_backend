@@ -208,6 +208,7 @@ $teichiIds = []; // 底地
 foreach($contract['details'] as $detail) {
     if($detail['contractDataType'] == '01') {
         $detailIds[] = $detail['locationInfoPid'];
+        $belongIds[] = $detail['locationInfoPid'];// 20200828 S_Add
     }
     else if($detail['contractDataType'] === '02') {
         $belongIds[] = $detail['locationInfoPid'];
@@ -329,15 +330,24 @@ $keyword = 'contractTypeTitle';
 $pos = searchCellPos($sheet, $keyword, $pos);
 if($template['reportFormType'] == '04') {
     $cellName = 'A' . $pos;
-    bindCell($cellName, $sheet, 'contractTypeTitle', '借地権の場合、（次の土地に係る借地権）');
+    //20200828 S_Update
+//    bindCell($cellName, $sheet, 'contractTypeTitle', '借地権の場合、（次の土地に係る借地権）');
+    bindCell($cellName, $sheet, 'contractTypeTitle', '（次の土地に係る借地権）');
+    //20200828 E_Update
 }
 else if($template['reportFormType'] == '05') {
     $cellName = 'A' . $pos;
-    bindCell($cellName, $sheet, 'contractTypeTitle', '地上権の場合、（次の土地に係る地上権）');
+    //20200828 S_Update
+//    bindCell($cellName, $sheet, 'contractTypeTitle', '地上権の場合、（次の土地に係る地上権）');
+    bindCell($cellName, $sheet, 'contractTypeTitle', '（次の土地に係る地上権）');
+    //20200828 E_Update
 }
 else if($template['reportFormType'] == '06') {
     $cellName = 'A' . $pos;
-    bindCell($cellName, $sheet, 'contractTypeTitle', '敷地権付区分建物の場合、（敷地権の目的たる土地の表示）');
+    //20200828 S_Update
+//    bindCell($cellName, $sheet, 'contractTypeTitle', '敷地権付区分建物の場合、（敷地権の目的たる土地の表示）');
+    bindCell($cellName, $sheet, 'contractTypeTitle', '（敷地権の目的たる土地の表示）');
+    //20200828 E_Update
 }
 else {
     $sheet->removeRow($pos);

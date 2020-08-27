@@ -18,7 +18,7 @@ $query = ORM::for_table(TBLTEMPLANDINFO)
 
 if(isset($param->address) && $param->address != ''){
 	$query = $query->inner_join(TBLLOCATIONINFO, array('p1.pid', '=', 'p2.tempLandInfoPid'), 'p2');
-}						
+}
 $query = $query->where_null('p1.deleteDate');
 
 // 物件番号
@@ -29,6 +29,16 @@ if(isset($param->bukkenNo) && $param->bukkenNo !== ''){
 if(isset($param->contractBukkenNo) && $param->contractBukkenNo !== ''){
 	$query = $query->where('p1.contractBukkenNo', $param->contractBukkenNo);
 }
+// 20200828 S_Add
+// 契約物件番（前方一致）
+if(isset($param->contractBukkenNo_Like) && $param->contractBukkenNo_Like !== ''){
+	$query = $query->where_like('p1.contractBukkenNo', $param->contractBukkenNo_Like.'%');
+}
+// 物件担当者（複数指定）
+if(isset($param->clctInfoStaff) && $param->clctInfoStaff !== ''){
+	$query = $query->where_in('p1.infoStaff', $param->clctInfoStaff);
+}
+// 20200828 E_Add
 // 物件名
 if(isset($param->bukkenName) && $param->bukkenName !== ''){
 	$query = $query->where_like('p1.bukkenName', '%'.$param->bukkenName.'%');
