@@ -52,7 +52,7 @@ ORM::configure('id_column_overrides', array(
 		'tblbukkensalesinfo'=>'pid',
 		'tblcontracttypefix'=>'pid',
 		'tblcsvinfo' => 'pid',
-		'tblcsvinfodetail' => 'pid'
+		'tblcsvinfodetail' => 'pid',
 		'tblplanhistory'=>'pid',
 		'tblplandetailhistory'=>'pid',
 		'tblplanrentrollhistory' => 'pid',

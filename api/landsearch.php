@@ -35,8 +35,15 @@ if(isset($param->contractBukkenNo_Like) && $param->contractBukkenNo_Like !== '')
 	$query = $query->where_like('p1.contractBukkenNo', $param->contractBukkenNo_Like.'%');
 }
 // 物件担当者（複数指定）
-if(isset($param->clctInfoStaff) && $param->clctInfoStaff !== ''){
-	$query = $query->where_in('p1.infoStaff', $param->clctInfoStaff);
+if(isset($param->clctInfoStaff) && $param->clctInfoStaff !== '' && sizeof($param->clctInfoStaff) > 0){
+
+	$str = [];
+	foreach($param->clctInfoStaff as $userId) {
+		$str[] = " CONCAT(',',p1.infoStaff, ',') like '%," . $userId . ",%' ";
+	}
+
+	$whereRaw = '( ' . implode ('OR', $str) . ' )';
+	$query = $query->where_raw($whereRaw);
 }
 // 20200828 E_Add
 // 物件名
