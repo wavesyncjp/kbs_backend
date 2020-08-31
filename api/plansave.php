@@ -99,6 +99,6 @@ if(isset($param->rentdetails)){
 
 
 $plan = getPlanInfo($plan->pid);
-echo json_encode($param );
+echo json_encode($plan);
 
 ?>
