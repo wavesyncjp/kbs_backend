@@ -495,11 +495,30 @@ function contractStatus($contract) {
 /**
  * ユーザー名称取得
  */
-function getUserName($uesrCode) {
+// 20200901 S_Update
+function getUserName($val) {
+    $ret = '';
+
+    $list = explode(',', $val);
+    foreach ($list as $userId)
+    {
+        $lst = ORM::for_table(TBLUSER)->where('userId', $userId)->findArray();
+        if(sizeof($lst) > 0)
+        {
+            if(strlen($ret) > 0) $ret .= ",";
+            $ret .= $lst[0]['userName'];
+        }
+    }
+    return $ret;
+}
+/*
+ function getUserName($uesrCode) {
     $lst = ORM::for_table(TBLUSER)->where('userId', $uesrCode)->findArray();
     if(sizeof($lst) > 0) return $lst[0]['userName'];
     return '';
 }
+*/
+// 20200901 E_Update
 
 /**
  * 所在地情報取得
