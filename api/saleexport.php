@@ -257,7 +257,7 @@ foreach($payList1 as $payDetail) {
     $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['contractPrice']));
     // 支払金額
 //    $sheet->setCellValue('H'.$payPos, formatYenNumber($payDetail['payPrice']));
-    $sheet->setCellValue('H'.$payPos, $payDetail['payPrice']);
+    $sheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
     // 支払時期
     $sheet->setCellValue('I'.$payPos, $payDetail['paymentSeason']);
     // 支払予定日
@@ -310,7 +310,7 @@ foreach($payList2 as $payDetail) {
     $sheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
     // 金額
 //    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
-    $sheet->setCellValue('G'.$payPos, $payDetail['payPrice']);
+    $sheet->setCellValue('G'.$payPos, $payDetail['payPriceTax']);
     // 支払方法
     $sheet->setCellValue('H'.$payPos, getPayMethodName($payDetail['paymentMethod']));
     // 支払日
@@ -433,7 +433,7 @@ foreach($contracts as $contract) {
             $clonedWorksheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
             // 支払金額
 //            $clonedWorksheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
-            $clonedWorksheet->setCellValue('G'.$payPos, $payDetail['payPrice']);
+            $clonedWorksheet->setCellValue('G'.$payPos, $payDetail['payPriceTax']);
             // 支払時期
             $clonedWorksheet->setCellValue('H'.$payPos, $payDetail['paymentSeason']);
             // 支払予定日
