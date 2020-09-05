@@ -231,6 +231,7 @@ foreach($payContracts as $pay) {
         foreach($details as $detail) {
             $detail['supplierName'] = $pay['supplierName'];
             $detail['contractPrice'] = $pay['contractPrice'];
+            $detail['contractPriceTax'] = $pay['contractPriceTax'];// 20200906 Add
             $detail = getPaymentName($detail, $paymentTypeData);
             if(!equalVal($detail, 'costFlg', '04')){// 原価フラグ=04:地権者費用は対象外
                 // 光熱費フラグで分割する
@@ -254,7 +255,8 @@ foreach($payList1 as $payDetail) {
     // 摘要
     $sheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
     // 契約金額
-    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['contractPrice']));
+//    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['contractPrice']));
+    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['contractPriceTax']));
     // 支払金額
 //    $sheet->setCellValue('H'.$payPos, formatYenNumber($payDetail['payPrice']));
     $sheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
