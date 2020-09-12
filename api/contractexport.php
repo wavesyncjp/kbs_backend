@@ -161,7 +161,10 @@ if($nextPos != -1) {
 // 明渡期日
 $val = '';
 if(isset($contract['vacationDay']) && $contract['vacationDay'] !== '') {
-    $val = date('Y年m月d日', strtotime($contract['vacationDay']));
+    // 20200913 S_Update
+//    $val = date('Y年m月d日', strtotime($contract['vacationDay']));
+    $val = mb_convert_kana(date('Y年m月d日', strtotime($contract['vacationDay'])), 'KVRN');
+    // 20200913 E_Update
 }
 else {
     $val = '　　　年　　月　　日';
@@ -303,7 +306,10 @@ if(sizeof($sellers) > 0) {
     for($cursor = 0 ; $cursor < sizeof($sellers) ; $cursor++){
         $seller = $sellers[$cursor];
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['contractorAddress', 'contractorName'], [$seller['contractorAdress'], $seller['contractorName']]);
+        // 20200913 S_Update
+//        bindCell($cellName, $sheet, ['contractorAddress', 'contractorName'], [$seller['contractorAdress'], $seller['contractorName']]);
+        bindCell($cellName, $sheet, ['contractorAddress', 'contractorName'], ['', '']);
+        // 20200913 E_Update
 
         //$cellName = 'A' . ($pos + 3) ;
         //bindCell($cellName, $sheet, ['contractorName'], [$seller['contractorName']]);
@@ -330,24 +336,24 @@ $keyword = 'contractTypeTitle';
 $pos = searchCellPos($sheet, $keyword, $pos);
 if($template['reportFormType'] == '04') {
     $cellName = 'A' . $pos;
-    //20200828 S_Update
+    // 20200828 S_Update
 //    bindCell($cellName, $sheet, 'contractTypeTitle', '借地権の場合、（次の土地に係る借地権）');
     bindCell($cellName, $sheet, 'contractTypeTitle', '（次の土地に係る借地権）');
-    //20200828 E_Update
+    // 20200828 E_Update
 }
 else if($template['reportFormType'] == '05') {
     $cellName = 'A' . $pos;
-    //20200828 S_Update
+    // 20200828 S_Update
 //    bindCell($cellName, $sheet, 'contractTypeTitle', '地上権の場合、（次の土地に係る地上権）');
     bindCell($cellName, $sheet, 'contractTypeTitle', '（次の土地に係る地上権）');
-    //20200828 E_Update
+    // 20200828 E_Update
 }
 else if($template['reportFormType'] == '06') {
     $cellName = 'A' . $pos;
-    //20200828 S_Update
+    // 20200828 S_Update
 //    bindCell($cellName, $sheet, 'contractTypeTitle', '敷地権付区分建物の場合、（敷地権の目的たる土地の表示）');
     bindCell($cellName, $sheet, 'contractTypeTitle', '（敷地権の目的たる土地の表示）');
-    //20200828 E_Update
+    // 20200828 E_Update
 }
 else {
     $sheet->removeRow($pos);
@@ -388,7 +394,10 @@ if(isset($locs) && sizeof($locs) > 0) {
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['l_address', 'blockNumber', 'landCategory', 'area', 'sharer'],
-            [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            // 20200913 S_Update
+//            [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), formatNumber($loc['area'], true), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            // 20200913 E_Update
 
         //[土地]文言削除
         if($cursor > 0) {
@@ -465,9 +474,16 @@ if(isset($locs) && sizeof($locs) > 0) {
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['b_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
+            //20200913 S_Update
+            /*
             [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), 
             replaceNewLine($loc['structure'], 14, 1), 
             replaceNewLine($loc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            */
+            [$loc['address'], mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType']), 
+            replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1), 
+            replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            //20200913 E_Update
 
         //[土地]文言削除
         if($cursor > 0) {
@@ -570,9 +586,16 @@ if(sizeof($locs) > 0) {
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
+            // 20200913 S_Update
+            /*
             [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), 
             replaceNewLine($loc['structure'], 14, 1), 
             replaceNewLine($loc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            */
+            [$loc['address'], mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType']), 
+            replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1), 
+            replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            // 20200913 E_Update
 
         //登記名義人複数
         $pos = $pos + $blockCount - 1;
@@ -582,7 +605,7 @@ if(sizeof($locs) > 0) {
             //登記人分をコピー
             $sharerStr = $sheet->getCell('A' .  $pos)->getValue();
             $sheet->insertNewRowBefore($pos, $increase);
-            copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);   
+            copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);
 
             $keyword = 'repear_sharer';
             $pos = searchCellPos($sheet, $keyword, $pos) - 1;
@@ -667,7 +690,10 @@ if(isset($locs) && sizeof($locs) > 0) {
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['fl_address', 'blockNumber', 'landCategory', 'area'],
-            [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area']]);
+            // 20200913 S_Update
+//            [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area']]);
+            [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), formatNumber($loc['area'], true)]);
+            // 20200913 E_Update
 
     }
 }
@@ -701,9 +727,16 @@ if(isset($locs) && sizeof($locs) > 0) {
         $pos = searchCellPos($sheet, $keyword, $pos);
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['fb_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace'],
+            // 20200913 S_Update
+            /*
             [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), 
             replaceNewLine($loc['structure'], 9, 1), 
             replaceNewLine($loc['floorSpace'], 9, 1) ]);
+            */
+            [$loc['address'], mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType']), 
+            replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 9, 1), 
+            replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 9, 1) ]);
+            // 20200913 E_Update
 
     }
 }
@@ -779,9 +812,16 @@ if(sizeof($locs) > 0) {
                 $pos = searchCellPos($sheet, $keyword, $pos);
                 $cellName = 'A' . $pos;
                 bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
+                    // 20200913 S_Update
+                    /*
                     [$subLoc['address'], $subLoc['buildingNumber'], getCodeTitle($codeTypeList, $subLoc['dependType']), 
                     replaceNewLine($subLoc['structure'], 14, 1), 
                     replaceNewLine($subLoc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+                    */
+                    [$subLoc['address'], mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType']), 
+                    replaceNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'), 14, 1), 
+                    replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+                    // 20200913 E_Update
 
                 //登記名義人複数
                 $pos = $pos + $subBlockCount - 1;
@@ -891,38 +931,39 @@ else {
 
 //敷地面積
 if($contract['equiExchangeFlg'] == 1) {
+    //敷地面積・有効敷地面積
     $keyword = 'siteArea';
     $pos = searchCellPos($sheet, $keyword, $pos);
     bindCell('A' . $pos, $sheet, ['siteArea', 'siteAvailableArea'], [$contract['siteArea'], $contract['siteAvailableArea']]);
-
+    //構造
     $keyword = 'structure';
     $pos = searchCellPos($sheet, $keyword, $pos);
     bindCell('A' . $pos, $sheet, 'structure', $contract['structure']);
-
+    //規模
     $keyword = 'scale';
     $pos = searchCellPos($sheet, $keyword, $pos);
     bindCell('A' . $pos, $sheet, 'scale', $contract['scale']);
-
+    //延床面積
     $keyword = 'totalFloorArea';
     $pos = searchCellPos($sheet, $keyword, $pos);
     bindCell('A' . $pos, $sheet, 'totalFloorArea', $contract['totalFloorArea']);
-    
+    //建築確認取得
     $keyword = 'acquisitionConfirmDay';
     $pos = searchCellPos($sheet, $keyword, $pos);
     bindCell('A' . $pos, $sheet, 'acquisitionConfirmDay', showDay($contract['acquisitionConfirmDay']));
-
+    //計画建物着工
     $keyword = 'startScheduledDay';
     $pos = searchCellPos($sheet, $keyword, $pos);
     bindCell('A' . $pos, $sheet, 'startScheduledDay', showDay($contract['startScheduledDay']));
-
+    //優先分譲契約締結
     $keyword = 'prioritySalesAgreementDay';
     $pos = searchCellPos($sheet, $keyword, $pos);
     bindCell('A' . $pos, $sheet, 'prioritySalesAgreementDay', showDay($contract['prioritySalesAgreementDay']));
-
+    //計画建物竣工
     $keyword = 'finishScheduledDay';
     $pos = searchCellPos($sheet, $keyword, $pos);
     bindCell('A' . $pos, $sheet, 'finishScheduledDay', showDay($contract['finishScheduledDay']));
-
+    //取得物件引渡
     $keyword = 'deliveryDay';
     $pos = searchCellPos($sheet, $keyword, $pos);
     bindCell('A' . $pos, $sheet, 'deliveryDay', showDay($contract['deliveryDay']));
