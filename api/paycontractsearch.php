@@ -28,6 +28,12 @@ $query = $query->where_null('p1.deleteDate');
 if(isset($param->bukkenNo)  && $param->bukkenNo !== ''){
 	$query = $query->where('p3.bukkenNo', $param->bukkenNo);
 }
+// 20200828 S_Add
+// 契約物件番（前方一致）
+if(isset($param->contractBukkenNo_Like) && $param->contractBukkenNo_Like !== ''){
+	$query = $query->where_like('p3.contractBukkenNo', $param->contractBukkenNo_Like.'%');
+}
+// 20200913 E_Add
 // 物件名
 if(isset($param->bukkenName) && $param->bukkenName !== ''){
 	$query = $query->where_like('p3.bukkenName', '%'.$param->bukkenName.'%');
@@ -61,6 +67,15 @@ if(isset($param->payDay_From) && $param->payDay_From != ''){
 if(isset($param->payDay_To) && $param->payDay_To != ''){
 	$query = $query->where_lte('p1.contractDay', $param->payDay_To);
 }
+// 20200913 S_Add
+// 支払確定日(payFixDay)
+if(isset($param->payFixDay_From) && $param->payFixDay_From != ''){
+	$query = $query->where_gte('p1.contractFixDay', $param->payFixDay_From);
+}
+if(isset($param->payFixDay_To) && $param->payFixDay_To != ''){
+	$query = $query->where_lte('p1.contractFixDay', $param->payFixDay_To);
+}
+// 20200913 E_Add
 
 $contracts = $query->order_by_desc('p3.bukkenNo')->find_array();
 

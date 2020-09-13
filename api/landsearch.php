@@ -80,6 +80,15 @@ if(isset($param->surveyRequestedDaySearch_From) && $param->surveyRequestedDaySea
 if(isset($param->surveyRequestedDaySearch_To) && $param->surveyRequestedDaySearch_To != ''){
 	$query = $query->where_lte('p1.surveyRequestedDay', $param->surveyRequestedDaySearch_To);
 }
+// 20200913 S_Add
+//終了日(finishDate)
+if(isset($param->finishDateSearch_From) && $param->finishDateSearch_From != ''){
+	$query = $query->where_gte('p1.finishDate', $param->finishDateSearch_From);
+}
+if(isset($param->finishDateSearch_To) && $param->finishDateSearch_To != ''){
+	$query = $query->where_lte('p1.finishDate', $param->finishDateSearch_To);
+}
+// 20200913 E_Add
 
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();
