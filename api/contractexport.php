@@ -180,6 +180,22 @@ for($i = 0 ; $i < 2; $i++) {
     }
 }
 
+// 20200914 S_Add
+// 即決和解申請日
+$keyword = 'settlementDay';
+$nextPos = searchCellPos($sheet, $keyword, $pos);
+if($nextPos != -1) {
+    $pos = $nextPos;
+    if(isset($contract[$keyword]) && $contract[$keyword] !== '') {
+        $val = mb_convert_kana(date('Y年m月d日', strtotime($contract[$keyword])), 'KVRN');
+    }
+    else {
+        $val = '　　　年　　月　　日';
+    }
+    bindCell('A' . $pos, $sheet, $keyword, $val);
+}
+// 20200914 E_Add
+
 // 優先分譲面積
 $keyword = 'prioritySalesArea';
 $nextPos = searchCellPos($sheet, $keyword, $pos);
