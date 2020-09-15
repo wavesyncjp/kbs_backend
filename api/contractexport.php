@@ -408,6 +408,14 @@ if(isset($locs) && sizeof($locs) > 0) {
 
         $keyword = 'l_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
+
+        //20200915 S_Add 1行隙間開ける
+        if($cursor > 0) {
+            $sheet->insertNewRowBefore($pos);
+            $pos++;
+        }
+        //20200915 E_Add 1行隙間開ける
+
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['l_address', 'blockNumber', 'landCategory', 'area', 'sharer'],
             // 20200913 S_Update
@@ -488,6 +496,14 @@ if(isset($locs) && sizeof($locs) > 0) {
 
         $keyword = 'b_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
+
+        //20200915 S_Add 1行隙間開ける
+        if($cursor > 0) {
+            $sheet->insertNewRowBefore($pos);
+            $pos++;
+        }
+        //20200915 E_Add 1行隙間開ける
+
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['b_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
             //20200913 S_Update
@@ -500,6 +516,17 @@ if(isset($locs) && sizeof($locs) > 0) {
             replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1), 
             replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
             //20200913 E_Update
+
+        //20200915 S_Add セルの高さを調整
+        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
+        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
+        if($lineCount > 3) {
+            $newHeight = 18.8 + 2.6 *($lineCount - 3);
+            for($rowPos = 0 ; $rowPos < $blockCount - 1 ; $rowPos++) {
+                $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
+            }            
+        }
+        //20200915 E_Add セルの高さを調整
 
         //[土地]文言削除
         if($cursor > 0) {
@@ -564,10 +591,29 @@ if(sizeof($locs) > 0) {
 
         $keyword = 'ob_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
+
+        //20200915 S_Add 1行隙間開ける
+        if($cursor > 0) {
+            $sheet->insertNewRowBefore($pos);
+            $pos++;
+        }
+        //20200915 E_Add 1行隙間開ける
+
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], 
-        replaceNewLine($loc['structure'], 14, 1), 
-        replaceNewLine($loc['floorSpace'], 14, 1)]);
+                replaceNewLine($loc['structure'], 14, 1), 
+                replaceNewLine($loc['floorSpace'], 14, 1)]);
+
+        //20200915 S_Add セルの高さを調整
+        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
+        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
+        if($lineCount > 3) {
+            $newHeight = 18.8 + 6.2 *($lineCount - 3);
+            for($rowPos = 0 ; $rowPos < $blockCount - 1 ; $rowPos++) {
+                $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
+            }            
+        }
+        //20200915 E_Add セルの高さを調整
     }
 
 }
@@ -600,6 +646,14 @@ if(sizeof($locs) > 0) {
 
         $keyword = 'p_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
+
+        //20200915 S_Add 1行隙間開ける
+        if($cursor > 0) {
+            $sheet->insertNewRowBefore($pos);
+            $pos++;
+        }
+        //20200915 E_Add 1行隙間開ける
+
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
             // 20200913 S_Update
@@ -612,6 +666,17 @@ if(sizeof($locs) > 0) {
             replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1), 
             replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
             // 20200913 E_Update
+
+        //20200915 S_Add セルの高さを調整
+        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
+        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
+        if($lineCount > 3) {
+            $newHeight = 18.8 + 2.6 *($lineCount - 3);
+            for($rowPos = 0 ; $rowPos < $blockCount-1 ; $rowPos++) {
+                $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
+            }            
+        }
+        //20200915 E_Add セルの高さを調整
 
         //登記名義人複数
         $pos = $pos + $blockCount - 1;
@@ -704,6 +769,14 @@ if(isset($locs) && sizeof($locs) > 0) {
 
         $keyword = 'fl_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
+
+        //20200915 S_Add 1行隙間開ける
+        if($cursor > 0) {
+            $sheet->insertNewRowBefore($pos);
+            $pos++;
+        }
+        //20200915 E_Add 1行隙間開ける
+
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['fl_address', 'blockNumber', 'landCategory', 'area'],
             // 20200913 S_Update
@@ -741,6 +814,14 @@ if(isset($locs) && sizeof($locs) > 0) {
 
         $keyword = 'fb_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
+
+        //20200915 S_Add 1行隙間開ける
+        if($cursor > 0) {
+            $sheet->insertNewRowBefore($pos);
+            $pos++;
+        }
+        //20200915 E_Add 1行隙間開ける
+
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['fb_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace'],
             // 20200913 S_Update
@@ -753,6 +834,17 @@ if(isset($locs) && sizeof($locs) > 0) {
             replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 9, 1), 
             replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 9, 1) ]);
             // 20200913 E_Update
+
+        //20200915 S_Add セルの高さを調整
+        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
+        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
+        if($lineCount > 3) {
+            $newHeight = 18.8 + 3.76 *($lineCount - 3);
+            for($rowPos = 0 ; $rowPos < $blockCount - 1 ; $rowPos++) {
+                $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
+            }            
+        }
+        //20200915 E_Add セルの高さを調整
 
     }
 }
@@ -795,11 +887,30 @@ if(sizeof($locs) > 0) {
 
         $keyword = 'ob_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
+
+        //20200915 S_Add 1行隙間開ける
+        if($cursor > 0) {
+            $sheet->insertNewRowBefore($pos);
+            $pos++;
+        }
+        //20200915 E_Add 1行隙間開ける
+
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], 
             replaceNewLine($loc['structure'], 14, 1), 
             replaceNewLine($loc['floorSpace'], 14, 1)]
         );
+
+        //20200915 S_Add セルの高さを調整
+        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
+        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
+        if($lineCount > 3) {
+            $newHeight = 18.8 + 1.7 *($lineCount - 3);
+            for($rowPos = 0 ; $rowPos < $blockCount - 1 ; $rowPos++) {
+                $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
+            }            
+        }
+        //20200915 E_Add セルの高さを調整
 
         //（専有部分の建物の表示）---------------------------------------------------------------------------
         $keyword = 'p_address';
@@ -826,6 +937,14 @@ if(sizeof($locs) > 0) {
 
                 $keyword = 'p_address';
                 $pos = searchCellPos($sheet, $keyword, $pos);
+
+                //20200915 S_Add 1行隙間開ける
+                if($cursor > 0) {
+                    $sheet->insertNewRowBefore($pos);
+                    $pos++;
+                }
+                //20200915 E_Add 1行隙間開ける
+
                 $cellName = 'A' . $pos;
                 bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
                     // 20200913 S_Update
@@ -838,6 +957,17 @@ if(sizeof($locs) > 0) {
                     replaceNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'), 14, 1), 
                     replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
                     // 20200913 E_Update
+                
+                //20200915 S_Add セルの高さを調整
+                $lineCount = countNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'));
+                $lineCount += countNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'));
+                if($lineCount > 3) {
+                    $newHeight = 18.8 + 2.6 *($lineCount - 3);
+                    for($rowPos = 0 ; $rowPos < $subBlockCount - 1 ; $rowPos++) {
+                        $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
+                    }            
+                }
+                //20200915 E_Add セルの高さを調整
 
                 //登記名義人複数
                 $pos = $pos + $subBlockCount - 1;
@@ -1018,4 +1148,13 @@ function replaceNewLine($val, $zenSpace, $hanSpace) {
     }
     return preg_replace("/\r|\n/", $str, $val);//str_replace('\r', $str, $val);
 }
+
+/**
+ * 改行数カウント
+ */
+function countNewLine($val) {
+    $newVal = preg_replace("/\r|\n/", 'BR', $val);
+    return count(explode('BR', $newVal));
+}
+
 ?>
