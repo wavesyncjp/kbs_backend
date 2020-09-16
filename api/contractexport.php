@@ -383,14 +383,6 @@ if(isset($locs) && sizeof($locs) > 0) {
         $keyword = 'l_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
 
-        // 20200915 S_Add
-        if($cursor > 0) {
-            // 1行挿入
-            $sheet->insertNewRowBefore($pos);
-            $pos++;
-        }
-        // 20200915 E_Add
-
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['l_address', 'blockNumber', 'landCategory', 'area', 'sharer']
             // 20200913 S_Update
@@ -466,14 +458,6 @@ if(isset($locs) && sizeof($locs) > 0) {
 
         $keyword = 'b_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
-
-        // 20200915 S_Add
-        if($cursor > 0) {
-            // 1行挿入
-            $sheet->insertNewRowBefore($pos);
-            $pos++;
-        }
-        // 20200915 E_Add
 
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['b_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer']
@@ -563,14 +547,6 @@ if(sizeof($locs) > 0) {
         $keyword = 'ob_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
 
-        // 20200915 S_Add
-        if($cursor > 0) {
-            // 1行挿入
-            $sheet->insertNewRowBefore($pos);
-            $pos++;
-        }
-        // 20200915 E_Add
-
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address']
         , replaceNewLine($loc['structure'], 14, 1)
@@ -618,14 +594,6 @@ if(sizeof($locs) > 0) {
 
         $keyword = 'p_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
-
-        // 20200915 S_Add
-        if($cursor > 0) {
-            // 1行挿入
-            $sheet->insertNewRowBefore($pos);
-            $pos++;
-        }
-        // 20200915 E_Add
 
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer']
