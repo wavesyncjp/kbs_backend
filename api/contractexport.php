@@ -4,8 +4,8 @@ require '../header.php';
 require '../util.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-	echo 'NOT SUPPORT';
-	exit;
+    echo 'NOT SUPPORT';
+    exit;
 }
 
 $postparam = file_get_contents("php://input");
@@ -19,7 +19,6 @@ header("Content-Type: application/vnd.ms-excel");
 header("Pragma: no-cache");
 header("Expires: 0");
 
-
 $fullPath  = __DIR__ . '/../template';
 //$filePath = $fullPath.'/売買契約.xlsx';
 $filePath = $fullPath.$template['reportFormPath'].$template['reportFormName'];
@@ -28,7 +27,6 @@ $filePath = $fullPath.$template['reportFormPath'].$template['reportFormName'];
 $reader = new PhpOffice\PhpSpreadsheet\Reader\Xlsx();
 $spreadsheet = $reader->load($filePath);
 $sheet = $spreadsheet->getSheet(0);
-
 
 //契約者
 $pos = searchCellPos($sheet, 'contractorName', 10);
@@ -81,24 +79,20 @@ if($nextPos != -1) {
     $name = '';
     if(sizeof($sellers) === 1) {
         $name = $sellers[0][$keyword];
-    }
-    else {
+    } else {
         $index = 0;
         $sl = [];
         foreach($sellers as $seller) {
             $sl[] = '「甲' . mb_convert_kana(($index + 1), 'N') . '」';
             if($index > 0) $name .= '売主：';
-            if($index < sizeof($sellers) - 1) {                
+            if($index < sizeof($sellers) - 1) {
                 $name .= $seller[$keyword].'（以下「甲' . mb_convert_kana(($index + 1), 'N') . '」という。）';
-            }
-            else {
+            } else {
                 $name .= $seller[$keyword].'（以下「甲' . mb_convert_kana(($index + 1), 'N') . '」といい' . implode('', $sl) . 'を併せて「甲」という。）';
             }
-
             $index++;
         }
     }
-
     bindCell('A'.$pos , $sheet, $keyword, $name);
 }
 
@@ -165,8 +159,7 @@ if(isset($contract['vacationDay']) && $contract['vacationDay'] !== '') {
 //    $val = date('Y年m月d日', strtotime($contract['vacationDay']));
     $val = mb_convert_kana(date('Y年m月d日', strtotime($contract['vacationDay'])), 'KVRN');
     // 20200913 E_Update
-}
-else {
+} else {
     $val = '　　　年　　月　　日';
 }
 
@@ -188,8 +181,7 @@ if($nextPos != -1) {
     $pos = $nextPos;
     if(isset($contract[$keyword]) && $contract[$keyword] !== '') {
         $val = mb_convert_kana(date('Y年m月d日', strtotime($contract[$keyword])), 'KVRN');
-    }
-    else {
+    } else {
         $val = '　　　年　　月　　日';
     }
     bindCell('A' . $pos, $sheet, $keyword, $val);
@@ -228,11 +220,9 @@ foreach($contract['details'] as $detail) {
     if($detail['contractDataType'] == '01') {
         $detailIds[] = $detail['locationInfoPid'];
         $belongIds[] = $detail['locationInfoPid'];// 20200828 S_Add
-    }
-    else if($detail['contractDataType'] === '02') {
+    } else if($detail['contractDataType'] === '02') {
         $belongIds[] = $detail['locationInfoPid'];
-    }
-    else if($detail['contractDataType'] === '03') {
+    } else if($detail['contractDataType'] === '03') {
         $teichiIds[] = $detail['locationInfoPid'];
     }
 }
@@ -252,12 +242,11 @@ if($count > 0) {
     bindCell('A' . $nextPos, $sheet, 'specialTerms7_start' , '', false);
     bindCell('A' . $termEnd, $sheet, 'specialTerms7_end' , '', false);
     $matsubi1Comment[] = '※上記　　、相続手続き中';
-}
-else {
+} else {
     while($termEnd >= $nextPos) {
         $sheet->removeRow($termEnd);
         $termEnd--;
-    }    
+    }
 }
 
 //specialTerms8
@@ -271,13 +260,11 @@ if($nextPos > 0) {
     if($count > 0) {
         bindCell('A' . $nextPos, $sheet, 'specialTerms8' , '', false);
         $matsubi1Comment[] = '※土地、　　　　　　　　　　　地番上に未登記建物あり';
-    }
-    else {
+    } else {
         $sheet->removeRow($nextPos);
     }
     $pos = $nextPos;
 }
-
 
 //specialTerms9_1
 $keyword = 'specialTerms9_1';
@@ -291,12 +278,10 @@ if($nextPos > 0) {
         $str = '　　  ６　本契約に基づく甲の義務について、' . implode('、', $term9) . 'は、連帯して乙に対して責任を負';
     //    bindCell('A' . $nextPos, $sheet, 'specialTerms9_1' , $str, false);
         $sheet->setCellValue('A' . $nextPos, $str);
-    }
-    else {
+    } else {
         $sheet->removeRow($nextPos);
     }
 }
-
 
 //specialTerms9_2
 $keyword = 'specialTerms9_2';
@@ -304,8 +289,7 @@ $nextPos = searchCellPos($sheet, $keyword, $pos);
 if($nextPos > 0) {
     if(sizeof($sellers) >= 2) {
         bindCell('A' . $nextPos, $sheet, 'specialTerms9_2' , '', false);
-    }
-    else {
+    } else {
         $sheet->removeRow($nextPos);
     }
     $pos = $nextPos;
@@ -318,7 +302,8 @@ if(sizeof($sellers) > 0) {
     $blockCount = 5;
     if(sizeof($sellers) > 1){
         copyBlock($sheet, $pos, $blockCount, (sizeof($sellers) - 1));
-    }    
+    }
+
     for($cursor = 0 ; $cursor < sizeof($sellers) ; $cursor++){
         $seller = $sellers[$cursor];
         $cellName = 'A' . $pos;
@@ -332,8 +317,7 @@ if(sizeof($sellers) > 0) {
 
         $pos += $blockCount;
     }
-}
-else {
+} else {
     $cellName = 'A' . $pos;
     bindCell($cellName, $sheet, ['contractorAddress', 'contractorName'], ['', '']);
 
@@ -341,11 +325,8 @@ else {
     //bindCell($cellName, $sheet, ['contractorName'], ['']);
 }
 
-
 $codeLandList = ORM::for_table(TBLCODE)->where('code', '002')->where_null('deleteDate')->findArray();
 $codeTypeList = ORM::for_table(TBLCODE)->where('code', '003')->where_null('deleteDate')->findArray();
-
-//---------------------------------
 
 //contractTypeTitle
 $keyword = 'contractTypeTitle';
@@ -356,22 +337,19 @@ if($template['reportFormType'] == '04') {
 //    bindCell($cellName, $sheet, 'contractTypeTitle', '借地権の場合、（次の土地に係る借地権）');
     bindCell($cellName, $sheet, 'contractTypeTitle', '（次の土地に係る借地権）');
     // 20200828 E_Update
-}
-else if($template['reportFormType'] == '05') {
+} else if($template['reportFormType'] == '05') {
     $cellName = 'A' . $pos;
     // 20200828 S_Update
 //    bindCell($cellName, $sheet, 'contractTypeTitle', '地上権の場合、（次の土地に係る地上権）');
     bindCell($cellName, $sheet, 'contractTypeTitle', '（次の土地に係る地上権）');
     // 20200828 E_Update
-}
-else if($template['reportFormType'] == '06') {
+} else if($template['reportFormType'] == '06') {
     $cellName = 'A' . $pos;
     // 20200828 S_Update
 //    bindCell($cellName, $sheet, 'contractTypeTitle', '敷地権付区分建物の場合、（敷地権の目的たる土地の表示）');
     bindCell($cellName, $sheet, 'contractTypeTitle', '（敷地権の目的たる土地の表示）');
     // 20200828 E_Update
-}
-else {
+} else {
     $sheet->removeRow($pos);
 }
 
@@ -381,23 +359,19 @@ if($template['reportFormType'] == '01' || $template['reportFormType'] == '03') {
     if(sizeof($detailIds) > 0) {
         $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '01')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
     }
-}
-else if($template['reportFormType'] == '04' || $template['reportFormType'] == '05' || $template['reportFormType'] == '06') {
+} else if($template['reportFormType'] == '04' || $template['reportFormType'] == '05' || $template['reportFormType'] == '06') {
     if(sizeof($teichiIds) > 0) {
         $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $teichiIds)->where('locationType', '01')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
     }
 }
-
-
 //土地荷主あり
 $keyword = 'l_address';
 $pos = searchCellPos($sheet, $keyword, $pos);
 $blockCount = 6;
 if(isset($locs) && sizeof($locs) > 0) {
-
     if(sizeof($locs) > 1) {
         copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
-    }    
+    }
 
     //データ出力（ループ）
     for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++){
@@ -409,18 +383,19 @@ if(isset($locs) && sizeof($locs) > 0) {
         $keyword = 'l_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
 
-        //20200915 S_Add 1行隙間開ける
+        // 20200915 S_Add
         if($cursor > 0) {
+            // 1行挿入
             $sheet->insertNewRowBefore($pos);
             $pos++;
         }
-        //20200915 E_Add 1行隙間開ける
+        // 20200915 E_Add
 
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['l_address', 'blockNumber', 'landCategory', 'area', 'sharer'],
+        bindCell($cellName, $sheet, ['l_address', 'blockNumber', 'landCategory', 'area', 'sharer']
             // 20200913 S_Update
-//            [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
-            [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), formatNumber($loc['area'], true), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+//            , [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            , [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), formatNumber($loc['area'], true), sizeof($regists) > 0 ?  $regists[0] : "" ]);
             // 20200913 E_Update
 
         //[土地]文言削除
@@ -448,11 +423,9 @@ if(isset($locs) && sizeof($locs) > 0) {
                 $pos++;
             }
             $sheet->setCellValue('A' .  $pos, '');
-        }
-        else {
+        } else {
             $sheet->setCellValue('A' .  $pos, '');
         }
-
     }
 }
 //土地荷主なし ->　削除
@@ -463,20 +436,17 @@ else {
     $sheet->setCellValue('A' .  $pos, '');
 }
 
-
 //荷主所有地(建物)
 $locs = [];
 if($template['reportFormType'] == '05') {
     if(sizeof($detailIds) > 0) {
         $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
     }
-}
-else if($template['reportFormType'] != '01' && $template['reportFormType'] != '06') {
+} else if($template['reportFormType'] != '01' && $template['reportFormType'] != '06') {
     if(sizeof($detailIds) > 0) {
         $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '02')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
     }
 }
-
 //土地荷主あり
 $keyword = 'b_address';
 $pos = searchCellPos($sheet, $keyword, $pos);
@@ -497,186 +467,44 @@ if(isset($locs) && sizeof($locs) > 0) {
         $keyword = 'b_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
 
-        //20200915 S_Add 1行隙間開ける
+        // 20200915 S_Add
         if($cursor > 0) {
+            // 1行挿入
             $sheet->insertNewRowBefore($pos);
             $pos++;
         }
-        //20200915 E_Add 1行隙間開ける
+        // 20200915 E_Add
 
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['b_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
+        bindCell($cellName, $sheet, ['b_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer']
             //20200913 S_Update
             /*
-            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), 
-            replaceNewLine($loc['structure'], 14, 1), 
-            replaceNewLine($loc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            , [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), 
+            , replaceNewLine($loc['structure'], 14, 1), 
+            , replaceNewLine($loc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
             */
-            [$loc['address'], mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType']), 
-            replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1), 
-            replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            , [$loc['address'], mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType'])
+            , replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1)
+            , replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
             //20200913 E_Update
 
-        //20200915 S_Add セルの高さを調整
+        // 20200915 S_Add
         $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
         $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
-        if($lineCount > 3) {
-            $newHeight = 18.8 + 2.6 *($lineCount - 3);
+        if($lineCount > 2) {
+            // セルの高さを調整
+            $newHeight = 18.8 * (4 + $lineCount) / ($blockCount - 1);
             for($rowPos = 0 ; $rowPos < $blockCount - 1 ; $rowPos++) {
                 $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
-            }            
+            }
         }
-        //20200915 E_Add セルの高さを調整
+        // 20200915 E_Add
 
         //[土地]文言削除
         if($cursor > 0) {
             $val = str_replace('建物', '    ', $sheet->getCell($cellName)->getValue());
             $sheet->setCellValue($cellName, $val);
         }
-
-        //登記名義人複数
-        $pos = $pos + $blockCount - 1;
-        if(sizeof($regists) > 1) {
-            $increase = sizeof($regists) - 1;
-
-            //登記人分をコピー
-            $sharerStr = $sheet->getCell('A' .  $pos)->getValue();
-            $sheet->insertNewRowBefore($pos, $increase);
-            copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);   
-
-            $keyword = 'repear_sharer';
-            $pos = searchCellPos($sheet, $keyword, $pos) - 1;
-
-            foreach($regists as $regist) {
-                $val = str_replace('$repear_sharer$', $regist, $sharerStr);
-                $sheet->setCellValue('A' .  $pos, $val);
-                $pos++;
-            }
-            $sheet->setCellValue('A' .  $pos, '');
-        }
-        else {
-            $sheet->setCellValue('A' .  $pos, '');
-        }
-    }
-}
-//土地荷主なし
-else {
-    for($i = 0 ; $i < $blockCount-1; $i++) {
-        $sheet->removeRow($pos);
-    } 
-    $sheet->setCellValue('A' .  $pos, '');
-}
-
-//（一棟の建物の表示）
-$keyword = 'ob_address';
-$blockCount = 3;
-$pos = searchCellPos($sheet, $keyword, $pos);
-$locs = [];
-if(sizeof($detailIds) > 0 && $template['reportFormType'] != '01') {
-    $tempLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_not_null('ridgePid')
-                ->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
-    foreach($tempLocs as $temp) {
-        $locs[] = ORM::for_table(TBLLOCATIONINFO)->findOne($temp['ridgePid'])->asArray();
-    }
-}
-if(sizeof($locs) > 0) {
-
-    //ブロックコピー
-    if(sizeof($locs) > 1) {
-        copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
-    }
-    //データ出力（ループ）
-    for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++){
-        $loc = $locs[$cursor];
-
-        $keyword = 'ob_address';
-        $pos = searchCellPos($sheet, $keyword, $pos);
-
-        //20200915 S_Add 1行隙間開ける
-        if($cursor > 0) {
-            $sheet->insertNewRowBefore($pos);
-            $pos++;
-        }
-        //20200915 E_Add 1行隙間開ける
-
-        $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], 
-                replaceNewLine($loc['structure'], 14, 1), 
-                replaceNewLine($loc['floorSpace'], 14, 1)]);
-
-        //20200915 S_Add セルの高さを調整
-        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
-        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
-        if($lineCount > 3) {
-            $newHeight = 18.8 + 6.2 *($lineCount - 3);
-            for($rowPos = 0 ; $rowPos < $blockCount - 1 ; $rowPos++) {
-                $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
-            }            
-        }
-        //20200915 E_Add セルの高さを調整
-    }
-
-}
-else {
-    for($i = 0 ; $i < $blockCount + 1; $i++) {
-        $sheet->removeRow($pos-1);
-    }
-}
-
-//（専有部分の建物の表示）
-$keyword = 'p_address';
-$blockCount = 7;
-$pos = searchCellPos($sheet, $keyword, $pos);
-$locs = [];
-if(sizeof($detailIds) > 0 && $template['reportFormType'] != '01') {
-    $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
-}
-if(sizeof($locs) > 0) {
-
-    //ブロックコピー
-    if(sizeof($locs) > 1) {
-        copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
-    }
-    //データ出力（ループ）
-    for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++){
-        $loc = $locs[$cursor];
-
-        //登記名義人
-        $regists = getRegistrants($contract['details'], $loc);
-
-        $keyword = 'p_address';
-        $pos = searchCellPos($sheet, $keyword, $pos);
-
-        //20200915 S_Add 1行隙間開ける
-        if($cursor > 0) {
-            $sheet->insertNewRowBefore($pos);
-            $pos++;
-        }
-        //20200915 E_Add 1行隙間開ける
-
-        $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
-            // 20200913 S_Update
-            /*
-            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), 
-            replaceNewLine($loc['structure'], 14, 1), 
-            replaceNewLine($loc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
-            */
-            [$loc['address'], mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType']), 
-            replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1), 
-            replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
-            // 20200913 E_Update
-
-        //20200915 S_Add セルの高さを調整
-        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
-        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
-        if($lineCount > 3) {
-            $newHeight = 18.8 + 2.6 *($lineCount - 3);
-            for($rowPos = 0 ; $rowPos < $blockCount-1 ; $rowPos++) {
-                $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
-            }            
-        }
-        //20200915 E_Add セルの高さを調整
 
         //登記名義人複数
         $pos = $pos + $blockCount - 1;
@@ -697,19 +525,161 @@ if(sizeof($locs) > 0) {
                 $pos++;
             }
             $sheet->setCellValue('A' .  $pos, '');
-        }
-        else {
+        } else {
             $sheet->setCellValue('A' .  $pos, '');
         }
+    }
+}
+//土地荷主なし
+else {
+    for($i = 0 ; $i < $blockCount-1; $i++) {
+        $sheet->removeRow($pos);
+    }
+    $sheet->setCellValue('A' .  $pos, '');
+}
 
+//（一棟の建物の表示）
+$keyword = 'ob_address';
+$blockCount = 3;
+$pos = searchCellPos($sheet, $keyword, $pos);
+$locs = [];
+if(sizeof($detailIds) > 0 && $template['reportFormType'] != '01') {
+    $tempLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_not_null('ridgePid')
+                ->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+    foreach($tempLocs as $temp) {
+        $locs[] = ORM::for_table(TBLLOCATIONINFO)->findOne($temp['ridgePid'])->asArray();
+    }
+}
+if(sizeof($locs) > 0) {
+    //ブロックコピー
+    if(sizeof($locs) > 1) {
+        copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
     }
 
+    //データ出力（ループ）
+    for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++){
+        $loc = $locs[$cursor];
+
+        $keyword = 'ob_address';
+        $pos = searchCellPos($sheet, $keyword, $pos);
+
+        // 20200915 S_Add
+        if($cursor > 0) {
+            // 1行挿入
+            $sheet->insertNewRowBefore($pos);
+            $pos++;
+        }
+        // 20200915 E_Add
+
+        $cellName = 'A' . $pos;
+        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address']
+        , replaceNewLine($loc['structure'], 14, 1)
+        , replaceNewLine($loc['floorSpace'], 14, 1)]);
+
+        // 20200915 S_Add
+        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
+        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
+        if($lineCount > 2) {
+            // セルの高さを調整
+            $newHeight = 18.8 * (1 + $lineCount) / ($blockCount);
+            for($rowPos = 0 ; $rowPos < $blockCount ; $rowPos++) {
+                $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
+            }
+        }
+        // 20200915 E_Add
+    }
+} else {
+    for($i = 0 ; $i < $blockCount + 1; $i++) {
+        $sheet->removeRow($pos-1);
+    }
 }
-else {
+
+//（専有部分の建物の表示）
+$keyword = 'p_address';
+$blockCount = 7;
+$pos = searchCellPos($sheet, $keyword, $pos);
+$locs = [];
+if(sizeof($detailIds) > 0 && $template['reportFormType'] != '01') {
+    $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+}
+
+if(sizeof($locs) > 0) {
+    //ブロックコピー
+    if(sizeof($locs) > 1) {
+        copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
+    }
+
+    //データ出力（ループ）
+    for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++){
+        $loc = $locs[$cursor];
+
+        //登記名義人
+        $regists = getRegistrants($contract['details'], $loc);
+
+        $keyword = 'p_address';
+        $pos = searchCellPos($sheet, $keyword, $pos);
+
+        // 20200915 S_Add
+        if($cursor > 0) {
+            // 1行挿入
+            $sheet->insertNewRowBefore($pos);
+            $pos++;
+        }
+        // 20200915 E_Add
+
+        $cellName = 'A' . $pos;
+        bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer']
+            // 20200913 S_Update
+            /*
+            , [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType'])
+            , replaceNewLine($loc['structure'], 14, 1)
+            , replaceNewLine($loc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            */
+            , [$loc['address'], mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType'])
+            , replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1)
+            , replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            // 20200913 E_Update
+
+        // 20200915 S_Add
+        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
+        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
+        if($lineCount > 2) {
+            // セルの高さを調整
+            $newHeight = 18.8 * (4 + $lineCount) / ($blockCount - 1);
+            for($rowPos = 0 ; $rowPos < $blockCount - 1 ; $rowPos++) {
+                $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
+            }
+        }
+        // 20200915 E_Add
+
+        //登記名義人複数
+        $pos = $pos + $blockCount - 1;
+        if(sizeof($regists) > 1) {
+            $increase = sizeof($regists) - 1;
+
+            //登記人分をコピー
+            $sharerStr = $sheet->getCell('A' .  $pos)->getValue();
+            $sheet->insertNewRowBefore($pos, $increase);
+            copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);
+
+            $keyword = 'repear_sharer';
+            $pos = searchCellPos($sheet, $keyword, $pos) - 1;
+
+            foreach($regists as $regist) {
+                $val = str_replace('$repear_sharer$', $regist, $sharerStr);
+                $sheet->setCellValue('A' .  $pos, $val);
+                $pos++;
+            }
+            $sheet->setCellValue('A' .  $pos, '');
+        } else {
+            $sheet->setCellValue('A' .  $pos, '');
+        }
+    }
+} else {
     //$sheet->removeRow($pos-1, $blockCount+1);
     for($i = 0 ; $i < $blockCount + 1; $i++) {
         $sheet->removeRow($pos-1);
-    }    
+    }
 }
 
 //$matsubi1_comment$
@@ -722,20 +692,16 @@ if($pos > 0) {
             copyBlock($sheet, $pos, 1, 1, true);
             $sheet->setCellValue('A' . $pos, $matsubi1Comment[0]);
             $sheet->setCellValue('A' . ($pos + 1), $matsubi1Comment[1]);
-        }
-        else {
+        } else {
             $sheet->setCellValue('A' . $pos, $matsubi1Comment[0]);
         }
-    }
-    else {
+    } else {
         $sheet->removeRow($pos+1);
         $sheet->removeRow($pos);
     }
-}
-else {
+} else {
     $pos = $lastPos;
 }
-
 
 // 不可分が存在しない場合、末尾２　＜本計画地の表示＞を削除
 if(sizeof($belongIds) == 0) {
@@ -758,7 +724,6 @@ $keyword = 'fl_address';
 $pos = searchCellPos($sheet, $keyword, $pos);
 $blockCount = 4;
 if(isset($locs) && sizeof($locs) > 0) {
-
     if(sizeof($locs) > 1) {
         copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
     }    
@@ -770,20 +735,20 @@ if(isset($locs) && sizeof($locs) > 0) {
         $keyword = 'fl_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
 
-        //20200915 S_Add 1行隙間開ける
+        // 20200915 S_Add
         if($cursor > 0) {
+            // 1行挿入
             $sheet->insertNewRowBefore($pos);
             $pos++;
         }
-        //20200915 E_Add 1行隙間開ける
+        // 20200915 E_Add
 
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['fl_address', 'blockNumber', 'landCategory', 'area'],
+        bindCell($cellName, $sheet, ['fl_address', 'blockNumber', 'landCategory', 'area']
             // 20200913 S_Update
-//            [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area']]);
-            [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), formatNumber($loc['area'], true)]);
+//            , [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area']]);
+            , [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), formatNumber($loc['area'], true)]);
             // 20200913 E_Update
-
     }
 }
 //土地荷主なし
@@ -799,53 +764,54 @@ $locs = [];
 if(sizeof($belongIds) > 0) {
     $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '02')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
 }
+
 $keyword = 'fb_address';
 $pos = searchCellPos($sheet, $keyword, $pos);
 $blockCount = 5;
 if(isset($locs) && sizeof($locs) > 0) {
-
     if(sizeof($locs) > 1) {
         copyBlock($sheet, $pos, $blockCount, (sizeof($locs) - 1), true);
     }    
 
     //データ出力（ループ）
-    for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++){
+    for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++) {
         $loc = $locs[$cursor];
 
         $keyword = 'fb_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
 
-        //20200915 S_Add 1行隙間開ける
+        // 20200915 S_Add
         if($cursor > 0) {
+            // 1行挿入
             $sheet->insertNewRowBefore($pos);
             $pos++;
         }
-        //20200915 E_Add 1行隙間開ける
+        // 20200915 E_Add
 
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['fb_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace'],
+        bindCell($cellName, $sheet, ['fb_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace']
             // 20200913 S_Update
             /*
-            [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType']), 
-            replaceNewLine($loc['structure'], 9, 1), 
-            replaceNewLine($loc['floorSpace'], 9, 1) ]);
+            , [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType'])
+            , replaceNewLine($loc['structure'], 9, 1), 
+            , replaceNewLine($loc['floorSpace'], 9, 1) ]);
             */
-            [$loc['address'], mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType']), 
-            replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 9, 1), 
-            replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 9, 1) ]);
+            , [$loc['address'], mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType'])
+            , replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 9, 1)
+            , replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 9, 1) ]);
             // 20200913 E_Update
 
-        //20200915 S_Add セルの高さを調整
+        // 20200915 S_Add
         $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
         $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
-        if($lineCount > 3) {
-            $newHeight = 18.8 + 3.76 *($lineCount - 3);
-            for($rowPos = 0 ; $rowPos < $blockCount - 1 ; $rowPos++) {
+        if($lineCount > 2) {
+            // セルの高さを調整
+            $newHeight = 18.8 * (3 + $lineCount) / ($blockCount);
+            for($rowPos = 0 ; $rowPos < $blockCount ; $rowPos++) {
                 $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
-            }            
+            }
         }
-        //20200915 E_Add セルの高さを調整
-
+        // 20200915 E_Add
     }
 }
 //土地荷主なし
@@ -870,17 +836,15 @@ if(sizeof($belongIds) > 0) {
         if(!in_array($temp['ridgePid'], $ids)) {
             $ids[] = $temp['ridgePid'];
             $locs[] = ORM::for_table(TBLLOCATIONINFO)->findOne($temp['ridgePid'])->asArray();
-        }        
+        }
     }
 }
 if(sizeof($locs) > 0) {
-
     //ブロックコピー
     if(sizeof($locs) > 1) {
         copyBlock($sheet, $pos-1, $blockCount + 1, (sizeof($locs) - 1), true);
     }
 
-    
     //データ出力（ループ）
     for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++){
         $loc = $locs[$cursor];
@@ -888,31 +852,33 @@ if(sizeof($locs) > 0) {
         $keyword = 'ob_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
 
-        //20200915 S_Add 1行隙間開ける
+        // 20200915 S_Add
         if($cursor > 0) {
+            // 1行挿入
             $sheet->insertNewRowBefore($pos);
             $pos++;
         }
-        //20200915 E_Add 1行隙間開ける
+        // 20200915 E_Add
 
         $cellName = 'A' . $pos;
-        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address'], 
-            replaceNewLine($loc['structure'], 14, 1), 
-            replaceNewLine($loc['floorSpace'], 14, 1)]
+        bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address']
+            , replaceNewLine($loc['structure'], 14, 1)
+            , replaceNewLine($loc['floorSpace'], 14, 1)]
         );
 
-        //20200915 S_Add セルの高さを調整
+        // 20200915 S_Add
         $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
         $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
-        if($lineCount > 3) {
-            $newHeight = 18.8 + 1.7 *($lineCount - 3);
-            for($rowPos = 0 ; $rowPos < $blockCount - 1 ; $rowPos++) {
+        if($lineCount > 2) {
+            // セルの高さを調整
+            $newHeight = 18.8 * (1 + $lineCount) / 3;
+            for($rowPos = 0 ; $rowPos < 3 ; $rowPos++) {
                 $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
-            }            
+            }
         }
-        //20200915 E_Add セルの高さを調整
+        // 20200915 E_Add
 
-        //（専有部分の建物の表示）---------------------------------------------------------------------------
+        //（専有部分の建物の表示）
         $keyword = 'p_address';
         $subBlockCount = 7;
         $pos = searchCellPos($sheet, $keyword, $pos);
@@ -923,11 +889,11 @@ if(sizeof($locs) > 0) {
                     ->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
         }
         if(sizeof($subLocs) > 0) {
-
             //ブロックコピー
             if(sizeof($subLocs) > 1) {
                 copyBlock($sheet, $pos, $subBlockCount, (sizeof($subLocs) - 1), true);
             }
+
             //データ出力（ループ）
             for($subCursor = 0 ; $subCursor < sizeof($subLocs) ; $subCursor++){
                 $subLoc = $subLocs[$subCursor];
@@ -938,36 +904,38 @@ if(sizeof($locs) > 0) {
                 $keyword = 'p_address';
                 $pos = searchCellPos($sheet, $keyword, $pos);
 
-                //20200915 S_Add 1行隙間開ける
+                // 20200915 S_Add
                 if($cursor > 0) {
+                    // 1行挿入
                     $sheet->insertNewRowBefore($pos);
                     $pos++;
                 }
-                //20200915 E_Add 1行隙間開ける
+                // 20200915 E_Add
 
                 $cellName = 'A' . $pos;
-                bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer'],
+                bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer']
                     // 20200913 S_Update
                     /*
-                    [$subLoc['address'], $subLoc['buildingNumber'], getCodeTitle($codeTypeList, $subLoc['dependType']), 
-                    replaceNewLine($subLoc['structure'], 14, 1), 
-                    replaceNewLine($subLoc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+                    , [$subLoc['address'], $subLoc['buildingNumber'], getCodeTitle($codeTypeList, $subLoc['dependType'])
+                    , replaceNewLine($subLoc['structure'], 14, 1)
+                    , replaceNewLine($subLoc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
                     */
-                    [$subLoc['address'], mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType']), 
-                    replaceNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'), 14, 1), 
-                    replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+                    , [$subLoc['address'], mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'])
+                    , replaceNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'), 14, 1)
+                    , replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
                     // 20200913 E_Update
-                
-                //20200915 S_Add セルの高さを調整
+
+                // 20200915 S_Add
                 $lineCount = countNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'));
                 $lineCount += countNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'));
-                if($lineCount > 3) {
-                    $newHeight = 18.8 + 2.6 *($lineCount - 3);
+                if($lineCount > 2) {
+                    // セルの高さを調整
+                    $newHeight = 18.8 * (4 + $lineCount) / ($subBlockCount - 1);
                     for($rowPos = 0 ; $rowPos < $subBlockCount - 1 ; $rowPos++) {
                         $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
-                    }            
+                    }
                 }
-                //20200915 E_Add セルの高さを調整
+                // 20200915 E_Add
 
                 //登記名義人複数
                 $pos = $pos + $subBlockCount - 1;
@@ -988,25 +956,18 @@ if(sizeof($locs) > 0) {
                         $pos++;
                     }
                     $sheet->setCellValue('A' .  $pos, '');
-                }
-                else {
+                } else {
                     $sheet->setCellValue('A' .  $pos, '');
-                }                
+                }
                 $sheet->removeRow($pos);
             }
-
-        }
-        else {
+        } else {
             for($i = 0 ; $i < $subBlockCount + 1; $i++) {
                 $sheet->removeRow($pos-1);
             }
         }
-        //（専有部分の建物の表示）---------------------------------------------------------------------------
     }
-
-    
-}
-else {
+} else {
     //$sheet->removeRow($pos-1, $blockCount+1);
     for($i = 0 ; $i < $blockCount + 1; $i++) {
         $sheet->removeRow($pos-1);
@@ -1113,9 +1074,7 @@ if($contract['equiExchangeFlg'] == 1) {
     $keyword = 'deliveryDay';
     $pos = searchCellPos($sheet, $keyword, $pos);
     bindCell('A' . $pos, $sheet, 'deliveryDay', showDay($contract['deliveryDay']));
-
-}
-else {
+} else {
     $keyword = 'siteArea';
     $pos = searchCellPos($sheet, $keyword, $pos);
     for($i = 0 ; $i < 12; $i++) {
@@ -1148,7 +1107,7 @@ function replaceNewLine($val, $zenSpace, $hanSpace) {
     }
     return preg_replace("/\r|\n/", $str, $val);//str_replace('\r', $str, $val);
 }
-
+// 20200915 S_Add
 /**
  * 改行数カウント
  */
@@ -1156,5 +1115,5 @@ function countNewLine($val) {
     $newVal = preg_replace("/\r|\n/", 'BR', $val);
     return count(explode('BR', $newVal));
 }
-
+// 20200915 E_Add
 ?>
