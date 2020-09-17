@@ -78,7 +78,7 @@ if($nextPos != -1) {
 
     $name = '';
     if(sizeof($sellers) === 1) {
-        $name = $sellers[0][$keyword];
+        $name = $sellers[0][$keyword].'（以下「甲」という。）';
     } else {
         $index = 0;
         $sl = [];
@@ -387,7 +387,7 @@ if(isset($locs) && sizeof($locs) > 0) {
         bindCell($cellName, $sheet, ['l_address', 'blockNumber', 'landCategory', 'area', 'sharer']
             // 20200913 S_Update
 //            , [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
-            , [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), formatNumber($loc['area'], true), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            , [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), mb_convert_kana($loc['area'], 'KVRN') . '㎡', sizeof($regists) > 0 ?  $regists[0] : "" ]);
             // 20200913 E_Update
 
         //[土地]文言削除
@@ -715,7 +715,7 @@ if(isset($locs) && sizeof($locs) > 0) {
         bindCell($cellName, $sheet, ['fl_address', 'blockNumber', 'landCategory', 'area']
             // 20200913 S_Update
 //            , [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area']]);
-            , [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), formatNumber($loc['area'], true)]);
+            , [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), mb_convert_kana($loc['area'], 'KVRN') . '㎡']);
             // 20200913 E_Update
     }
 }
