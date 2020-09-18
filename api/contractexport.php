@@ -707,6 +707,7 @@ if(isset($locs) && sizeof($locs) > 0) {
         if($cursor > 0) {
             // 1行挿入
             $sheet->insertNewRowBefore($pos);
+            $sheet->getRowDimension($pos)->setRowHeight(18.8);// 20200917 Add
             $pos++;
         }
         // 20200915 E_Add
@@ -825,6 +826,7 @@ if(sizeof($locs) > 0) {
         if($cursor > 0) {
             // 1行挿入
             $sheet->insertNewRowBefore($pos);
+            $sheet->getRowDimension($pos)->setRowHeight(18.8);// 20200917 Add
             $pos++;
         }
         // 20200915 E_Add
@@ -877,6 +879,7 @@ if(sizeof($locs) > 0) {
                 if($cursor > 0) {
                     // 1行挿入
                     $sheet->insertNewRowBefore($pos);
+                    $sheet->getRowDimension($pos)->setRowHeight(18.8);// 20200917 Add
                     $pos++;
                 }
                 // 20200915 E_Add
