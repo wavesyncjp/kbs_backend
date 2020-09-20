@@ -256,7 +256,12 @@ foreach($payList1 as $payDetail) {
     $sheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
     // 契約金額
 //    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['contractPrice']));
-    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['contractPriceTax']));
+    // 20200921 S_Update
+//    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['contractPriceTax']));
+    $contractPriceTax = $payDetail['contractPriceTax'];
+    if($contractPriceTax === '0') $contractPriceTax = '';
+    $sheet->setCellValue('G'.$payPos, formatYenNumber($contractPriceTax));
+    // 20200921 E_Update
     // 支払金額
 //    $sheet->setCellValue('H'.$payPos, formatYenNumber($payDetail['payPrice']));
     $sheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
