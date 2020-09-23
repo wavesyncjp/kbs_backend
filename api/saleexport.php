@@ -260,7 +260,8 @@ foreach($payList1 as $payDetail) {
 //    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['contractPriceTax']));
     $contractPriceTax = $payDetail['contractPriceTax'];
     if($contractPriceTax === '0') $contractPriceTax = '';
-    $sheet->setCellValue('G'.$payPos, formatYenNumber($contractPriceTax));
+    else $contractPriceTax = formatYenNumber($contractPriceTax);
+    $sheet->setCellValue('G'.$payPos, $contractPriceTax);
     // 20200921 E_Update
     // 支払金額
 //    $sheet->setCellValue('H'.$payPos, formatYenNumber($payDetail['payPrice']));
