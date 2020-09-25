@@ -100,8 +100,12 @@ if($nextPos != -1) {
 $val = '';
 if(isset($contract['setlementPrice']) && $contract['setlementPrice'] !== '') {
     $val = $contract['setlementPrice'];
+    // 20200925 S_Delete
+    /*
     $val = round($val / 10000, 4);
     $val = number_format($val, 4);
+    */
+    // 20200925 E_Delete
     $val = mb_convert_kana($val, 'KVRN');
 }
 
@@ -213,9 +217,10 @@ if($nextPos != -1) {
 }
 
 // 土地
-$belongIds = []; // 不可分
 $detailIds = []; // 売主
+$belongIds = []; // 不可分
 $teichiIds = []; // 底地
+$contractAreas = []; // 地積のうち借地契約面積 20200925 Add
 foreach($contract['details'] as $detail) {
     if($detail['contractDataType'] == '01') {
         $detailIds[] = $detail['locationInfoPid'];
@@ -224,6 +229,10 @@ foreach($contract['details'] as $detail) {
         $belongIds[] = $detail['locationInfoPid'];
     } else if($detail['contractDataType'] === '03') {
         $teichiIds[] = $detail['locationInfoPid'];
+        // 20200925 S_Add
+        // Key:所在地情報PID,Value:地積のうち借地契約面積
+        $contractAreas[$detail['locationInfoPid']] = $detail['contractArea'];
+        // 20200925 E_Add
     }
 }
 
@@ -377,6 +386,16 @@ if(isset($locs) && sizeof($locs) > 0) {
     for($cursor = 0 ; $cursor < sizeof($locs) ; $cursor++){
         $loc = $locs[$cursor];
 
+        // 20200925 S_Add
+        $contractArea = '';
+        // 帳票フォーム種別が04:借地権の場合
+        if($template['reportFormType'] == '04') {
+            if(isset($contractAreas[$loc['pid']])) {
+                $contractArea = '（うち、借地契約面積約' . $contractAreas[$loc['pid']] . '㎡）';
+            }
+        }
+        // 20200925 E_Add
+
         //登記名義人
         $regists = getRegistrants($contract['details'], $loc);
 
@@ -387,7 +406,7 @@ if(isset($locs) && sizeof($locs) > 0) {
         bindCell($cellName, $sheet, ['l_address', 'blockNumber', 'landCategory', 'area', 'sharer']
             // 20200913 S_Update
 //            , [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
-            , [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), mb_convert_kana($loc['area'], 'KVRN') . '㎡', sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            , [$loc['address'], mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), mb_convert_kana($loc['area'] . '㎡' . $contractArea, 'KVRN'), sizeof($regists) > 0 ?  $regists[0] : "" ]);
             // 20200913 E_Update
 
         //[土地]文言削除
