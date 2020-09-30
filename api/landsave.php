@@ -14,6 +14,17 @@ $param = json_decode($postparam);
 if($param->pid > 0){
 	$land = ORM::for_table(TBLTEMPLANDINFO)->find_one($param->pid);
 	setUpdate($land, $param->updateUserId);
+
+	//20200928 S_Add
+	//ファイル添付
+	$attachFiles = $param->attachFiles;
+	foreach($attachFiles as $attachFile){
+		$attach = ORM::for_table(TBLFILEATTACH)->find_one($attachFile->pid);
+		setUpdate($attach, $param->updateUserId);
+		$attach->attachFileRemark = $attachFile->attachFileRemark;
+		$attach->save();
+	}
+	//20200928 E_Add
 }
 //登録
 else {
