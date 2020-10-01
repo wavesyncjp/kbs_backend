@@ -239,7 +239,7 @@ foreach($contract['details'] as $detail) {
 $matsubi1Comment = [];
 $count = 0;
 if(sizeof($detailIds) > 0) {
-    $count = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('buildingNotyet', 1)->where_null('deleteDate')->count();
+    $count = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('inheritanceNotyet', 1)->where_null('deleteDate')->count();
 }
 //$specialTerms7_start$
 if($pos < 150) $pos = 150;
@@ -264,7 +264,7 @@ $nextPos = searchCellPos($sheet, $keyword, $pos);
 if($nextPos > 0) {
     $count = 0;
     if(sizeof($detailIds) > 0) {
-        $count = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('inheritanceNotyet', 1)->where_null('deleteDate')->count();
+        $count = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('buildingNotyet', 1)->where_null('deleteDate')->count();
     }
     if($count > 0) {
         bindCell('A' . $nextPos, $sheet, 'specialTerms8' , '', false);
