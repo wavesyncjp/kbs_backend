@@ -50,6 +50,10 @@ if(isset($param->sharers)) {
 }
 // 削除
 if(isset($param->delSharers)) {
+
+    //20201007：tblContractRegistrant削除
+    ORM::for_table(TBLCONTRACTREGISTRANT)->where_in('sharerInfoPid', $param->delSharers)->delete_many();
+
     ORM::for_table(TBLSHARERINFO)->where_in('pid', $param->delSharers)->delete_many();
 }
 ORM::get_db()->commit();
