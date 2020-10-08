@@ -566,6 +566,15 @@ if(sizeof($locs) > 0) {
         $keyword = 'ob_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
 
+        // 20200915 S_Add
+        if($cursor > 0) {
+            // 1行挿入
+            $sheet->insertNewRowBefore($pos);
+            $sheet->getRowDimension($pos)->setRowHeight(18.8);// 20200917 Add
+            $pos++;
+        }
+        // 20200915 E_Add
+
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace'], [$loc['address']
         , replaceNewLine($loc['structure'], 14, 1)
@@ -614,6 +623,15 @@ if(sizeof($locs) > 0) {
         $keyword = 'p_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
 
+        // 20200915 S_Add
+        if($cursor > 0) {
+            // 1行挿入
+            $sheet->insertNewRowBefore($pos);
+            $sheet->getRowDimension($pos)->setRowHeight(18.8);// 20200917 Add
+            $pos++;
+        }
+        // 20200915 E_Add
+        
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer']
             // 20200913 S_Update
@@ -661,6 +679,7 @@ if(sizeof($locs) > 0) {
         } else {
             $sheet->setCellValue('A' .  $pos, '');
         }
+        $sheet->removeRow($pos);// 20201008 Add
     }
 } else {
     //$sheet->removeRow($pos-1, $blockCount+1);
@@ -813,7 +832,8 @@ else {
 
 //（一棟の建物の表示）
 $keyword = 'ob_address';
-$blockCount = 11;
+//$blockCount = 11;
+$blockCount = 10;
 $pos = searchCellPos($sheet, $keyword, $pos);
 $locs = [];
 if(sizeof($belongIds) > 0) {
@@ -842,12 +862,14 @@ if(sizeof($locs) > 0) {
         $pos = searchCellPos($sheet, $keyword, $pos);
 
         // 20200915 S_Add
+        /*
         if($cursor > 0) {
             // 1行挿入
             $sheet->insertNewRowBefore($pos);
             $sheet->getRowDimension($pos)->setRowHeight(18.8);// 20200917 Add
             $pos++;
         }
+        */
         // 20200915 E_Add
 
         $cellName = 'A' . $pos;
@@ -895,12 +917,14 @@ if(sizeof($locs) > 0) {
                 $pos = searchCellPos($sheet, $keyword, $pos);
 
                 // 20200915 S_Add
+                /*
                 if($cursor > 0) {
                     // 1行挿入
                     $sheet->insertNewRowBefore($pos);
                     $sheet->getRowDimension($pos)->setRowHeight(18.8);// 20200917 Add
                     $pos++;
                 }
+                */
                 // 20200915 E_Add
 
                 $cellName = 'A' . $pos;
