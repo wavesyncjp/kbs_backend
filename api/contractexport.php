@@ -904,7 +904,12 @@ if(sizeof($locs) > 0) {
                 // 20200915 E_Add
 
                 $cellName = 'A' . $pos;
+                // 20201008 S_Update
+                /*
                 bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer']
+                */
+                bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace']
+                // 20201008 E_Update
                     // 20200913 S_Update
                     /*
                     , [$subLoc['address'], $subLoc['buildingNumber'], getCodeTitle($codeTypeList, $subLoc['dependType'])
@@ -913,7 +918,7 @@ if(sizeof($locs) > 0) {
                     */
                     , [$subLoc['address'], mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'])
                     , replaceNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'), 14, 1)
-                    , replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+                    , replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1)]);
                     // 20200913 E_Update
 
                 // 20200915 S_Add
@@ -921,13 +926,20 @@ if(sizeof($locs) > 0) {
                 $lineCount += countNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'));
                 if($lineCount > 2) {
                     // セルの高さを調整
+                    // 20201008 S_Update
+                    /*
                     $newHeight = 18.8 * (4 + $lineCount) / ($subBlockCount - 1);
-                    for($rowPos = 0 ; $rowPos < $subBlockCount - 1 ; $rowPos++) {
+                    */
+                    $newHeight = 18.8 * (3 + $lineCount) / ($subBlockCount - 2);
+                    // 20201008 E_Update
+                    for($rowPos = 0 ; $rowPos < $subBlockCount - 2 ; $rowPos++) {
                         $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
                     }
                 }
                 // 20200915 E_Add
 
+                // 20201008 S_Delete
+                /*
                 //登記名義人複数
                 $pos = $pos + $subBlockCount - 1;
                 if(sizeof($regists) > 1) {
@@ -951,6 +963,8 @@ if(sizeof($locs) > 0) {
                     $sheet->setCellValue('A' .  $pos, '');
                 }
                 $sheet->removeRow($pos);
+                */
+                // 20201008 E_Delete
             }
         } else {
             for($i = 0 ; $i < $subBlockCount + 1; $i++) {
