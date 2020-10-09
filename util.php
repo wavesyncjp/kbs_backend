@@ -518,6 +518,7 @@ function getPlanInfo($pid){
 	return $plan;
 }
 
+//20200909 S_Edd
 /**
  * 事業収支情報取得
  * @param unknown $pid
@@ -554,7 +555,7 @@ function getPlanInfoHistory($pid){
 
 	return $plan;
 }
-
+//20200909 E_Add
 
 function searchCellPos($sheet, $keyword, $startPos) {
 

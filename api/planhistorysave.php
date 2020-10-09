@@ -105,6 +105,6 @@ if(isset($param->rentdetails)){
 
 
 $plan = getPlanInfoHistory($plan->pid);
-echo json_encode($param );
+echo json_encode($plan );
 
 ?>
