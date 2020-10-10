@@ -520,40 +520,37 @@ function getPlanInfo($pid){
 
 //20200909 S_Edd
 /**
- * 事業収支情報取得
+ * 事業収支情報履歴取得
  * @param unknown $pid
  */
 function getPlanInfoHistory($pid){
-	$plan = ORM::for_table(TBLPLANHISTORY)->findOne($pid)->asArray();
+	$planHistory = ORM::for_table(TBLPLANHISTORY)->findOne($pid)->asArray();
 	
-	$detailList = [];
-	$details = ORM::for_table(TBLPLANDETAILHISTORY)->where('planHistoryPid', $pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
-	if(isset($details)){	
-
-		$plan['details'] = $details;
+	$detailHistorys = ORM::for_table(TBLPLANDETAILHISTORY)->where('planHistoryPid', $pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
+	if(isset($detailHistorys)) {
+		$planHistory['details'] = $detailHistorys;
 	}
 	else {
-		$plan['details'] = [];
+		$planHistory['details'] = [];
 	}
 
-	$rent = ORM::for_table(TBLPLANRENTROLLHISTORY)->where('planHistoryPid', $pid)->where_null('deleteDate')->findArray();
-	if(isset($rent) && sizeof($rent) > 0 ){	
-		$plan['rent'] = $rent[0];
+	$rentHistory = ORM::for_table(TBLPLANRENTROLLHISTORY)->where('planHistoryPid', $pid)->where_null('deleteDate')->findArray();
+	if(isset($rentHistory) && sizeof($rentHistory) > 0 ) {
+		$planHistory['rent'] = $rentHistory[0];
 	}
 	else {
-		$plan['rent'] = null;
+		$planHistory['rent'] = null;
 	}
 
-	$rentdetails = ORM::for_table(TBLPLANRENTROLLDETAILHISTORY)->where('planHistoryPid', $pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
-	if(isset($rentdetails)){	
-
-		$plan['rentdetails'] = $rentdetails;
+	$rentdetailHistorys = ORM::for_table(TBLPLANRENTROLLDETAILHISTORY)->where('planHistoryPid', $pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
+	if(isset($rentdetailHistorys)) {
+		$planHistory['rentdetails'] = $rentdetailHistorys;
 	}
 	else {
-		$plan['rentdetails'] = [];
+		$planHistory['rentdetails'] = [];
 	}
 
-	return $plan;
+	return $planHistory;
 }
 //20200909 E_Add
 
