@@ -441,10 +441,10 @@ if(isset($locs) && sizeof($locs) > 0) {
 }
 //土地荷主なし ->　削除
 else {
-    for($i = 0 ; $i < $blockCount - 1; $i++) {
+    for($i = 0 ; $i < $blockCount; $i++) {
         $sheet->removeRow($pos);
     }
-    $sheet->setCellValue('A' .  $pos, '');
+//    $sheet->setCellValue('A' .  $pos, '');
 }
 
 //荷主所有地(建物)
@@ -535,10 +535,10 @@ if(isset($locs) && sizeof($locs) > 0) {
 }
 //土地荷主なし
 else {
-    for($i = 0 ; $i < $blockCount-1; $i++) {
+    for($i = 0 ; $i < $blockCount; $i++) {
         $sheet->removeRow($pos);
     }
-    $sheet->setCellValue('A' .  $pos, '');
+//    $sheet->setCellValue('A' .  $pos, '');
 }
 
 //（一棟の建物の表示）
@@ -894,7 +894,8 @@ if(sizeof($locs) > 0) {
 
         //（専有部分の建物の表示）
         $keyword = 'p_address';
-        $subBlockCount = 7;
+//        $subBlockCount = 7;
+        $subBlockCount = 6;
         $pos = searchCellPos($sheet, $keyword, $pos);
         $subLocs = [];
         if(sizeof($belongIds) > 0) {
