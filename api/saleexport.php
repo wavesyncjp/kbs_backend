@@ -109,7 +109,10 @@ foreach($contracts as $contract) {
     $address = getAddress($locs);
     $deposit = getDeposit($contract);
     $depositDay = getDepositDay($contract);
-    $area = getArea($locs);
+    // 20201014 S_Update
+//    $area = getArea($locs);
+    $area = getArea($locs, $contract['tradingType']);
+    // 20201014 E_Update
     $newList[] = array(
         'contractorName' => $contractors[0],
         'contractor' => $contractors[1],
@@ -493,9 +496,17 @@ unlink($savePath);
  * ステータス設定
  */
 function contractStatus($contract) {
-    if($contract['decisionDayChk'] === '1') return 'メトロス買取済';
-    if($contract['canncellDayChk'] === '1') return '解除（等価交換）';
-    if(isset($contract['canncellDay']) && $contract['canncellDay'] != '') return '解除';
+    // 20201014 S_Update
+//    if($contract['decisionDayChk'] === '1') return 'メトロス買取済';
+    // 契約状況が02:買取済の場合
+    if($contract['contractNow'] === '02') return 'メトロス買取済';
+//    if($contract['canncellDayChk'] === '1') return '解除（等価交換）';
+    // 解約日チェック（等価交換）がONもしくは、契約状況が04:解除済(等価交換)の場合
+    if($contract['canncellDayChk'] === '1' || $contract['contractNow'] === '04') return '解除（等価交換）';
+//    if(isset($contract['canncellDay']) && $contract['canncellDay'] != '') return '解除';
+    // 解約日に指定があるもしくは、契約状況が03:解除済の場合
+    if((isset($contract['canncellDay']) && $contract['canncellDay'] != '') || $contract['contractNow'] === '03') return '解除';
+    // 20201014 E_Update
     if($contract['equiExchangeFlg'] === '1') return '等価交換';
     return '売却';
 }
@@ -538,6 +549,7 @@ function getLocation($contractPid) {
     ->select('p2.blockNumber', 'blockNumber')
     ->select('p2.buildingNumber', 'buildingNumber')
     ->select('p2.area', 'area')
+    ->select('p1.contractHave', 'contractHave')// 20201014 Add
     ->inner_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p2.pid'), 'p2')
     ->where('p1.contractDataType', '01')
     ->where('p1.contractInfoPid', $contractPid)
@@ -562,13 +574,30 @@ function getAddress($lst) {
 /**
  * 売買面積（㎡）合計取得
  */
-function getArea($lst) {
+// 20201014 S_Update
+//function getArea($lst) {
+function getArea($lst, $tradingType) {
+// 20201014 E_Update
     $ret = 0;
     if(isset($lst)) {
         foreach($lst as $data) {
+            // 20201014 S_Update
+            /*
             if(isset($data['area']) && $data['area'] != '') {
                 $ret += $data['area'];
             }
+            */
+            // 売買が02:実測売買もしくは、03:実測売買(想定有効面積)の場合
+            if($tradingType == '02' || $tradingType == '03') {
+                if(isset($data['contractHave']) && $data['contractHave'] != '') {
+                    $ret += $data['contractHave'];
+                }
+            } else {
+                if(isset($data['area']) && $data['area'] != '') {
+                    $ret += $data['area'];
+                }
+            }
+            // 20201014 E_Update
         }
     }
     return $ret;
