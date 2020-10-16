@@ -79,7 +79,7 @@ $data['address'] = $plan['address'];// 所在地
 
 // 計画詳細情報(tblPlanDetail)
 foreach($details as $detail) {
-    $data['price_' . $detail['backNumber']] = $detail['price'];
+    $data['price_' . $detail['backNumber']] = floatval($detail['price']);
     $data['unitPrice_' . $detail['backNumber']] = $detail['unitPrice'];
     $data['routePrice_' . $detail['backNumber']] = $detail['routePrice'];
     $data['burdenDays_' . $detail['backNumber']] = $detail['burdenDays'];
@@ -610,10 +610,14 @@ foreach ($sheet4Pos as $key => $value) {
     $sheet->setCellValue($key, isset($data[$value]) ? $data[$value] : '');
 }
 
+//\PhpOffice\PhpSpreadsheet\Calculation\Calculation::getInstance($spreadsheet)->disableCalculationCache();
+//\PhpOffice\PhpSpreadsheet\Calculation\Calculation::getInstance($spreadsheet)->clearCalculationCache();
+
 // 保存
 $filename = "収支帳票_" . date("YmdHis") . 'xlsx';
 $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 $savePath = $fullPath.'/'.$filename;
+$writer->setPreCalculateFormulas(false); 
 $writer->save($savePath);
 
 // ダウンロード
