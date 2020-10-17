@@ -45,6 +45,18 @@ foreach($plan as $key => $value) {
         $data[$key] = round($value / 100, 3);
         // 20200826 E_Update
     }
+    // 20201016 S_Add
+    // 住宅用地の率、土地評価額、課税標準額（固定）、課税標準額（都市）、既存建物評価額
+    // 固定資産税（土地）、都市計画税（土地）、固定資産税（建物）、都市計画税（建物）
+    // 取得後固定資産税、取得後都市計画税、取得後課税標準額（固定）
+    // 融資金額(土地)、融資金額(建物)
+    if($key === 'residentialRate' || $key === 'landEvaluation' || $key === 'taxation' || $key === 'taxationCity' || $key === 'buildValuation'
+        || $key === 'fixedTaxLand' || $key === 'cityPlanTaxLand' || $key === 'fixedTaxBuild' || $key === 'cityPlanTaxBuild'
+        || $key === 'afterFixedTax' || $key === 'afterCityPlanTax' || $key === 'afterTaxationCity'
+        || $key === 'landLoan' || $key === 'buildLoan') {
+        $data[$key] = floatval($value);
+    }
+    // 20201016 E_Add
 }
 // コード値変換
 // 決済期別
@@ -79,15 +91,18 @@ $data['address'] = $plan['address'];// 所在地
 
 // 計画詳細情報(tblPlanDetail)
 foreach($details as $detail) {
+    // 20201016 S_Update
+//    $data['price_' . $detail['backNumber']] = $detail['price'];
     $data['price_' . $detail['backNumber']] = floatval($detail['price']);
-    $data['unitPrice_' . $detail['backNumber']] = $detail['unitPrice'];
-    $data['routePrice_' . $detail['backNumber']] = $detail['routePrice'];
-    $data['burdenDays_' . $detail['backNumber']] = $detail['burdenDays'];
-    $data['complePriceMonth_' . $detail['backNumber']] = $detail['complePriceMonth'];
-    $data['dismantlingMonth_' . $detail['backNumber']] = $detail['dismantlingMonth'];
+    // 20201016 E_Update
+    $data['unitPrice_' . $detail['backNumber']] = floatval($detail['unitPrice']);
+    $data['routePrice_' . $detail['backNumber']] = floatval($detail['routePrice']);
+    $data['burdenDays_' . $detail['backNumber']] = floatval($detail['burdenDays']);
+    $data['complePriceMonth_' . $detail['backNumber']] = floatval($detail['complePriceMonth']);
+    $data['dismantlingMonth_' . $detail['backNumber']] = floatval($detail['dismantlingMonth']);
     $data['totalMonths_' . $detail['backNumber']] = $detail['totalMonths'];
-    $data['valuation_' . $detail['backNumber']] = $detail['valuation'];
-    $data['rent_' . $detail['backNumber']] = $detail['rent'];
+    $data['valuation_' . $detail['backNumber']] = floatval($detail['valuation']);
+    $data['rent_' . $detail['backNumber']] = floatval($detail['rent']);
     $data['commissionRate_' . $detail['backNumber']] = $detail['commissionRate'];
 
     // 支払名称設定
@@ -116,13 +131,29 @@ foreach($rent as $key => $value) {
         $data[$key] = round($value / 100, 3);
         // 20200826 E_Update
     }
+    // 20201016 S_Add
+    // 販売経費１A、販売経費１B、販売経費１C、販売経費１D
+    // 販売経費２A、販売経費２B、販売経費２C、販売経費２D
+    // 販売経費３A、販売経費３B、販売経費３C、販売経費３D
+    // 販売経費４A、販売経費４B、販売経費４C、販売経費４D
+    // 坪単価A、坪単価B、坪単価C、坪単価D
+    // 共益費、その他収入（月額）
+    if($key === 'salesExpense1A' || $key === 'salesExpense1B' || $key === 'salesExpense1C' || $key === 'salesExpense1D'
+        || $key === 'salesExpense2A' || $key === 'salesExpense2B' || $key === 'salesExpense2C' || $key === 'salesExpense2D'
+        || $key === 'salesExpense3A' || $key === 'salesExpense3B' || $key === 'salesExpense3C' || $key === 'salesExpense3D'
+        || $key === 'salesExpense4A' || $key === 'salesExpense4B' || $key === 'salesExpense4C' || $key === 'salesExpense4D'
+        || $key === 'tsuboUnitPriceA' || $key === 'tsuboUnitPriceB' || $key === 'tsuboUnitPriceC' || $key === 'tsuboUnitPriceD'
+        || $key === 'commonFee' || $key === 'monthlyOtherIncome') {
+        $data[$key] = floatval($value);
+    }
+    // 20201016 E_Add
 }
 
 // レントロール詳細情報(tblPlanRentRollDetail)
 foreach($rentDetails as $rentDetail) {
     $data['targetArea_' . $rentDetail['backNumber']] = $rentDetail['targetArea'];
     $data['space_' . $rentDetail['backNumber']] = $rentDetail['space'];
-    $data['rentUnitPrice_' . $rentDetail['backNumber']] = $rentDetail['rentUnitPrice'];
+    $data['rentUnitPrice_' . $rentDetail['backNumber']] = floatval($rentDetail['rentUnitPrice']);
     $data['securityDeposit_' . $rentDetail['backNumber']] = $rentDetail['securityDeposit'];
 }
 
@@ -617,7 +648,10 @@ foreach ($sheet4Pos as $key => $value) {
 $filename = "収支帳票_" . date("YmdHis") . 'xlsx';
 $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 $savePath = $fullPath.'/'.$filename;
-$writer->setPreCalculateFormulas(false); 
+// 20201016 S_Add
+// Excel側の数式を再計算させる
+$writer->setPreCalculateFormulas(false);
+// 20201016 E_Add
 $writer->save($savePath);
 
 // ダウンロード
