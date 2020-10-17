@@ -592,6 +592,9 @@ function getArea($lst, $tradingType) {
                 if(isset($data['contractHave']) && $data['contractHave'] != '') {
                     $ret += $data['contractHave'];
                 }
+                else if(isset($data['area']) && $data['area'] != '') {
+                    $ret += $data['area'];
+                }
             } else {
                 if(isset($data['area']) && $data['area'] != '') {
                     $ret += $data['area'];
