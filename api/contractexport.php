@@ -486,7 +486,7 @@ if(isset($locs) && sizeof($locs) > 0) {
             , replaceNewLine($loc['structure'], 14, 1), 
             , replaceNewLine($loc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
             */
-            , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType'])
+            , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType'], '　')
             , replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1)
             , replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
             //20200913 E_Update
@@ -798,7 +798,7 @@ if(sizeof($locs) > 0) {
                     , replaceNewLine($loc['structure'], 14, 1)
                     , replaceNewLine($loc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
                     */
-                    , [mb_convert_kana($subLoc['address'], 'KVRN'), mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'])
+                    , [mb_convert_kana($subLoc['address'], 'KVRN'), mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'], '　')
                     , replaceNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'), 14, 1)
                     , replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
                     // 20200913 E_Update
@@ -969,7 +969,7 @@ if(isset($locs) && sizeof($locs) > 0) {
             , replaceNewLine($loc['structure'], 9, 1), 
             , replaceNewLine($loc['floorSpace'], 9, 1) ]);
             */
-            , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType'])
+            , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType'], '　')
             , replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 9, 1)
             , replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 9, 1) ]);
             // 20200913 E_Update
@@ -1107,7 +1107,7 @@ if(sizeof($locs) > 0) {
                     , replaceNewLine($subLoc['structure'], 14, 1)
                     , replaceNewLine($subLoc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
                     */
-                    , [mb_convert_kana($subLoc['address'], 'KVRN'), mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'])
+                    , [mb_convert_kana($subLoc['address'], 'KVRN'), mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'], '　')
                     , replaceNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'), 14, 1)
                     , replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1)]);
                     // 20200913 E_Update

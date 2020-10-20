@@ -12,9 +12,12 @@ $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
 $bukken = ORM::for_table(TBLTEMPLANDINFO)->findOne($param->pid)->asArray();
-$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->order_by_asc('pid')->findArray();
-$contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->order_by_asc('pid')->findArray();
-$payContracts = ORM::for_table(TBLPAYCONTRACT)->where('tempLandInfoPid', $param->pid)->order_by_asc('pid')->findArray();
+$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
+// 20201020 S_Update
+//$contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')>order_by_asc('pid')->findArray();
+$contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_not_null('contractNow')->where_not_equal('contractNow', '')->where_null('deleteDate')->order_by_asc('pid')->findArray();
+// 20201020 E_Update
+$payContracts = ORM::for_table(TBLPAYCONTRACT)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
 $paymentTypeData = ORM::for_table(TBLPAYMENTTYPE)->where_null('deleteDate')->findArray();
 
 header("Content-disposition: attachment; filename=sample.xlsx");
@@ -629,14 +632,23 @@ function getSellerName($contractPid) {
  * 内金（手付等）取得
  */
 function getDeposit($contract) {
-    if($contract['canncellDayChk'] == '1' || (!isset($contract['canncellDay']) && $contract['canncellDay'] != '') || $contract['decisionDayChk'] == '1') return '-';
+    if($contract['canncellDayChk'] == '1' || (!isset($contract['canncellDay']) && $contract['canncellDay'] != '') || $contract['decisionDayChk'] == '1') return "－";
     $deposit = [];
 
-    if($contract['deposit1DayChk']=='1' && $contract['deposit1'] > 0) $deposit[] = "¥".number_format($contract['deposit1']);
+    // 20201020 S_Update
+//    if($contract['deposit1DayChk']=='1' && $contract['deposit1'] > 0) $deposit[] = "¥".number_format($contract['deposit1']);
+    if($contract['deposit1'] > 0) $deposit[] = "¥".number_format($contract['deposit1']);
+    // 20201020 E_Update
     else  $deposit[] = "－";
-    if($contract['deposit2DayChk']=='1' && $contract['deposit2'] > 0) $deposit[] = "¥".number_format($contract['deposit2']);
+    // 20201020 S_Update
+//    if($contract['deposit2DayChk']=='1' && $contract['deposit2'] > 0) $deposit[] = "¥".number_format($contract['deposit2']);
+    if($contract['deposit2'] > 0) $deposit[] = "¥".number_format($contract['deposit2']);
+    // 20201020 E_Update
     else  $deposit[] = "－";
-    if($contract['earnestPriceDayChk']=='1' && $contract['earnestPrice'] > 0) $deposit[] = "¥".number_format($contract['earnestPrice']);
+    // 20201020 S_Update
+//    if($contract['earnestPriceDayChk']=='1' && $contract['earnestPrice'] > 0) $deposit[] = "¥".number_format($contract['earnestPrice']);
+    if($contract['earnestPrice'] > 0) $deposit[] = "¥".number_format($contract['earnestPrice']);
+    // 20201020 E_Update
     else  $deposit[] = "－";
     return implode(chr(10), $deposit);
 }
@@ -645,7 +657,7 @@ function getDeposit($contract) {
  * 内金（手付）支払日取得
  */
 function getDepositDay($contract) {
-    if($contract['canncellDayChk'] == '1' || (!isset($contract['canncellDay']) && $contract['canncellDay'] != '') || $contract['decisionDayChk'] == '1') return '-';
+    if($contract['canncellDayChk'] == '1' || (!isset($contract['canncellDay']) && $contract['canncellDay'] != '') || $contract['decisionDayChk'] == '1') return "－";
     $depositDay = [];
 
     if($contract['deposit1DayChk']=='1' && isset($contract['deposit1Day']) && $contract['deposit1Day'] != '') $depositDay[] = convert_jpdt($contract['deposit1Day']);

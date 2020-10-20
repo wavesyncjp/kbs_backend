@@ -382,6 +382,8 @@ function copyRowsWithValue($sheet,$srcRow,$dstRow,$height,$width, $setStyle = fa
     }
 }
 
+// 20201021 S_Update
+/*
 function getCodeTitle($lst, $codeDetail) {
 	$ret = [];
 	$strs = explode(',', $codeDetail);
@@ -392,6 +394,18 @@ function getCodeTitle($lst, $codeDetail) {
 	}
 	return implode(',', $ret);
 }
+*/
+function getCodeTitle($lst, $codeDetail, $delimiter = ',') {
+	$ret = [];
+	$strs = explode(',', $codeDetail);
+	foreach($lst as $code) {
+		if($code['codeDetail'] === $codeDetail || in_array($code['codeDetail'], $strs)){
+			$ret[] = $code['name'];
+		}
+	}
+	return implode($delimiter, $ret);
+}
+// 20201021 E_Update
 
 function getRegistrants($details, $loc) {
 	$ctDetail = null;
