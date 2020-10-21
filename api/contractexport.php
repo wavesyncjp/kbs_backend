@@ -694,7 +694,7 @@ if(sizeof($locs) > 0) {
 //（一棟の建物の表示）
 $keyword = 'ob_address';
 //$blockCount = 3;
-$blockCount = 11;
+$blockCount = 10;
 $pos = searchCellPos($sheet, $keyword, $pos);
 $locs = [];
 if(sizeof($detailIds) > 0 && $template['reportFormType'] != '01') {
@@ -751,9 +751,10 @@ if(sizeof($locs) > 0) {
         // 20200915 E_Add
 
         //（専有部分の建物の表示）
-        $keyword = 'p_address';
+//        $keyword = 'p_address';
+        $keyword = 'p_buildingNumber';
         //$blockCount = 7;
-        $subBlockCount = 7;
+        $subBlockCount = 6;
         $pos = searchCellPos($sheet, $keyword, $pos);
         //$locs = [];
         $subLocs = [];
@@ -776,7 +777,8 @@ if(sizeof($locs) > 0) {
                 //$regists = getRegistrants($contract['details'], $loc);
                 $regists = getSharers($subLoc);
 
-                $keyword = 'p_address';
+//                $keyword = 'p_address';
+                $keyword = 'p_buildingNumber';
                 $pos = searchCellPos($sheet, $keyword, $pos);
 
                 // 20200915 S_Add
@@ -791,14 +793,16 @@ if(sizeof($locs) > 0) {
                 // 20200915 E_Add
 
                 $cellName = 'A' . $pos;
-                bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer']
+//                bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer']
+                bindCell($cellName, $sheet, ['p_buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer']
                     // 20200913 S_Update
                     /*
                     , [$loc['address'], $loc['buildingNumber'], getCodeTitle($codeTypeList, $loc['dependType'])
                     , replaceNewLine($loc['structure'], 14, 1)
                     , replaceNewLine($loc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
                     */
-                    , [mb_convert_kana($subLoc['address'], 'KVRN'), mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'], '　')
+//                    , [mb_convert_kana($subLoc['address'], 'KVRN'), mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'], '　')
+                    , [mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'], '　')
                     , replaceNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'), 14, 1)
                     , replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
                     // 20200913 E_Update
@@ -808,7 +812,7 @@ if(sizeof($locs) > 0) {
                 $lineCount += countNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'));
                 if($lineCount > 2) {
                     // セルの高さを調整
-                    $newHeight = 18.8 * (4 + $lineCount) / ($subBlockCount - 1);
+                    $newHeight = 18.8 * (3 + $lineCount) / ($subBlockCount - 1);
                     for($rowPos = 0 ; $rowPos < $subBlockCount - 1 ; $rowPos++) {
                         $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
                     }
@@ -998,7 +1002,7 @@ else {
 //（一棟の建物の表示）
 $keyword = 'ob_address';
 //$blockCount = 11;
-$blockCount = 10;
+$blockCount = 9;
 $pos = searchCellPos($sheet, $keyword, $pos);
 $locs = [];
 if(sizeof($belongIds) > 0) {
@@ -1057,9 +1061,10 @@ if(sizeof($locs) > 0) {
         // 20200915 E_Add
 
         //（専有部分の建物の表示）
-        $keyword = 'p_address';
+//        $keyword = 'p_address';
+        $keyword = 'p_buildingNumber';
 //        $subBlockCount = 7;
-        $subBlockCount = 6;
+        $subBlockCount = 5;
         $pos = searchCellPos($sheet, $keyword, $pos);
         $subLocs = [];
         if(sizeof($belongIds) > 0) {
@@ -1080,7 +1085,8 @@ if(sizeof($locs) > 0) {
                 //登記名義人
                 $regists = getSharers($subLoc);
 
-                $keyword = 'p_address';
+//                $keyword = 'p_address';
+                $keyword = 'p_buildingNumber';
                 $pos = searchCellPos($sheet, $keyword, $pos);
 
                 // 20200915 S_Add
@@ -1099,7 +1105,8 @@ if(sizeof($locs) > 0) {
                 /*
                 bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace', 'sharer']
                 */
-                bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace']
+//                bindCell($cellName, $sheet, ['p_address', 'buildingNumber', 'dependType', 'structure', 'floorSpace']
+                bindCell($cellName, $sheet, ['p_buildingNumber', 'dependType', 'structure', 'floorSpace']
                 // 20201008 E_Update
                     // 20200913 S_Update
                     /*
@@ -1107,7 +1114,8 @@ if(sizeof($locs) > 0) {
                     , replaceNewLine($subLoc['structure'], 14, 1)
                     , replaceNewLine($subLoc['floorSpace'], 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
                     */
-                    , [mb_convert_kana($subLoc['address'], 'KVRN'), mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'], '　')
+//                    , [mb_convert_kana($subLoc['address'], 'KVRN'), mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'], '　')
+                    , [mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'], '　')
                     , replaceNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'), 14, 1)
                     , replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1)]);
                     // 20200913 E_Update
@@ -1121,7 +1129,7 @@ if(sizeof($locs) > 0) {
                     /*
                     $newHeight = 18.8 * (4 + $lineCount) / ($subBlockCount - 1);
                     */
-                    $newHeight = 18.8 * (3 + $lineCount) / ($subBlockCount - 2);
+                    $newHeight = 18.8 * (2 + $lineCount) / ($subBlockCount - 2);
                     // 20201008 E_Update
                     for($rowPos = 0 ; $rowPos < $subBlockCount - 2 ; $rowPos++) {
                         $sheet->getRowDimension($pos + $rowPos)->setRowHeight($newHeight);
