@@ -35,9 +35,9 @@ $spreadsheet = $reader->load($filePath);
 $sheet = $spreadsheet->getSheet(0);
 
 // 契約物件番号
-$sheet->setCellValue("A2", $bukken['contractBukkenNo']);
+$sheet->setCellValue('A2', $bukken['contractBukkenNo']);
 // 居住表示
-$sheet->setCellValue("D2", $bukken['residence']);
+$sheet->setCellValue('D2', $bukken['residence']);
 
 // 売り契約ブロック
 $pos = 5;
@@ -47,46 +47,46 @@ if(sizeof($sales) > 1) {
 }
 foreach($sales as $sale) {
     // 買主
-    $sheet->setCellValue("F".$pos, $sale['salesName']);
+    $sheet->setCellValue('F'.$pos, $sale['salesName']);
     // 金額
-    $sheet->setCellValue("I".$pos, formatYenNumber($sale['salesTradingPrice']));
+    $sheet->setCellValue('I'.$pos, formatYenNumber($sale['salesTradingPrice']));
     // 契約日
-    $sheet->setCellValue("J".$pos, convert_jpdt($sale['salesContractDay']));
+    $sheet->setCellValue('J'.$pos, convert_jpdt($sale['salesContractDay']));
     // 決済日
-    $sheet->setCellValue("K".$pos, convert_jpdt($sale['salesDecisionDay']));
+    $sheet->setCellValue('K'.$pos, convert_jpdt($sale['salesDecisionDay']));
     // 固都税清算金（土地）
-    $sheet->setCellValue("M".$pos, formatYenNumber($sale['salesFixedLandTax']));
+    $sheet->setCellValue('M'.$pos, formatYenNumber($sale['salesFixedLandTax']));
     // 固都税清算金（建物）
-    $sheet->setCellValue("M".($pos + 1), formatYenNumber($sale['salesFixedBuildingTax']));
+    $sheet->setCellValue('M'.($pos + 1), formatYenNumber($sale['salesFixedBuildingTax']));
     // 固都税清算金（消費税）
-    $sheet->setCellValue("M".($pos + 2), formatYenNumber($sale['salesFixedConsumptionTax']));
+    $sheet->setCellValue('M'.($pos + 2), formatYenNumber($sale['salesFixedConsumptionTax']));
     // その他清算金１
-    $sheet->setCellValue("O".($pos + 0), formatYenNumber($sale['salesLiquidation1']));
+    $sheet->setCellValue('O'.($pos + 0), formatYenNumber($sale['salesLiquidation1']));
     // その他清算金２
-    $sheet->setCellValue("O".($pos + 1), formatYenNumber($sale['salesLiquidation2']));
+    $sheet->setCellValue('O'.($pos + 1), formatYenNumber($sale['salesLiquidation2']));
     // その他清算金３
-    $sheet->setCellValue("O".($pos + 2), formatYenNumber($sale['salesLiquidation3']));
+    $sheet->setCellValue('O'.($pos + 2), formatYenNumber($sale['salesLiquidation3']));
     // その他清算金４
-    $sheet->setCellValue("O".($pos + 3), formatYenNumber($sale['salesLiquidation4']));
+    $sheet->setCellValue('O'.($pos + 3), formatYenNumber($sale['salesLiquidation4']));
     // その他清算金５
-    $sheet->setCellValue("O".($pos + 4), formatYenNumber($sale['salesLiquidation5']));
+    $sheet->setCellValue('O'.($pos + 4), formatYenNumber($sale['salesLiquidation5']));
     $pos += 5;
 }
 // データが存在しない場合
 if(sizeof($sales) == 0) {
-    $sheet->setCellValue("C".$pos, '');
-    $sheet->setCellValue("F".$pos, '');// 買主
-    $sheet->setCellValue("I".$pos, '');// 金額
-    $sheet->setCellValue("J".$pos, '');// 契約日
-    $sheet->setCellValue("K".$pos, '');// 決済日
-    $sheet->setCellValue("M".$pos, '');// 固都税清算金（土地）
-    $sheet->setCellValue("M".($pos + 1), '');// 固都税清算金（建物）
-    $sheet->setCellValue("M".($pos + 2), '');// 固都税清算金（消費税）
-    $sheet->setCellValue("O".($pos + 0), '');// その他清算金１
-    $sheet->setCellValue("O".($pos + 1), '');// その他清算金２
-    $sheet->setCellValue("O".($pos + 2), '');// その他清算金３
-    $sheet->setCellValue("O".($pos + 3), '');// その他清算金４
-    $sheet->setCellValue("O".($pos + 4), '');// その他清算金５
+    $sheet->setCellValue('C'.$pos, '');
+    $sheet->setCellValue('F'.$pos, '');// 買主
+    $sheet->setCellValue('I'.$pos, '');// 金額
+    $sheet->setCellValue('J'.$pos, '');// 契約日
+    $sheet->setCellValue('K'.$pos, '');// 決済日
+    $sheet->setCellValue('M'.$pos, '');// 固都税清算金（土地）
+    $sheet->setCellValue('M'.($pos + 1), '');// 固都税清算金（建物）
+    $sheet->setCellValue('M'.($pos + 2), '');// 固都税清算金（消費税）
+    $sheet->setCellValue('O'.($pos + 0), '');// その他清算金１
+    $sheet->setCellValue('O'.($pos + 1), '');// その他清算金２
+    $sheet->setCellValue('O'.($pos + 2), '');// その他清算金３
+    $sheet->setCellValue('O'.($pos + 3), '');// その他清算金４
+    $sheet->setCellValue('O'.($pos + 4), '');// その他清算金５
     $pos += 5;
 }
 
@@ -140,7 +140,7 @@ foreach($contracts as $contract) {
     // 契約日
     $sheet->setCellValue('F'.$contractPos, $status !== 'メトロス買取済' ? convert_jpdt($contract['contractDay']) : '');
     // 金額
-    if($status == '解除（等価交換）' || $status == '解除') {
+    if($status === '解除（等価交換）' || $status === '解除') {
         $sheet->setCellValue('G'.$contractPos, '');
     }
     else {
@@ -148,9 +148,11 @@ foreach($contracts as $contract) {
         $sheet->setCellValue('G'.$contractPos, $contract['tradingPrice']);
     }
     // 内金（手付等）
+    if($status === 'メトロス買取済') $deposit = '－';// 20201027 Add
     $sheet->setCellValue('H'.$contractPos, $deposit);
     $sheet->getStyle('H'.$contractPos)->getAlignment()->setWrapText(true);
     // 内金（手付）支払日
+    if($status === 'メトロス買取済') $depositDay = '－';// 20201027 Add
     $sheet->setCellValue('I'.$contractPos, $depositDay);
     $sheet->getStyle('I'.$contractPos)->getAlignment()->setWrapText(true);
     // 決済代金
@@ -164,10 +166,10 @@ foreach($contracts as $contract) {
     $sheet->setCellValue('N'.$contractPos, emptyStatus($status, convert_jpdt($contract['decisionDay'])));
     // 即決和解の有無等
     $promptDecideFlg = '';
-    if($status === "解除（等価交換）" || $status === "解除") $promptDecideFlg = '';
+    if($status === '解除（等価交換）' || $status === '解除') $promptDecideFlg = '';
     else if($status === 'メトロス買取済') $promptDecideFlg = '（旧所有者：' . $contractors[0] . '）';
-    else if ($contract['promptDecideFlg'] == '0') $promptDecideFlg = '無';
-    else if ($contract['promptDecideFlg'] == '1') $promptDecideFlg = '有';
+    else if ($contract['promptDecideFlg'] === '0') $promptDecideFlg = '無';
+    else if ($contract['promptDecideFlg'] === '1') $promptDecideFlg = '有';
     $sheet->setCellValue('O'.$contractPos, $promptDecideFlg);
     // 留保金
     $sheet->setCellValue('P'.$contractPos, emptyStatus($status, formatYenNumber($contract['retainage'])));
@@ -186,7 +188,7 @@ foreach($contracts as $contract) {
         $sheet->getStyle('C'.$contractPos.':S'.$contractPos)->getFill()
               ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('FFFFCC');
     }
-    else if($status === "解除（等価交換）" || $status === "解除") {
+    else if($status === '解除（等価交換）' || $status === '解除') {
         // 塗りつぶし：グレー
         // 文字色：赤
         $sheet->getStyle('C'.$contractPos.':S'.$contractPos)->getFill()
@@ -387,16 +389,20 @@ foreach($contracts as $contract) {
         $spreadsheet->addSheet($clonedWorksheet);
 
         // 契約物件番号
-        $clonedWorksheet->setCellValue("A2", $bukken['contractBukkenNo']);
+        $clonedWorksheet->setCellValue('A2', $bukken['contractBukkenNo']);
         // 居住表示
-        $clonedWorksheet->setCellValue("D2", $bukken['residence']);
+        $clonedWorksheet->setCellValue('D2', $bukken['residence']);
 
         // 契約ブロック
         $contractPos = 5;
         // （担当）
         $clonedWorksheet->setCellValue('A'.$contractPos, $data['contractStaff']);
+        // 20201027 S_Delete
+        /*
         // 売却・等価交換
         $clonedWorksheet->setCellValue('C'.$contractPos, $data['status']);
+        */
+        // 20201027 E_Delete
         // 所在地
         $clonedWorksheet->setCellValue('D'.$contractPos, $data['address']);
         $clonedWorksheet->getStyle('D'.$contractPos)->getAlignment()->setWrapText(true);
@@ -484,7 +490,7 @@ foreach($contracts as $contract) {
 $spreadsheet->removeSheetByIndex(1);
 
 // 保存
-$filename = "売買取引管理表_" . date("YmdHis") . 'xlsx';
+$filename = '売買取引管理表_' . date('YmdHis') . '.xlsx';
 $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 $savePath = $fullPath.'/'.$filename;
 $writer->save($savePath);
@@ -527,7 +533,7 @@ function getUserName($val) {
         $lst = ORM::for_table(TBLUSER)->where('userId', $userId)->findArray();
         if(sizeof($lst) > 0)
         {
-            if(strlen($ret) > 0) $ret .= ",";
+            if(strlen($ret) > 0) $ret .= ',';
             $ret .= $lst[0]['userName'];
         }
     }
@@ -567,8 +573,8 @@ function getAddress($lst) {
     $ret = [];
     if(isset($lst)) {
         foreach($lst as $data) {
-            if($data['locationType'] == '01' && $data['blockNumber'] != '') $ret[] = $data['blockNumber'];
-            else if($data['buildingNumber'] != '') $ret[] = $data['buildingNumber'];
+            if($data['locationType'] === '01' && $data['blockNumber'] !== '') $ret[] = $data['blockNumber'];
+            else if($data['buildingNumber'] !== '') $ret[] = $data['buildingNumber'];
         }
     }
     return implode(chr(10), $ret);
@@ -632,24 +638,26 @@ function getSellerName($contractPid) {
  * 内金（手付等）取得
  */
 function getDeposit($contract) {
-    if($contract['canncellDayChk'] == '1' || (!isset($contract['canncellDay']) && $contract['canncellDay'] != '') || $contract['decisionDayChk'] == '1') return "－";
+    // 20201027 S_Delete
+//    if($contract['canncellDayChk'] == '1' || (!isset($contract['canncellDay']) && $contract['canncellDay'] != '') || $contract['decisionDayChk'] == '1') return '－';
+    // 20201027 E_Delete
     $deposit = [];
 
     // 20201020 S_Update
-//    if($contract['deposit1DayChk']=='1' && $contract['deposit1'] > 0) $deposit[] = "¥".number_format($contract['deposit1']);
-    if($contract['deposit1'] > 0) $deposit[] = "¥".number_format($contract['deposit1']);
+//    if($contract['deposit1DayChk']=='1' && $contract['deposit1'] > 0) $deposit[] = '¥'.number_format($contract['deposit1']);
+    if($contract['deposit1'] > 0) $deposit[] = '¥'.number_format($contract['deposit1']);
     // 20201020 E_Update
-    else  $deposit[] = "－";
+    else  $deposit[] = '－';
     // 20201020 S_Update
-//    if($contract['deposit2DayChk']=='1' && $contract['deposit2'] > 0) $deposit[] = "¥".number_format($contract['deposit2']);
-    if($contract['deposit2'] > 0) $deposit[] = "¥".number_format($contract['deposit2']);
+//    if($contract['deposit2DayChk']=='1' && $contract['deposit2'] > 0) $deposit[] = '¥'.number_format($contract['deposit2']);
+    if($contract['deposit2'] > 0) $deposit[] = '¥'.number_format($contract['deposit2']);
     // 20201020 E_Update
-    else  $deposit[] = "－";
+    else  $deposit[] = '－';
     // 20201020 S_Update
-//    if($contract['earnestPriceDayChk']=='1' && $contract['earnestPrice'] > 0) $deposit[] = "¥".number_format($contract['earnestPrice']);
-    if($contract['earnestPrice'] > 0) $deposit[] = "¥".number_format($contract['earnestPrice']);
+//    if($contract['earnestPriceDayChk']=='1' && $contract['earnestPrice'] > 0) $deposit[] = '¥'.number_format($contract['earnestPrice']);
+    if($contract['earnestPrice'] > 0) $deposit[] = '¥'.number_format($contract['earnestPrice']);
     // 20201020 E_Update
-    else  $deposit[] = "－";
+    else  $deposit[] = '－';
     return implode(chr(10), $deposit);
 }
 
@@ -657,15 +665,17 @@ function getDeposit($contract) {
  * 内金（手付）支払日取得
  */
 function getDepositDay($contract) {
-    if($contract['canncellDayChk'] == '1' || (!isset($contract['canncellDay']) && $contract['canncellDay'] != '') || $contract['decisionDayChk'] == '1') return "－";
+    // 20201027 S_Delete
+//    if($contract['canncellDayChk'] == '1' || (!isset($contract['canncellDay']) && $contract['canncellDay'] != '') || $contract['decisionDayChk'] == '1') return '－';
+    // 20201027 E_Delete
     $depositDay = [];
 
-    if($contract['deposit1DayChk']=='1' && isset($contract['deposit1Day']) && $contract['deposit1Day'] != '') $depositDay[] = convert_jpdt($contract['deposit1Day']);
-    else  $depositDay[] = "－";
-    if($contract['deposit2DayChk']=='1' && isset($contract['deposit2Day']) && $contract['deposit2Day'] != '') $depositDay[] = convert_jpdt($contract['deposit2Day']);
-    else  $depositDay[] = "－";
-    if($contract['earnestPriceDayChk']=='1' && isset($contract['earnestPriceDay']) && $contract['earnestPriceDay'] != '') $depositDay[] = convert_jpdt($contract['earnestPriceDay']);
-    else  $depositDay[] = "－";
+    if($contract['deposit1DayChk'] == '1' && isset($contract['deposit1Day']) && $contract['deposit1Day'] != '') $depositDay[] = convert_jpdt($contract['deposit1Day']);
+    else  $depositDay[] = '－';
+    if($contract['deposit2DayChk'] == '1' && isset($contract['deposit2Day']) && $contract['deposit2Day'] != '') $depositDay[] = convert_jpdt($contract['deposit2Day']);
+    else  $depositDay[] = '－';
+    if($contract['earnestPriceDayChk'] == '1' && isset($contract['earnestPriceDay']) && $contract['earnestPriceDay'] != '') $depositDay[] = convert_jpdt($contract['earnestPriceDay']);
+    else  $depositDay[] = '－';
     return implode(chr(10), $depositDay);
 }
 
@@ -674,12 +684,12 @@ function getDepositDay($contract) {
  */
 function getDeposit2($contract) { 
     $deposit = [];
-    if($contract['deposit1DayChk']=='1' && $contract['deposit1'] > 0) $deposit[] = "¥".number_format($contract['deposit1']);
-    else  $deposit[] = "－";
-    if($contract['deposit2DayChk']=='1' && $contract['deposit2'] > 0) $deposit[] = "¥".number_format($contract['deposit2']);
-    else  $deposit[] = "－";
-    if($contract['earnestPriceDayChk']=='1' && $contract['earnestPrice'] > 0) $deposit[] = "¥".number_format($contract['earnestPrice']);
-    else  $deposit[] = "－";
+    if($contract['deposit1DayChk'] == '1' && $contract['deposit1'] > 0) $deposit[] = '¥'.number_format($contract['deposit1']);
+    else  $deposit[] = '－';
+    if($contract['deposit2DayChk'] == '1' && $contract['deposit2'] > 0) $deposit[] = '¥'.number_format($contract['deposit2']);
+    else  $deposit[] = '－';
+    if($contract['earnestPriceDayChk'] == '1' && $contract['earnestPrice'] > 0) $deposit[] = '¥'.number_format($contract['earnestPrice']);
+    else  $deposit[] = '－';
     return implode(chr(10), $deposit);
 }
 
@@ -688,12 +698,12 @@ function getDeposit2($contract) {
  */
 function getDepositDay2($contract) {
     $depositDay = [];
-    if($contract['deposit1DayChk']=='1' && isset($contract['deposit1Day']) && $contract['deposit1Day'] != '') $depositDay[] = convert_jpdt($contract['deposit1Day']);
-    else  $depositDay[] = "－";
-    if($contract['deposit2DayChk']=='1' && isset($contract['deposit2Day']) && $contract['deposit2Day'] != '') $depositDay[] = convert_jpdt($contract['deposit2Day']);
-    else  $depositDay[] = "－";
-    if($contract['earnestPriceDayChk']=='1' && isset($contract['earnestPriceDay']) && $contract['earnestPriceDay'] != '') $depositDay[] = convert_jpdt($contract['earnestPriceDay']);
-    else  $depositDay[] = "－";
+    if($contract['deposit1DayChk'] == '1' && isset($contract['deposit1Day']) && $contract['deposit1Day'] != '') $depositDay[] = convert_jpdt($contract['deposit1Day']);
+    else  $depositDay[] = '－';
+    if($contract['deposit2DayChk'] == '1' && isset($contract['deposit2Day']) && $contract['deposit2Day'] != '') $depositDay[] = convert_jpdt($contract['deposit2Day']);
+    else  $depositDay[] = '－';
+    if($contract['earnestPriceDayChk'] == '1' && isset($contract['earnestPriceDay']) && $contract['earnestPriceDay'] != '') $depositDay[] = convert_jpdt($contract['earnestPriceDay']);
+    else  $depositDay[] = '－';
     return implode(chr(10), $depositDay);
 }
 
@@ -777,7 +787,7 @@ function getContractData($lst, $pid) {
  * 対象ステータスで値表示
  */
 function emptyStatus($status, $val) {
-    if($status === "解除（等価交換）" || $status === "解除" || $status === "メトロス買取済") return '';
+    if($status === '解除（等価交換）' || $status === '解除' || $status === 'メトロス買取済') return '';
     return $val;
 }
 
@@ -788,7 +798,7 @@ function formatYenNumber($number) {
     if(!isset($number) || $number == '') {
         return '';
     }
-    $ret = "¥" . number_format($number);
+    $ret = '¥' . number_format($number);
 
     return $ret;
 }
