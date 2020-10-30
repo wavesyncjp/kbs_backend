@@ -406,7 +406,7 @@ if(isset($locs) && sizeof($locs) > 0) {
         bindCell($cellName, $sheet, ['l_address', 'blockNumber', 'landCategory', 'area', 'sharer']
             // 20200913 S_Update
 //            , [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
-            , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), mb_convert_kana($loc['area'] . '㎡' . $contractArea, 'KVRN'), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), mb_convert_kana(number_format($loc['area'], 2) . '㎡' . $contractArea, 'KVRN'), sizeof($regists) > 0 ?  $regists[0] : "" ]);
             // 20200913 E_Update
 
         //[土地]文言削除
@@ -923,7 +923,7 @@ if(isset($locs) && sizeof($locs) > 0) {
         bindCell($cellName, $sheet, ['fl_address', 'blockNumber', 'landCategory', 'area']
             // 20200913 S_Update
 //            , [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area']]);
-            , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), mb_convert_kana($loc['area'], 'KVRN') . '㎡']);
+            , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), mb_convert_kana(number_format($loc['area'], 2), 'KVRN') . '㎡']);
             // 20200913 E_Update
     }
 }
