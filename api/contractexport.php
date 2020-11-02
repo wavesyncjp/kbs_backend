@@ -492,8 +492,8 @@ if(isset($locs) && sizeof($locs) > 0) {
             //20200913 E_Update
 
         // 20200915 S_Add
-        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
-        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
+        $lineCount = countNewLine($loc['structure']);
+        $lineCount += countNewLine($loc['floorSpace']);
         if($lineCount > 2) {
             // セルの高さを調整
             $newHeight = 18.8 * (4 + $lineCount) / ($blockCount - 1);
@@ -733,12 +733,12 @@ if(sizeof($locs) > 0) {
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace']
         , [mb_convert_kana($loc['address'], 'KVRN')
-        , replaceNewLine($loc['structure'], 14, 1)
-        , replaceNewLine($loc['floorSpace'], 14, 1)]);
+        , replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1)
+        , replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1)]);
 
         // 20200915 S_Add
-        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
-        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
+        $lineCount = countNewLine($loc['structure']);
+        $lineCount += countNewLine($loc['floorSpace']);
         if($lineCount > 2) {
             // セルの高さを調整
             //$newHeight = 18.8 * (1 + $lineCount) / ($blockCount);
@@ -808,8 +808,8 @@ if(sizeof($locs) > 0) {
                     // 20200913 E_Update
 
                 // 20200915 S_Add
-                $lineCount = countNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'));
-                $lineCount += countNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'));
+                $lineCount = countNewLine($subLoc['structure']);
+                $lineCount += countNewLine($subLoc['floorSpace']);
                 if($lineCount > 2) {
                     // セルの高さを調整
                     $newHeight = 18.8 * (3 + $lineCount) / ($subBlockCount - 1);
@@ -979,8 +979,8 @@ if(isset($locs) && sizeof($locs) > 0) {
             // 20200913 E_Update
 
         // 20200915 S_Add
-        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
-        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
+        $lineCount = countNewLine($loc['structure']);
+        $lineCount += countNewLine($loc['floorSpace']);
         if($lineCount > 2) {
             // セルの高さを調整
             $newHeight = 18.8 * (3 + $lineCount) / ($blockCount);
@@ -1044,13 +1044,13 @@ if(sizeof($locs) > 0) {
         $cellName = 'A' . $pos;
         bindCell($cellName, $sheet, ['ob_address', 'structure', 'floorSpace']
             , [mb_convert_kana($loc['address'], 'KVRN')
-            , replaceNewLine($loc['structure'], 14, 1)
-            , replaceNewLine($loc['floorSpace'], 14, 1)]
+            , replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1)
+            , replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1)]
         );
 
         // 20200915 S_Add
-        $lineCount = countNewLine(mb_convert_kana($loc['structure'], 'KVRN'));
-        $lineCount += countNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'));
+        $lineCount = countNewLine($loc['structure']);
+        $lineCount += countNewLine($loc['floorSpace']);
         if($lineCount > 2) {
             // セルの高さを調整
             $newHeight = 18.8 * (1 + $lineCount) / 3;
@@ -1121,8 +1121,8 @@ if(sizeof($locs) > 0) {
                     // 20200913 E_Update
 
                 // 20200915 S_Add
-                $lineCount = countNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'));
-                $lineCount += countNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'));
+                $lineCount = countNewLine($subLoc['structure']);
+                $lineCount += countNewLine($subLoc['floorSpace']);
                 if($lineCount > 2) {
                     // セルの高さを調整
                     // 20201008 S_Update
