@@ -178,6 +178,7 @@ foreach($contracts as $contract) {
     // 留保金支払（明渡）日
     $sheet->setCellValue('R'.$contractPos, emptyStatus($status, convert_jpdt($contract['retainageDay'])));
     // 売買面積（㎡）
+    if($status === '解除（等価交換）' || $status === '解除') $area = '';// 20201106 Add
     //$sheet->setCellValue('S'.$contractPos, emptyStatus($status, $area));
     $sheet->setCellValue('S'.$contractPos, $area);
     $sheet->getStyle('S'.$contractPos)->getAlignment()->setWrapText(true);
@@ -598,7 +599,10 @@ function getArea($lst, $tradingType) {
             */
             // 売買が02:実測売買もしくは、03:実測売買(想定有効面積)の場合
             if($tradingType == '02' || $tradingType == '03') {
-                if(isset($data['contractHave']) && $data['contractHave'] != '') {
+                // 20201106 S_Update
+//                if(isset($data['contractHave']) && $data['contractHave'] != '') {
+                if(isset($data['contractHave']) && $data['contractHave'] != '' && $data['contractHave'] > 0) {
+                // 20201106 E_Update
                     $ret += $data['contractHave'];
                 }
                 else if(isset($data['area']) && $data['area'] != '') {
