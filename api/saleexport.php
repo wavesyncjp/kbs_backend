@@ -280,6 +280,8 @@ foreach($payList1 as $payDetail) {
     // 支払予定日
     $sheet->setCellValue('J'.$payPos, convert_jpdt($payDetail['contractDay']));
     // 支払日
+    // 20201107 S_Update
+    /*
     if(isCancel($newList, $payDetail)) {
         $sheet->setCellValue('K'.$payPos, '解除');
 
@@ -291,6 +293,9 @@ foreach($payList1 as $payDetail) {
     else {
         $sheet->setCellValue('K'.$payPos, convert_jpdt($payDetail['contractFixDay']));
     }
+    */
+    $sheet->setCellValue('K'.$payPos, convert_jpdt($payDetail['contractFixDay']));
+    // 20201107 E_Update
     // 契約者
     $sheet->setCellValue('L'.$payPos, getContractor($newList, $payDetail));
     // 備考
@@ -331,6 +336,8 @@ foreach($payList2 as $payDetail) {
     // 支払方法
     $sheet->setCellValue('H'.$payPos, getPayMethodName($payDetail['paymentMethod']));
     // 支払日
+    // 20201107 S_Update
+    /*
     if(isCancel($newList, $payDetail)) {
         $sheet->setCellValue('I'.$payPos, '解除');
 
@@ -342,6 +349,9 @@ foreach($payList2 as $payDetail) {
     else {
         $sheet->setCellValue('I'.$payPos, convert_jpdt($payDetail['contractFixDay']));
     }
+    */
+    $sheet->setCellValue('I'.$payPos, convert_jpdt($payDetail['contractFixDay']));
+    // 20201107 E_Update
     // 備考
     $sheet->setCellValue('J'.$payPos, $payDetail['detailRemarks']);
 
@@ -460,12 +470,17 @@ foreach($contracts as $contract) {
             // 支払予定日
             $clonedWorksheet->setCellValue('I'.$payPos, convert_jpdt($payDetail['contractDay']));
             // 支払日
+            // 20201107 S_Update
+            /*
             if(isCancel($newList, $payDetail)) {
                 $clonedWorksheet->setCellValue('J'.$payPos, '解除');
             }
             else {
                 $clonedWorksheet->setCellValue('J'.$payPos, convert_jpdt($payDetail['contractFixDay']));
             }
+            */
+            $clonedWorksheet->setCellValue('J'.$payPos, convert_jpdt($payDetail['contractFixDay']));
+            // 20201107 E_Update
             // 契約者
             $clonedWorksheet->setCellValue('K'.$payPos, $data['contractorName']);
             // 備考
