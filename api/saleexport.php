@@ -666,17 +666,17 @@ function getDeposit($contract) {
 //    if($contract['deposit1DayChk']=='1' && $contract['deposit1'] > 0) $deposit[] = '¥'.number_format($contract['deposit1']);
     if($contract['deposit1'] > 0) $deposit[] = '¥'.number_format($contract['deposit1']);
     // 20201020 E_Update
-    else  $deposit[] = '－';
+    else $deposit[] = '－';
     // 20201020 S_Update
 //    if($contract['deposit2DayChk']=='1' && $contract['deposit2'] > 0) $deposit[] = '¥'.number_format($contract['deposit2']);
     if($contract['deposit2'] > 0) $deposit[] = '¥'.number_format($contract['deposit2']);
     // 20201020 E_Update
-    else  $deposit[] = '－';
+    else $deposit[] = '－';
     // 20201020 S_Update
 //    if($contract['earnestPriceDayChk']=='1' && $contract['earnestPrice'] > 0) $deposit[] = '¥'.number_format($contract['earnestPrice']);
     if($contract['earnestPrice'] > 0) $deposit[] = '¥'.number_format($contract['earnestPrice']);
     // 20201020 E_Update
-    else  $deposit[] = '－';
+    else $deposit[] = '－';
     return implode(chr(10), $deposit);
 }
 
@@ -690,11 +690,11 @@ function getDepositDay($contract) {
     $depositDay = [];
 
     if($contract['deposit1DayChk'] == '1' && isset($contract['deposit1Day']) && $contract['deposit1Day'] != '') $depositDay[] = convert_jpdt($contract['deposit1Day']);
-    else  $depositDay[] = '－';
+    else $depositDay[] = '－';
     if($contract['deposit2DayChk'] == '1' && isset($contract['deposit2Day']) && $contract['deposit2Day'] != '') $depositDay[] = convert_jpdt($contract['deposit2Day']);
-    else  $depositDay[] = '－';
+    else $depositDay[] = '－';
     if($contract['earnestPriceDayChk'] == '1' && isset($contract['earnestPriceDay']) && $contract['earnestPriceDay'] != '') $depositDay[] = convert_jpdt($contract['earnestPriceDay']);
-    else  $depositDay[] = '－';
+    else $depositDay[] = '－';
     return implode(chr(10), $depositDay);
 }
 
@@ -703,12 +703,21 @@ function getDepositDay($contract) {
  */
 function getDeposit2($contract) { 
     $deposit = [];
-    if($contract['deposit1DayChk'] == '1' && $contract['deposit1'] > 0) $deposit[] = '¥'.number_format($contract['deposit1']);
-    else  $deposit[] = '－';
-    if($contract['deposit2DayChk'] == '1' && $contract['deposit2'] > 0) $deposit[] = '¥'.number_format($contract['deposit2']);
-    else  $deposit[] = '－';
-    if($contract['earnestPriceDayChk'] == '1' && $contract['earnestPrice'] > 0) $deposit[] = '¥'.number_format($contract['earnestPrice']);
-    else  $deposit[] = '－';
+    // 20201124 S_Update
+//    if($contract['deposit1DayChk'] == '1' && $contract['deposit1'] > 0) $deposit[] = '¥'.number_format($contract['deposit1']);
+    if($contract['deposit1'] > 0) $deposit[] = '¥'.number_format($contract['deposit1']);
+    // 20201124 E_Update
+    else $deposit[] = '－';
+    // 20201124 S_Update
+//    if($contract['deposit2DayChk'] == '1' && $contract['deposit2'] > 0) $deposit[] = '¥'.number_format($contract['deposit2']);
+    if($contract['deposit2'] > 0) $deposit[] = '¥'.number_format($contract['deposit2']);
+    // 20201124 E_Update
+    else $deposit[] = '－';
+    // 20201124 S_Update
+//    if($contract['earnestPriceDayChk'] == '1' && $contract['earnestPrice'] > 0) $deposit[] = '¥'.number_format($contract['earnestPrice']);
+    if($contract['earnestPrice'] > 0) $deposit[] = '¥'.number_format($contract['earnestPrice']);
+    // 20201124 E_Update
+    else $deposit[] = '－';
     return implode(chr(10), $deposit);
 }
 
@@ -718,11 +727,11 @@ function getDeposit2($contract) {
 function getDepositDay2($contract) {
     $depositDay = [];
     if($contract['deposit1DayChk'] == '1' && isset($contract['deposit1Day']) && $contract['deposit1Day'] != '') $depositDay[] = convert_jpdt($contract['deposit1Day']);
-    else  $depositDay[] = '－';
+    else $depositDay[] = '－';
     if($contract['deposit2DayChk'] == '1' && isset($contract['deposit2Day']) && $contract['deposit2Day'] != '') $depositDay[] = convert_jpdt($contract['deposit2Day']);
-    else  $depositDay[] = '－';
+    else $depositDay[] = '－';
     if($contract['earnestPriceDayChk'] == '1' && isset($contract['earnestPriceDay']) && $contract['earnestPriceDay'] != '') $depositDay[] = convert_jpdt($contract['earnestPriceDay']);
-    else  $depositDay[] = '－';
+    else $depositDay[] = '－';
     return implode(chr(10), $depositDay);
 }
 
