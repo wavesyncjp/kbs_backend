@@ -224,9 +224,15 @@ $contractAreas = []; // 地積のうち借地契約面積 20200925 Add
 foreach($contract['details'] as $detail) {
     if($detail['contractDataType'] == '01') {
         $detailIds[] = $detail['locationInfoPid'];
-        $belongIds[] = $detail['locationInfoPid'];// 20200828 S_Add
+        // 20201208 S_Update
+//        $belongIds[] = $detail['locationInfoPid'];// 20200828 S_Add
+        if($contract['indivisibleFlg'] === '1') $belongIds[] = $detail['locationInfoPid'];
+        // 20201208 E_Update
     } else if($detail['contractDataType'] === '02') {
-        $belongIds[] = $detail['locationInfoPid'];
+        // 20201208 S_Update
+//        $belongIds[] = $detail['locationInfoPid'];
+        if($contract['indivisibleFlg'] === '1') $belongIds[] = $detail['locationInfoPid'];
+        // 20201208 E_Update
     } else if($detail['contractDataType'] === '03') {
         $teichiIds[] = $detail['locationInfoPid'];
         // 20200925 S_Add
