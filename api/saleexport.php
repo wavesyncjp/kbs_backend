@@ -612,8 +612,11 @@ function getArea($lst, $tradingType) {
                 $ret += $data['area'];
             }
             */
-            // 売買が02:実測売買もしくは、03:実測売買(想定有効面積)の場合
-            if($tradingType == '02' || $tradingType == '03') {
+            // 20201218 S_Update
+            // 売買が01:公募売買もしくは、02:実測売買もしくは、03:実測売買(想定有効面積)の場合
+//            if($tradingType == '02' || $tradingType == '03') {
+            if($tradingType == '01' || $tradingType == '02' || $tradingType == '03') {
+            // 20201218 E_Update
                 // 20201106 S_Update
 //                if(isset($data['contractHave']) && $data['contractHave'] != '') {
                 if(isset($data['contractHave']) && $data['contractHave'] != '' && $data['contractHave'] > 0) {
