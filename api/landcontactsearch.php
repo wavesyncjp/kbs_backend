@@ -114,6 +114,12 @@ foreach($lands as $land){
 	if(isset($param->contractDay_To) && $param->contractDay_To != ''){
 		$contracts = $contracts->where_lte('p2.contractDay', $param->contractDay_To);
 	}
+	// 20201222 S_Add
+	// 契約日
+	if(isset($param->decisionDay) && $param->decisionDay != ''){
+		$contracts = $contracts->where('p2.decisionDay', $param->decisionDay);
+	}
+	// 20201222 E_Add
 	$contracts = $contracts->select('p2.pid')->find_array();
 	// 20200906 E_Update
 	if(isset($contracts) && sizeof($contracts) > 0){
