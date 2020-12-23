@@ -50,6 +50,12 @@ if(isset($param->contractDay_From) && $param->contractDay_From != ''){
 if(isset($param->contractDay_To) && $param->contractDay_To != ''){
 	$query = $query->where_lte('p2.contractDay', $param->contractDay_To);
 }
+// 20201222 S_Add
+// 契約日
+if(isset($param->decisionDay) && $param->decisionDay != ''){
+	$query = $query->where('p2.decisionDay', $param->decisionDay);
+}
+// 20201222 E_Add
 
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();
