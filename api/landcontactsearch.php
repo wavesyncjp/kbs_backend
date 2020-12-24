@@ -51,9 +51,17 @@ if(isset($param->contractDay_To) && $param->contractDay_To != ''){
 	$query = $query->where_lte('p2.contractDay', $param->contractDay_To);
 }
 // 20201222 S_Add
-// 契約日
+// 決済日
 if(isset($param->decisionDay) && $param->decisionDay != ''){
 	$query = $query->where('p2.decisionDay', $param->decisionDay);
+}
+// 決済日（開始）
+if(isset($param->decisionDay_From) && $param->decisionDay_From != ''){
+	$query = $query->where_gte('p2.decisionDay', $param->decisionDay_From);
+}
+// 決済日（終了）
+if(isset($param->decisionDay_To) && $param->decisionDay_To != ''){
+	$query = $query->where_lte('p2.decisionDay', $param->decisionDay_To);
 }
 // 20201222 E_Add
 
@@ -121,9 +129,17 @@ foreach($lands as $land){
 		$contracts = $contracts->where_lte('p2.contractDay', $param->contractDay_To);
 	}
 	// 20201222 S_Add
-	// 契約日
+	// 決済日
 	if(isset($param->decisionDay) && $param->decisionDay != ''){
 		$contracts = $contracts->where('p2.decisionDay', $param->decisionDay);
+	}
+	// 決済日（開始）
+	if(isset($param->decisionDay_From) && $param->decisionDay_From != ''){
+		$contracts = $contracts->where_gte('p2.decisionDay', $param->decisionDay_From);
+	}
+	// 決済日（終了）
+	if(isset($param->decisionDay_To) && $param->decisionDay_To != ''){
+		$contracts = $contracts->where_lte('p2.decisionDay', $param->decisionDay_To);
 	}
 	// 20201222 E_Add
 	$contracts = $contracts->select('p2.pid')->find_array();
