@@ -23,7 +23,8 @@ else {
         $saleSave = ORM::for_table(TBLBUKKENSALESINFO)->create();
         setInsert($saleSave, isset($sale->updateUserId) && $sale->updateUserId ? $sale->updateUserId : $sale->createUserId);
     }
-    copyData($sale, $saleSave, array('pid', 'salesContractDayMap', 'salesContractSchDayMap', 'salesDecisionSchDayMap', 'salesDecisionDayMap', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+    copyData($sale, $saleSave, array('pid', 'salesContractDayMap', 'salesContractSchDayMap', 'salesDecisionSchDayMap', 'salesDecisionDayMap', 
+        'salesLocationMap', 'salesLocationStr', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
     $saleSave->save();
 }
 
