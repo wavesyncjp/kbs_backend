@@ -21,7 +21,12 @@ $csvDetails = ORM::for_table(TBLCSVINFODETAIL)->where('csvCode', $param->csvCode
 // 対象カラムを設定
 $columns = [];
 foreach($csvDetails as $csvDetail) {
-    $columns[] = strtolower($csvDetail['itemTable']).'.'.$csvDetail['itemColumn'];
+    // 20210103 S_Update
+    /*$columns[] = strtolower($csvDetail['itemTable']).'.'.$csvDetail['itemColumn'];*/
+    if($csvDetail['itemColumn'] != '-') {
+        $columns[] = strtolower($csvDetail['itemTable']).'.'.$csvDetail['itemColumn'];
+    }
+    // 20210103 E_Update
 }
 
 // 【ノート】
@@ -94,6 +99,56 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
             WHERE tbltemplandinfo.pid IN (' . $param->ids . ')
             ORDER BY tbltemplandinfo.pid';
 }
+// 20210103 S_Add
+// 対象テーブルが06:売り契約情報の場合
+else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '06') {
+    // 【ノート】
+    // 1:Nの項目を設定
+
+    // 所在地
+    $selectContent = str_replace('tbllocationinfo.address', '(SELECT GROUP_CONCAT(address) FROM tbllocationinfo WHERE tempLandInfoPid = tblbukkensalesinfo.tempLandInfoPid AND locationType IN (\'01\',\'02\') ORDER BY locationType) as address', $selectContent);
+    // 地番
+//    $selectContent = str_replace('tbllocationinfo.blockNumber', '(SELECT GROUP_CONCAT(CONCAT(IFNULL(blockNumber, \'\'))) FROM tbllocationinfo WHERE tempLandInfoPid = tblbukkensalesinfo.tempLandInfoPid AND locationType = \'01\') as blockNumber', $selectContent);
+    $selectContent = str_replace('tbllocationinfo.blockNumber', '(SELECT GROUP_CONCAT(CONCAT(IFNULL(blockNumber, \'\'))) FROM tbllocationinfo WHERE FIND_IN_SET(pid, tblbukkensalesinfo.salesLocation) > 0) as blockNumber', $selectContent);
+    // 地積(㎡)
+//    $selectContent = str_replace('tbllocationinfo.area', '(SELECT SUM(area) FROM tbllocationinfo WHERE tempLandInfoPid = tblbukkensalesinfo.tempLandInfoPid AND locationType = \'01\') as area', $selectContent);
+    $selectContent = str_replace('tbllocationinfo.area', '(SELECT SUM(area) FROM tbllocationinfo WHERE FIND_IN_SET(pid, tblbukkensalesinfo.salesLocation) > 0) as area', $selectContent);
+    
+    $query = 'SELECT ' . $selectContent . ' FROM tblbukkensalesinfo
+            INNER JOIN tbltemplandinfo ON tblbukkensalesinfo.tempLandInfoPid = tbltemplandinfo.pid
+            WHERE tblbukkensalesinfo.tempLandInfoPid IN (' . $param->ids . ')
+            ORDER BY tbltemplandinfo.pid, tblbukkensalesinfo.pid';
+}
+// 対象テーブルが07:支払調書情報の場合
+else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '07') {
+    // 【ノート】
+    // 1:Nの項目を設定
+
+    // 所在地
+    $selectContent = str_replace('tbllocationinfo.address', '(SELECT GROUP_CONCAT(address) FROM tbllocationinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid AND locationType IN (\'01\',\'02\') ORDER BY locationType) as address', $selectContent);
+    // 地番
+    $selectContent = str_replace('tbllocationinfo.blockNumber', '(SELECT GROUP_CONCAT(CONCAT(IFNULL(blockNumber, \'\'))) FROM tbllocationinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid AND locationType = \'01\' AND EXISTS (SELECT 1 FROM tblcontractdetailinfo WHERE locationInfoPid = tbllocationinfo.pid AND contractInfoPid = tblcontractinfo.pid AND contractDataType IN (\'01\',\'03\'))) as blockNumber', $selectContent);
+    // 地積
+    $selectContent = str_replace('tbllocationinfo.area', '(SELECT SUM(area) FROM tbllocationinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid AND locationType = \'01\' AND EXISTS (SELECT 1 FROM tblcontractdetailinfo WHERE locationInfoPid = tbllocationinfo.pid AND contractInfoPid = tblcontractinfo.pid AND contractDataType = \'01\')) as area', $selectContent);
+    // 権利形態
+    $selectContent = str_replace('tbllocationinfo.rightsForm', '(SELECT GROUP_CONCAT(CONCAT(IFNULL(rightsForm, \'\'))) FROM tbllocationinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid AND locationType IN (\'01\',\'02\') AND EXISTS (SELECT 1 FROM tblcontractdetailinfo WHERE locationInfoPid = tbllocationinfo.pid AND contractInfoPid = tblcontractinfo.pid AND contractDataType = \'01\')) as rightsForm', $selectContent);
+    // 家屋番号
+    $selectContent = str_replace('tbllocationinfo.buildingNumber', '(SELECT GROUP_CONCAT(CONCAT(IFNULL(buildingNumber, \'\'))) FROM tbllocationinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid AND locationType IN (\'02\',\'04\') AND EXISTS (SELECT 1 FROM tblcontractdetailinfo WHERE locationInfoPid = tbllocationinfo.pid AND contractInfoPid = tblcontractinfo.pid AND contractDataType = \'01\')) as buildingNumber', $selectContent);
+    // 延床面積
+    $selectContent = str_replace('tbllocationinfo.grossFloorArea', '(SELECT SUM(grossFloorArea) FROM tbllocationinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid AND locationType IN (\'02\',\'04\') AND EXISTS (SELECT 1 FROM tblcontractdetailinfo WHERE locationInfoPid = tbllocationinfo.pid AND contractInfoPid = tblcontractinfo.pid AND contractDataType = \'01\')) as grossFloorArea', $selectContent);
+    // 契約者名
+    $selectContent = str_replace('tblcontractsellerinfo.contractorName', '(SELECT GROUP_CONCAT(contractorName) FROM tblcontractsellerinfo WHERE contractInfoPid = tblcontractinfo.pid) as contractorName', $selectContent);
+    // 契約者住所
+    $selectContent = str_replace('tblcontractsellerinfo.contractorAdress', '(SELECT GROUP_CONCAT(contractorAdress) FROM tblcontractsellerinfo WHERE contractInfoPid = tblcontractinfo.pid) as contractorAdress', $selectContent);
+    // 売却先
+    $selectContent = str_replace('tblbukkensalesinfo.salesName', '(SELECT GROUP_CONCAT(salesName) FROM tblbukkensalesinfo WHERE tempLandInfoPid = tblcontractinfo.tempLandInfoPid) as salesName', $selectContent);
+
+    $query = 'SELECT ' . $selectContent . ' FROM tblcontractinfo
+            INNER JOIN tbltemplandinfo ON tblcontractinfo.tempLandInfoPid = tbltemplandinfo.pid
+            WHERE tblcontractinfo.pid IN (' . $param->ids . ')
+            ORDER BY tbltemplandinfo.pid, tblcontractinfo.contractNumber';
+}
+// 20210103 E_Add 
 
 $res = ORM::raw_execute($query);
 $statement = ORM::get_last_statement();
@@ -160,6 +215,21 @@ function convertValueMulti($val, $multipleType, $conversionType, $conversionCode
         else if($multipleType === '02') {
             if($index > 1) break;
         }
+        // 20210103 S_Add
+        // 複数区分が03:，区切りの場合
+        else if($multipleType === '03') {
+            if($index > 1) $retVal .= '，';
+        }
+        // 複数区分が04:，区切り（２件まで）の場合
+        else if($multipleType === '04') {
+            if($index > 1 && $index < 3) $retVal .= '，';
+            if($index > 2) {
+                $retVal .= '他';
+                break;
+            }
+        }
+        // 20210103 E_Add
+
         $retVal .= convertValue($lst, $conversionType, $conversionCode);
         $index++;
     }
