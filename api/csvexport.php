@@ -108,10 +108,8 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
     // 所在地
     $selectContent = str_replace('tbllocationinfo.address', '(SELECT GROUP_CONCAT(address) FROM tbllocationinfo WHERE tempLandInfoPid = tblbukkensalesinfo.tempLandInfoPid AND locationType IN (\'01\',\'02\') ORDER BY locationType) as address', $selectContent);
     // 地番
-//    $selectContent = str_replace('tbllocationinfo.blockNumber', '(SELECT GROUP_CONCAT(CONCAT(IFNULL(blockNumber, \'\'))) FROM tbllocationinfo WHERE tempLandInfoPid = tblbukkensalesinfo.tempLandInfoPid AND locationType = \'01\') as blockNumber', $selectContent);
     $selectContent = str_replace('tbllocationinfo.blockNumber', '(SELECT GROUP_CONCAT(CONCAT(IFNULL(blockNumber, \'\'))) FROM tbllocationinfo WHERE FIND_IN_SET(pid, tblbukkensalesinfo.salesLocation) > 0) as blockNumber', $selectContent);
-    // 地積(㎡)
-//    $selectContent = str_replace('tbllocationinfo.area', '(SELECT SUM(area) FROM tbllocationinfo WHERE tempLandInfoPid = tblbukkensalesinfo.tempLandInfoPid AND locationType = \'01\') as area', $selectContent);
+    // 地積
     $selectContent = str_replace('tbllocationinfo.area', '(SELECT SUM(area) FROM tbllocationinfo WHERE FIND_IN_SET(pid, tblbukkensalesinfo.salesLocation) > 0) as area', $selectContent);
     
     $query = 'SELECT ' . $selectContent . ' FROM tblbukkensalesinfo
@@ -184,8 +182,9 @@ function convertCsv($row, $csvDetails, $csvInfo) {
 //        $columnName = strtolower($csvDetail['itemTable']).'.'.$csvDetail['itemColumn'];
         $columnName = $csvDetail['itemColumn'];
 
+        // 20210105 S_Add
         $columnVal = $row[$columnName];
-        if($csvInfo['csvCode'] === '0301' && $columnName === 'rightsForm'){
+        if($csvInfo['csvCode'] === '0301' && $columnName === 'rightsForm') {
             if(strpos($columnVal, '01') !== false) {
                 $columnVal = '01';
             }
@@ -199,14 +198,21 @@ function convertCsv($row, $csvDetails, $csvInfo) {
                 $columnVal = '';
             }
         }
+        // 20210105 E_Add
         
         // 複数区分に指定がある場合
         if($csvDetail['multipleType'] != '') {
+            // 20200105 S_Update
+            /*$ret[] = '"' . convertValueMulti($row[$columnName], $csvDetail['multipleType'], $csvDetail['conversionType'], $csvDetail['conversionCode']) . '"';*/
             $ret[] = '"' . convertValueMulti($columnVal, $csvDetail['multipleType'], $csvDetail['conversionType'], $csvDetail['conversionCode']) . '"';
+            // 20200105 E_Update
         }
         // 複数区分に指定がない場合
         else {
+            // 20200105 S_Update
+            /*$ret[] = '"' . convertValue($row[$columnName], $csvDetail['conversionType'], $csvDetail['conversionCode']) . '"';*/
             $ret[] = '"' . convertValue($columnVal, $csvDetail['conversionType'], $csvDetail['conversionCode']) . '"';
+            // 20200105 E_Update
         }
     }
     return $ret;
