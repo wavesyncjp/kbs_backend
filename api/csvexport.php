@@ -165,7 +165,7 @@ $ret[] = implode(',', $header);// 配列をカンマ区切りの文字列に変�
 
 // データを設定
 while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
-    $line = convertCsv($row, $csvDetails);
+    $line = convertCsv($row, $csvDetails, $csvInfo);
     $ret[] = implode(',', $line);
 }
 
@@ -178,19 +178,35 @@ exit;
 /**
  * カラムを設定
  */
-function convertCsv($row, $csvDetails) {
+function convertCsv($row, $csvDetails, $csvInfo) {
     $ret = [];
     foreach($csvDetails as $csvDetail) {
 //        $columnName = strtolower($csvDetail['itemTable']).'.'.$csvDetail['itemColumn'];
         $columnName = $csvDetail['itemColumn'];
+
+        $columnVal = $row[$columnName];
+        if($csvInfo['csvCode'] === '0301' && $columnName === 'rightsForm'){
+            if(strpos($columnVal, '01') !== false) {
+                $columnVal = '01';
+            }
+            else if(strpos($columnVal, '03') !== false) {
+                $columnVal = '03';
+            }
+            else if(strpos($columnVal, '02') !== false) {
+                $columnVal = '02';
+            }
+            else {
+                $columnVal = '';
+            }
+        }
         
         // 複数区分に指定がある場合
         if($csvDetail['multipleType'] != '') {
-            $ret[] = '"' . convertValueMulti($row[$columnName], $csvDetail['multipleType'], $csvDetail['conversionType'], $csvDetail['conversionCode']) . '"';
+            $ret[] = '"' . convertValueMulti($columnVal, $csvDetail['multipleType'], $csvDetail['conversionType'], $csvDetail['conversionCode']) . '"';
         }
         // 複数区分に指定がない場合
         else {
-            $ret[] = '"' . convertValue($row[$columnName], $csvDetail['conversionType'], $csvDetail['conversionCode']) . '"';
+            $ret[] = '"' . convertValue($columnVal, $csvDetail['conversionType'], $csvDetail['conversionCode']) . '"';
         }
     }
     return $ret;
