@@ -110,7 +110,7 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
     // 地番
     $selectContent = str_replace('tbllocationinfo.blockNumber', '(SELECT GROUP_CONCAT(CONCAT(IFNULL(blockNumber, \'\'))) FROM tbllocationinfo WHERE FIND_IN_SET(pid, tblbukkensalesinfo.salesLocation) > 0) as blockNumber', $selectContent);
     // 地積
-    $selectContent = str_replace('tbllocationinfo.area', '(SELECT SUM(area) FROM tbllocationinfo WHERE FIND_IN_SET(pid, tblbukkensalesinfo.salesLocation) > 0) as area', $selectContent);
+    /*$selectContent = str_replace('tbllocationinfo.area', '(SELECT SUM(area) FROM tbllocationinfo WHERE FIND_IN_SET(pid, tblbukkensalesinfo.salesLocation) > 0) as area', $selectContent);*/ // 20210107 Delete
     
     $query = 'SELECT ' . $selectContent . ' FROM tblbukkensalesinfo
             INNER JOIN tbltemplandinfo ON tblbukkensalesinfo.tempLandInfoPid = tbltemplandinfo.pid
