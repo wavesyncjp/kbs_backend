@@ -19,6 +19,12 @@ $query = ORM::for_table(TBLTEMPLANDINFO)
 if(isset($param->address) && $param->address != ''){
 	$query = $query->inner_join(TBLLOCATIONINFO, array('p1.pid', '=', 'p2.tempLandInfoPid'), 'p2');
 }
+// 2021012 S_Add
+if((isset($param->salesDecisionDaySearch_From) && $param->salesDecisionDaySearch_From != '')
+	|| (isset($param->salesDecisionDaySearch_From) && $param->salesDecisionDaySearch_From != '')){
+	$query = $query->inner_join(TBLBUKKENSALESINFO, array('p1.pid', '=', 'p3.tempLandInfoPid'), 'p3');
+}
+// 20210112 E_Add
 $query = $query->where_null('p1.deleteDate');
 
 // 物件番号
@@ -89,6 +95,27 @@ if(isset($param->finishDateSearch_To) && $param->finishDateSearch_To != ''){
 	$query = $query->where_lte('p1.finishDate', $param->finishDateSearch_To);
 }
 // 20200913 E_Add
+// 20210112 S_Add
+//決済日(salesDecisionDay)
+if(isset($param->salesDecisionDaySearch_From) && $param->salesDecisionDaySearch_From != ''){
+	$query = $query->where_gte('p3.salesDecisionDay', $param->salesDecisionDaySearch_From);
+}
+if(isset($param->salesDecisionDaySearch_To) && $param->salesDecisionDaySearch_To != ''){
+	$query = $query->where_lte('p3.salesDecisionDay', $param->salesDecisionDaySearch_To);
+}
+// 物件管理表
+if(isset($param->bukkenListChk) && $param->bukkenListChk !== ''){
+	$query = $query->where('p1.bukkenListChk', $param->bukkenListChk);
+}
+// 測量依頼日チェック
+if(isset($param->surveyRequestedDayChk) && $param->surveyRequestedDayChk !== ''){
+	$query = $query->where('p1.surveyRequestedDayChk', $param->surveyRequestedDayChk);
+}
+// 重要度
+if(isset($param->importance) && sizeof($param->importance) > 0){
+	$query = $query->where_in('p1.importance', $param->importance);
+}
+// 20210112 E_Add
 
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();
@@ -101,7 +128,7 @@ foreach($lands as $land){
 		foreach($address as $arr){
 			$arrs[] = $arr['address'];
 		}
-		$land['remark1'] = implode(",", $arrs);		
+		$land['remark1'] = implode(",", $arrs);
 	}
 	else {
 		$land['remark1'] = '';
@@ -114,7 +141,7 @@ foreach($lands as $land){
 		foreach($address as $arr){
 			$arrs[] = $arr['blockNumber'];
 		}
-		$land['remark2'] = implode(",", $arrs);		
+		$land['remark2'] = implode(",", $arrs);
 	}
 	else {
 		$land['remark2'] = '';
