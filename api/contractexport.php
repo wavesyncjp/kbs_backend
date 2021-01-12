@@ -447,10 +447,24 @@ if(isset($locs) && sizeof($locs) > 0) {
 }
 //土地荷主なし ->　削除
 else {
+    // 20210113 S_Delete
+    /*
     for($i = 0 ; $i < $blockCount; $i++) {
         $sheet->removeRow($pos);
     }
+    */
+    // 20210113 E_Delete
 //    $sheet->setCellValue('A' .  $pos, '');
+    // 20210113 S_Add
+    for($i = 0 ; $i < $blockCount - 1; $i++) {
+        $sheet->removeRow($pos);
+    }
+
+    $keyword = 'repear_sharer';
+    $pos = searchCellPos($sheet, $keyword, $pos);
+    $sheet->setCellValue('A' .  $pos, '');
+    $sheet->removeRow($pos - 1);
+    // 20210113 E_Add
 }
 
 //荷主所有地(建物)
