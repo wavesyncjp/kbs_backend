@@ -407,7 +407,10 @@ function getCodeTitle($lst, $codeDetail, $delimiter = ',') {
 }
 // 20201021 E_Update
 
-function getRegistrants($details, $loc) {
+// 20210204 S_Update
+//function getRegistrants($details, $loc) {
+function getRegistrants($details, $loc, $setShareRatio = false) {
+// 20210204 E_Update
 	$ctDetail = null;
 	$ret = [];
 	foreach($details as $detail) {
@@ -426,10 +429,33 @@ function getRegistrants($details, $loc) {
 	}
 
 	if(sizeof($ids) > 0) {
+		// 20210204 S_Update
+		/*
 		$lst = ORM::for_table(TBLSHARERINFO)->where_in('pid', $ids)->order_by_asc('pid')->select('sharer')->findArray();
 		foreach($lst as $item) {
 			$ret[] = $item['sharer'];
 		}
+		*/
+		if($setShareRatio) {
+			$lst = ORM::for_table(TBLSHARERINFO)->where_in('pid', $ids)->order_by_asc('pid')->select('sharer')->select('shareRatio')->findArray();
+			foreach($lst as $item) {
+				$shareRatio = $item['shareRatio'];
+				// 持ち分に指定がある場合
+				if(isset($shareRatio) && $shareRatio !== '') {
+					$ret[] = $item['sharer'].'（持分'.$shareRatio.'）';
+				}
+				else {
+					$ret[] = $item['sharer'];
+				}
+			}
+		}
+		else {
+			$lst = ORM::for_table(TBLSHARERINFO)->where_in('pid', $ids)->order_by_asc('pid')->select('sharer')->findArray();
+			foreach($lst as $item) {
+				$ret[] = $item['sharer'];
+			}
+		}
+		// 20210204 E_Update
 	}	
 	return $ret;
 }
@@ -438,13 +464,39 @@ function getRegistrants($details, $loc) {
 /**
  * ロケーションのSharer
  */
-function getSharers($loc) {
+// 20210204 S_Update
+//function getSharers($loc) {
+function getSharers($loc, $setShareRatio = false) {
+// 20210204 E_Update
 	$ret = [];
 	
+	// 20210204 S_Update
+	/*
 	$lst = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $loc['pid'])->order_by_asc('pid')->select('sharer')->findArray();
 	foreach($lst as $item) {
 		$ret[] = $item['sharer'];
 	}
+	*/
+	if($setShareRatio) {
+		$lst = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $loc['pid'])->order_by_asc('pid')->select('sharer')->select('shareRatio')->findArray();
+		foreach($lst as $item) {
+			$shareRatio = $item['shareRatio'];
+			// 持ち分に指定がある場合
+			if(isset($shareRatio) && $shareRatio !== '') {
+				$ret[] = $item['sharer'].'（持分'.$shareRatio.'）';
+			}
+			else {
+				$ret[] = $item['sharer'];
+			}
+		}
+	}
+	else {
+		$lst = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $loc['pid'])->order_by_asc('pid')->select('sharer')->findArray();
+		foreach($lst as $item) {
+			$ret[] = $item['sharer'];
+		}
+	}
+	// 20210204 E_Update
 	return $ret;
 }
 

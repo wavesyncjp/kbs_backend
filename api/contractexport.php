@@ -180,6 +180,8 @@ for($i = 0 ; $i < 2; $i++) {
 // 20200914 S_Add
 // 即決和解申請日
 $keyword = 'settlementDay';
+// 20210204 S_Update
+/*
 $nextPos = searchCellPos($sheet, $keyword, $pos);
 if($nextPos != -1) {
     $pos = $nextPos;
@@ -190,6 +192,20 @@ if($nextPos != -1) {
     }
     bindCell('A' . $pos, $sheet, $keyword, $val);
 }
+*/
+for($i = 0 ; $i < 3; $i++) {
+    $nextPos = searchCellPos($sheet, $keyword, $pos);
+    if($nextPos != -1) {
+        $pos = $nextPos;
+        if(isset($contract[$keyword]) && $contract[$keyword] !== '') {
+            $val = mb_convert_kana(date('Y年m月d日', strtotime($contract[$keyword])), 'KVRN');
+        } else {
+            $val = '　　　年　　月　　日';
+        }
+        bindCell('A' . $pos, $sheet, $keyword, $val);
+    }
+}
+// 20210204 E_Update
 // 20200914 E_Add
 
 // 優先分譲面積
@@ -403,7 +419,10 @@ if(isset($locs) && sizeof($locs) > 0) {
         // 20200925 E_Add
 
         //登記名義人
-        $regists = getRegistrants($contract['details'], $loc);
+        // 20210204 S_Update
+//        $regists = getRegistrants($contract['details'], $loc);
+        $regists = getRegistrants($contract['details'], $loc, true);
+        // 20210204 E_Update
 
         $keyword = 'l_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
@@ -412,7 +431,10 @@ if(isset($locs) && sizeof($locs) > 0) {
         bindCell($cellName, $sheet, ['l_address', 'blockNumber', 'landCategory', 'area', 'sharer']
             // 20200913 S_Update
 //            , [$loc['address'], $loc['blockNumber'], getCodeTitle($codeLandList, $loc['landCategory']), $loc['area'], sizeof($regists) > 0 ?  $regists[0] : "" ]);
-            , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), mb_convert_kana(number_format($loc['area'], 2) . '㎡' . $contractArea, 'KVRN'), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            // 20210204 S_Update
+//            , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), mb_convert_kana(number_format($loc['area'], 2) . '㎡' . $contractArea, 'KVRN'), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['blockNumber'], 'KVRN'), getCodeTitle($codeLandList, $loc['landCategory']), mb_convert_kana(number_format($loc['area'], 2) . '㎡' . $contractArea, 'KVRN'), sizeof($regists) > 0 ? mb_convert_kana($regists[0], 'KVRN') : "" ]);
+            // 20210204 E_Update
             // 20200913 E_Update
 
         //[土地]文言削除
@@ -436,7 +458,10 @@ if(isset($locs) && sizeof($locs) > 0) {
 
             foreach($regists as $regist) {
                 $val = str_replace('$repear_sharer$', $regist, $sharerStr);
-                $sheet->setCellValue('A' .  $pos, $val);
+                // 20210204 S_Update
+//                $sheet->setCellValue('A' .  $pos, $val);
+                $sheet->setCellValue('A' . $pos, mb_convert_kana($val, 'KVRN'));
+                // 20210204 E_Update
                 $pos++;
             }
             $sheet->setCellValue('A' .  $pos, '');
@@ -493,7 +518,10 @@ if(isset($locs) && sizeof($locs) > 0) {
         $loc = $locs[$cursor];
 
         //登記名義人
-        $regists = getRegistrants($contract['details'], $loc);
+        // 20210204 S_Update
+//        $regists = getRegistrants($contract['details'], $loc);
+        $regists = getRegistrants($contract['details'], $loc, true);
+        // 20210204 E_Update
 
         $keyword = 'b_address';
         $pos = searchCellPos($sheet, $keyword, $pos);
@@ -508,7 +536,10 @@ if(isset($locs) && sizeof($locs) > 0) {
             */
             , [mb_convert_kana($loc['address'], 'KVRN'), mb_convert_kana($loc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $loc['dependType'], '　')
             , replaceNewLine(mb_convert_kana($loc['structure'], 'KVRN'), 14, 1)
-            , replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            // 20210204 S_Update
+//            , replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+            , replaceNewLine(mb_convert_kana($loc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ? mb_convert_kana($regists[0], 'KVRN') : "" ]);
+            // 20210204 E_Update
             //20200913 E_Update
 
         // 20200915 S_Add
@@ -544,7 +575,10 @@ if(isset($locs) && sizeof($locs) > 0) {
 
             foreach($regists as $regist) {
                 $val = str_replace('$repear_sharer$', $regist, $sharerStr);
-                $sheet->setCellValue('A' .  $pos, $val);
+                // 20210204 S_Update
+//                $sheet->setCellValue('A' .  $pos, $val);
+                $sheet->setCellValue('A' . $pos, mb_convert_kana($val, 'KVRN'));
+                // 20210204 E_Update
                 $pos++;
             }
             $sheet->setCellValue('A' .  $pos, '');
@@ -795,7 +829,10 @@ if(sizeof($locs) > 0) {
 
                 //登記名義人
                 //$regists = getRegistrants($contract['details'], $loc);
-                $regists = getSharers($subLoc);
+                // 20210204 S_Update
+//                $regists = getSharers($subLoc);
+                $regists = getSharers($subLoc, true);
+                // 20210204 E_Update
 
 //                $keyword = 'p_address';
                 $keyword = 'p_buildingNumber';
@@ -824,7 +861,10 @@ if(sizeof($locs) > 0) {
 //                    , [mb_convert_kana($subLoc['address'], 'KVRN'), mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'], '　')
                     , [mb_convert_kana($subLoc['buildingNumber'], 'KVRN'), getCodeTitle($codeTypeList, $subLoc['dependType'], '　')
                     , replaceNewLine(mb_convert_kana($subLoc['structure'], 'KVRN'), 14, 1)
-                    , replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+                    // 20210204 S_Update
+//                    , replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ?  $regists[0] : "" ]);
+                    , replaceNewLine(mb_convert_kana($subLoc['floorSpace'], 'KVRN'), 14, 1), sizeof($regists) > 0 ? mb_convert_kana($regists[0], 'KVRN') : "" ]);
+                    // 20210204 E_Update
                     // 20200913 E_Update
 
                 // 20200915 S_Add
@@ -854,7 +894,10 @@ if(sizeof($locs) > 0) {
 
                     foreach($regists as $regist) {
                         $val = str_replace('$repear_sharer$', $regist, $sharerStr);
-                        $sheet->setCellValue('A' .  $pos, $val);
+                        // 20210204 S_Update
+//                        $sheet->setCellValue('A' .  $pos, $val);
+                        $sheet->setCellValue('A' . $pos, mb_convert_kana($val, 'KVRN'));
+                        // 20210204 E_Update
                         $pos++;
                     }
                     $sheet->setCellValue('A' .  $pos, '');
@@ -1103,7 +1146,7 @@ if(sizeof($locs) > 0) {
                 $subLoc = $subLocs[$subCursor];
 
                 //登記名義人
-                $regists = getSharers($subLoc);
+//                $regists = getSharers($subLoc);// 20210204 Delete
 
 //                $keyword = 'p_address';
                 $keyword = 'p_buildingNumber';
