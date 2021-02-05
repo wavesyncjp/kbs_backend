@@ -6,11 +6,19 @@ header('Content-type:  application/json; charset=UTF-8');
 
 require 'idiorm.php';
 
+#テスト環境
 ORM::configure('driver_options', array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
 ORM::configure('mysql:host=sddb0040052539.cgidb;dbname=sddb0040052539');
 ORM::configure('username', 'sd_dba_LTE2MjA0');
 ORM::configure('password', 'password32');
 
+#デモ環境
+#ORM::configure('driver_options', array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
+#ORM::configure('mysql:host=sddb0040039354.cgidb;dbname=sddb0040039354');
+#ORM::configure('username', 'sd_dba_NTkwOTU1');
+#ORM::configure('password', 'demo#pass32');
+
+#本番環境
 #ORM::configure('driver_options', array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'));
 #ORM::configure('mysql:host=mysql19.onamae.ne.jp;dbname=cesrh_metpro');
 #ORM::configure('username', 'cesrh_dbuser');
