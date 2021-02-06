@@ -116,6 +116,12 @@ if(isset($param->importance) && sizeof($param->importance) > 0){
 	$query = $query->where_in('p1.importance', $param->importance);
 }
 // 20210112 E_Add
+// 20210207 S_Add
+// 情報提供者 MetProは未使用
+if(isset($param->infoOffer) && $param->infoOffer !== ''){
+	$query = $query->where('p1.infoOffer', $param->infoOffer);
+}
+// 20210207 E_Add
 
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();
