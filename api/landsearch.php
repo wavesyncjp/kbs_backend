@@ -12,6 +12,8 @@ $param = json_decode($postdata);
 $query = ORM::for_table(TBLTEMPLANDINFO)
 			->table_alias('p1')
 			->distinct()
+//			->select('p1.*');
+			->select('p1.pid')
 			->select('p1.bukkenNo')
 			->select('p1.contractBukkenNo')
 			->select('p1.bukkenName')
