@@ -12,7 +12,14 @@ $param = json_decode($postdata);
 $query = ORM::for_table(TBLTEMPLANDINFO)
 			->table_alias('p1')
 			->distinct()
-			->select('p1.*');
+			->select('p1.bukkenNo')
+			->select('p1.contractBukkenNo')
+			->select('p1.bukkenName')
+			->select('p1.residence')
+			->select('p1.result')
+			->select('p1.infoStaff')
+			->select('p1.pickDate')
+			->select('p1.surveyRequestedDay');
 			//->select("GROUP_CONCAT(address SEPARATOR ', ') as locationAddress");
 			//->left_outer_join(TBLLOCATIONINFO, array('p1.pid', '=', 'p2.tempLandInfoPid'), 'p2')->where_null('p1.deleteDate');
 
