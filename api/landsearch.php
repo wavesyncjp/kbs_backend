@@ -128,7 +128,7 @@ if(isset($param->importance) && sizeof($param->importance) > 0){
 // 20210207 S_Add
 // 情報提供者 MetProは未使用
 if(isset($param->infoOffer) && $param->infoOffer !== ''){
-	$query = $query->where('p1.infoOffer', $param->infoOffer);
+	$query = $query->where_like('p1.infoOffer', '%'.$param->infoOffer.'%');
 }
 // 20210207 E_Add
 
