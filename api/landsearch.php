@@ -23,7 +23,8 @@ $query = ORM::for_table(TBLTEMPLANDINFO)
 			->select('p1.pickDate')
 			->select('p1.surveyRequestedDay')
 			->select('p1.latitude')
-			->select('p1.longitude');
+			->select('p1.longitude')
+			->select('p1.department');// 20210208 Add
 			//->select("GROUP_CONCAT(address SEPARATOR ', ') as locationAddress");
 			//->left_outer_join(TBLLOCATIONINFO, array('p1.pid', '=', 'p2.tempLandInfoPid'), 'p2')->where_null('p1.deleteDate');
 
@@ -63,6 +64,12 @@ if(isset($param->clctInfoStaff) && $param->clctInfoStaff !== '' && sizeof($param
 	$query = $query->where_raw($whereRaw);
 }
 // 20200828 E_Add
+// 20210208 S_Add
+// 物件担当者（担当なし）
+if(isset($param->notStaffChk) && $param->notStaffChk === '1'){
+	$query = $query->where('p1.infoStaff', '');
+}
+// 20210208 E_Add
 // 物件名
 if(isset($param->bukkenName) && $param->bukkenName !== ''){
 	$query = $query->where_like('p1.bukkenName', '%'.$param->bukkenName.'%');
