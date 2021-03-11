@@ -2,6 +2,8 @@
 require '../header.php';
 require '../util.php';
 
+$fullPath  = __DIR__ . '/../uploads/location';// 20210312 Add
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 	echo 'NOT SUPPORT';
 	exit;
@@ -31,6 +33,9 @@ if(isset($sharers)) {
 $attachFiles = ORM::for_table(TBLLOCATIONATTACH)->where('locationInfoPid', $pid)->where_null('deleteDate')->find_many();
 if(isset($attachFiles)) {
 	foreach($attachFiles as $attachFile) {
+		$split = explode('/', $attachFile->attachFilePath);
+		$dir = $fullPath.'/'.$split[sizeof($split) - 2];
+		deleteDirectory($dir);
 		setDelete($attachFile, $userId);
 		$attachFile->delete();
 	}
