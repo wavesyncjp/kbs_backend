@@ -26,6 +26,16 @@ if(isset($sharers)) {
 		$sharer->delete();
 	}
 }
+// 20210312 S_Add
+//謄本添付ファイル
+$attachFiles = ORM::for_table(TBLLOCATIONATTACH)->where('locationInfoPid', $pid)->where_null('deleteDate')->find_many();
+if(isset($attachFiles)) {
+	foreach($attachFiles as $attachFile) {
+		setDelete($attachFile, $userId);
+		$attachFile->delete();
+	}
+}
+// 20210312 E_Add
 $loc = ORM::for_table(TBLLOCATIONINFO)->find_one($pid);
 if(isset($loc)) {
 	setDelete($loc, $userId);
