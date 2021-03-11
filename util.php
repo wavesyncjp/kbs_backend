@@ -63,6 +63,10 @@ function getLandInfo($pid){
 		foreach($locs as $loc){
 			$sharers = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();			
 			$loc['sharers'] = $sharers;
+			// 20210311 S_Add
+			$attachFiles = ORM::for_table(TBLLOCATIONATTACH)->where('locationInfoPid', $loc['pid'])->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
+			$loc['attachFiles'] = $attachFiles;
+			// 20210311 E_Add
 			$locList[] = $loc;
 		}
 

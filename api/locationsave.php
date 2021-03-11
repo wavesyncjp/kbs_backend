@@ -22,8 +22,10 @@ else {
 	$loc = ORM::for_table(TBLLOCATIONINFO)->create();	
 	setInsert($loc, $param->createUserId);
 }
-
-copyData($param, $loc, array('pid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate'));
+// 20210311 S_Update
+//copyData($param, $loc, array('pid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate'));
+copyData($param, $loc, array('pid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'attachFiles'));
+// 20210311 E_Update
 $loc->save();
 
 //所有者
@@ -60,8 +62,12 @@ ORM::get_db()->commit();
 
 $locationPid = $loc->pid;
 $loc = ORM::for_table(TBLLOCATIONINFO)->findOne($locationPid)->asArray();
-$sharers = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $locationPid)->where_null('deleteDate')->order_by_asc('registPosition')->findArray();			
+$sharers = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $locationPid)->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
 $loc['sharers'] = $sharers;
+// 20210311 S_Add
+$attachFiles = ORM::for_table(TBLLOCATIONATTACH)->where('locationInfoPid', $locationPid)->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
+$loc['attachFiles'] = $attachFiles;
+// 20210311 E_Add
 echo json_encode($loc);
 
 ?>
