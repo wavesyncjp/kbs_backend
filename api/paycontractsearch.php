@@ -19,6 +19,7 @@ $query = ORM::for_table(TBLPAYCONTRACTDETAIL)
 			->select('p3.bukkenNo', 'bukkenNo')
 			->select('p3.contractBukkenNo', 'contractBukkenNo')
 			->select('p3.bukkenName', 'bukkenName')
+			->select('p3.pid', 'tempLandInfoPid')
 			->inner_join(TBLPAYCONTRACT, array('p1.payContractPid', '=', 'p2.pid'), 'p2')
 			->inner_join(TBLTEMPLANDINFO, array('p1.tempLandInfoPid', '=', 'p3.pid'), 'p3')
 			->distinct();
