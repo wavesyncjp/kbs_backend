@@ -36,8 +36,10 @@ $sheet = $spreadsheet->getSheet(0);
 
 // 契約物件番号
 $sheet->setCellValue('A2', $bukken['contractBukkenNo']);
+// 20210320 S_Delete
 // 居住表示
-$sheet->setCellValue('D2', $bukken['residence']);
+//$sheet->setCellValue('D2', $bukken['residence']);
+// 20210320 E_Delete
 
 // 売り契約ブロック
 $pos = 5;
@@ -47,46 +49,46 @@ if(sizeof($sales) > 1) {
 }
 foreach($sales as $sale) {
     // 買主
-    $sheet->setCellValue('F'.$pos, $sale['salesName']);
+    $sheet->setCellValue('G'.$pos, $sale['salesName']);
     // 金額
-    $sheet->setCellValue('I'.$pos, formatYenNumber($sale['salesTradingPrice']));
+    $sheet->setCellValue('J'.$pos, formatYenNumber($sale['salesTradingPrice']));
     // 契約日
-    $sheet->setCellValue('J'.$pos, convert_jpdt($sale['salesContractDay']));
+    $sheet->setCellValue('K'.$pos, convert_jpdt($sale['salesContractDay']));
     // 決済日
-    $sheet->setCellValue('K'.$pos, convert_jpdt($sale['salesDecisionDay']));
+    $sheet->setCellValue('L'.$pos, convert_jpdt($sale['salesDecisionDay']));
     // 固都税清算金（土地）
-    $sheet->setCellValue('M'.$pos, formatYenNumber($sale['salesFixedLandTax']));
+    $sheet->setCellValue('N'.$pos, formatYenNumber($sale['salesFixedLandTax']));
     // 固都税清算金（建物）
-    $sheet->setCellValue('M'.($pos + 1), formatYenNumber($sale['salesFixedBuildingTax']));
+    $sheet->setCellValue('N'.($pos + 1), formatYenNumber($sale['salesFixedBuildingTax']));
     // 固都税清算金（消費税）
-    $sheet->setCellValue('M'.($pos + 2), formatYenNumber($sale['salesFixedConsumptionTax']));
+    $sheet->setCellValue('N'.($pos + 2), formatYenNumber($sale['salesFixedConsumptionTax']));
     // その他清算金１
-    $sheet->setCellValue('O'.($pos + 0), formatYenNumber($sale['salesLiquidation1']));
+    $sheet->setCellValue('P'.($pos + 0), formatYenNumber($sale['salesLiquidation1']));
     // その他清算金２
-    $sheet->setCellValue('O'.($pos + 1), formatYenNumber($sale['salesLiquidation2']));
+    $sheet->setCellValue('P'.($pos + 1), formatYenNumber($sale['salesLiquidation2']));
     // その他清算金３
-    $sheet->setCellValue('O'.($pos + 2), formatYenNumber($sale['salesLiquidation3']));
+    $sheet->setCellValue('P'.($pos + 2), formatYenNumber($sale['salesLiquidation3']));
     // その他清算金４
-    $sheet->setCellValue('O'.($pos + 3), formatYenNumber($sale['salesLiquidation4']));
+    $sheet->setCellValue('P'.($pos + 3), formatYenNumber($sale['salesLiquidation4']));
     // その他清算金５
-    $sheet->setCellValue('O'.($pos + 4), formatYenNumber($sale['salesLiquidation5']));
+    $sheet->setCellValue('P'.($pos + 4), formatYenNumber($sale['salesLiquidation5']));
     $pos += 5;
 }
 // データが存在しない場合
 if(sizeof($sales) == 0) {
     $sheet->setCellValue('C'.$pos, '');
-    $sheet->setCellValue('F'.$pos, '');// 買主
-    $sheet->setCellValue('I'.$pos, '');// 金額
-    $sheet->setCellValue('J'.$pos, '');// 契約日
-    $sheet->setCellValue('K'.$pos, '');// 決済日
-    $sheet->setCellValue('M'.$pos, '');// 固都税清算金（土地）
-    $sheet->setCellValue('M'.($pos + 1), '');// 固都税清算金（建物）
-    $sheet->setCellValue('M'.($pos + 2), '');// 固都税清算金（消費税）
-    $sheet->setCellValue('O'.($pos + 0), '');// その他清算金１
-    $sheet->setCellValue('O'.($pos + 1), '');// その他清算金２
-    $sheet->setCellValue('O'.($pos + 2), '');// その他清算金３
-    $sheet->setCellValue('O'.($pos + 3), '');// その他清算金４
-    $sheet->setCellValue('O'.($pos + 4), '');// その他清算金５
+    $sheet->setCellValue('G'.$pos, '');// 買主
+    $sheet->setCellValue('J'.$pos, '');// 金額
+    $sheet->setCellValue('K'.$pos, '');// 契約日
+    $sheet->setCellValue('L'.$pos, '');// 決済日
+    $sheet->setCellValue('N'.$pos, '');// 固都税清算金（土地）
+    $sheet->setCellValue('N'.($pos + 1), '');// 固都税清算金（建物）
+    $sheet->setCellValue('N'.($pos + 2), '');// 固都税清算金（消費税）
+    $sheet->setCellValue('P'.($pos + 0), '');// その他清算金１
+    $sheet->setCellValue('P'.($pos + 1), '');// その他清算金２
+    $sheet->setCellValue('P'.($pos + 2), '');// その他清算金３
+    $sheet->setCellValue('P'.($pos + 3), '');// その他清算金４
+    $sheet->setCellValue('P'.($pos + 4), '');// その他清算金５
     $pos += 5;
 }
 
@@ -103,13 +105,19 @@ if(sizeof($contracts) > 1) {
     copyBlockWithVal($sheet, $contractPos, 1, sizeof($contracts) - 1, 20);
 }
 $newList = [];
+$residence = '';// 20210320 Add
 foreach($contracts as $contract) {
 
     $contractStaff = getUserName($contract['contractStaff']);
     $contractors = getSellerName($contract['pid']);
     $status = contractStatus($contract);
     $locs = getLocation($contract['pid']);
-    $address = getAddress($locs);
+//    $address = getAddress($locs);// 20210320 Delete
+    // 20210320 S_Add
+    $residence = getAddress($locs);
+    $blockNumber = getBlockNumber($locs);
+    $buildingNumber = getBuildingNumber($locs);
+    // 20210320 E_Add
     $deposit = getDeposit($contract);
     $depositDay = getDepositDay($contract);
     // 20201014 S_Update
@@ -122,7 +130,11 @@ foreach($contracts as $contract) {
         'status' => $status,
         'pid' => $contract['pid'],
         'contractStaff' => $contractStaff,
-        'address' => $address,
+//        'address' => $address,// 20210320 Delete
+        // 20210320 S_Add
+        'blockNumber' => $blockNumber,
+        'buildingNumber' => $buildingNumber,
+        // 20210320 E_Add
         'deposit' => $deposit,
         'depositDay' => $depositDay,
         'area' => $area
@@ -132,67 +144,77 @@ foreach($contracts as $contract) {
     $sheet->setCellValue('A'.$contractPos, $contractStaff);
     // 売却・等価交換
     $sheet->setCellValue('C'.$contractPos, $status);
+    // 20210320 S_Delete
+    /*
     // 所在地
     $sheet->setCellValue('D'.$contractPos, $address);
     $sheet->getStyle('D'.$contractPos)->getAlignment()->setWrapText(true);
+    */
+    // 20210320 E_Delete
+    // 20210320 S_Add
+    // 地番
+    $sheet->setCellValue('D'.$contractPos, $blockNumber);
+    // 家屋番号
+    $sheet->setCellValue('E'.$contractPos, $buildingNumber);
+    // 20210320 E_Add
     // 地権者
-    $sheet->setCellValue('E'.$contractPos, $contractors[0]);
+    $sheet->setCellValue('F'.$contractPos, $contractors[0]);
     // 契約日
-    $sheet->setCellValue('F'.$contractPos, $status !== 'メトロス買取済' ? convert_jpdt($contract['contractDay']) : '');
+    $sheet->setCellValue('G'.$contractPos, $status !== 'メトロス買取済' ? convert_jpdt($contract['contractDay']) : '');
     // 金額
     if($status === '解除（等価交換）' || $status === '解除') {
-        $sheet->setCellValue('G'.$contractPos, '');
+        $sheet->setCellValue('H'.$contractPos, '');
     }
     else {
 //        $sheet->setCellValue('G'.$contractPos, formatYenNumber($contract['tradingPrice']));
-        $sheet->setCellValue('G'.$contractPos, $contract['tradingPrice']);
+        $sheet->setCellValue('H'.$contractPos, $contract['tradingPrice']);
     }
     // 内金（手付等）
     if($status === 'メトロス買取済') $deposit = '－';// 20201027 Add
-    $sheet->setCellValue('H'.$contractPos, $deposit);
-    $sheet->getStyle('H'.$contractPos)->getAlignment()->setWrapText(true);
+    $sheet->setCellValue('I'.$contractPos, $deposit);
+    $sheet->getStyle('I'.$contractPos)->getAlignment()->setWrapText(true);
     // 内金（手付）支払日
     if($status === 'メトロス買取済') $depositDay = '－';// 20201027 Add
-    $sheet->setCellValue('I'.$contractPos, $depositDay);
-    $sheet->getStyle('I'.$contractPos)->getAlignment()->setWrapText(true);
+    $sheet->setCellValue('J'.$contractPos, $depositDay);
+    $sheet->getStyle('J'.$contractPos)->getAlignment()->setWrapText(true);
     // 決済代金
 //    $sheet->setCellValue('J'.$contractPos, emptyStatus($status, formatYenNumber($contract['decisionPrice'])));
-    $sheet->setCellValue('J'.$contractPos, emptyStatus($status, $contract['decisionPrice']));
+    $sheet->setCellValue('K'.$contractPos, emptyStatus($status, $contract['decisionPrice']));
     // 固都税清算金
-    $sheet->setCellValue('L'.$contractPos, emptyStatus($status, formatYenNumber($contract['fixedTax'])));
+    $sheet->setCellValue('M'.$contractPos, emptyStatus($status, formatYenNumber($contract['fixedTax'])));
     // 引渡期日
-    $sheet->setCellValue('M'.$contractPos, emptyStatus($status, convert_jpdt($contract['deliveryFixedDay'])));
+    $sheet->setCellValue('N'.$contractPos, emptyStatus($status, convert_jpdt($contract['deliveryFixedDay'])));
     // 決済日
-    $sheet->setCellValue('N'.$contractPos, emptyStatus($status, convert_jpdt($contract['decisionDay'])));
+    $sheet->setCellValue('O'.$contractPos, emptyStatus($status, convert_jpdt($contract['decisionDay'])));
     // 即決和解の有無等
     $promptDecideFlg = '';
     if($status === '解除（等価交換）' || $status === '解除') $promptDecideFlg = '';
     else if($status === 'メトロス買取済') $promptDecideFlg = '（旧所有者：' . $contractors[0] . '）';
     else if ($contract['promptDecideFlg'] === '0') $promptDecideFlg = '無';
     else if ($contract['promptDecideFlg'] === '1') $promptDecideFlg = '有';
-    $sheet->setCellValue('O'.$contractPos, $promptDecideFlg);
+    $sheet->setCellValue('P'.$contractPos, $promptDecideFlg);
     // 留保金
-    $sheet->setCellValue('P'.$contractPos, emptyStatus($status, formatYenNumber($contract['retainage'])));
+    $sheet->setCellValue('Q'.$contractPos, emptyStatus($status, formatYenNumber($contract['retainage'])));
     // 明渡期日
-    $sheet->setCellValue('Q'.$contractPos, emptyStatus($status, convert_jpdt($contract['vacationDay'])));
+    $sheet->setCellValue('R'.$contractPos, emptyStatus($status, convert_jpdt($contract['vacationDay'])));
     // 留保金支払（明渡）日
-    $sheet->setCellValue('R'.$contractPos, emptyStatus($status, convert_jpdt($contract['retainageDay'])));
+    $sheet->setCellValue('S'.$contractPos, emptyStatus($status, convert_jpdt($contract['retainageDay'])));
     // 売買面積（㎡）
     if($status === '解除（等価交換）' || $status === '解除') $area = '';// 20201106 Add
     //$sheet->setCellValue('S'.$contractPos, emptyStatus($status, $area));
-    $sheet->setCellValue('S'.$contractPos, $area);
-    $sheet->getStyle('S'.$contractPos)->getAlignment()->setWrapText(true);
+    $sheet->setCellValue('T'.$contractPos, $area);
+    $sheet->getStyle('T'.$contractPos)->getAlignment()->setWrapText(true);
 
     // 塗りつぶし・文字色設定
     if($status === 'メトロス買取済') {
         // 塗りつぶし：黄色
-        $sheet->getStyle('C'.$contractPos.':S'.$contractPos)->getFill()
+        $sheet->getStyle('C'.$contractPos.':T'.$contractPos)->getFill()
               ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('FFFFCC');
     }
     else if($status === '解除（等価交換）' || $status === '解除') {
         // 塗りつぶし：グレー
         // 文字色：赤
-        $sheet->getStyle('C'.$contractPos.':S'.$contractPos)->getFill()
+        $sheet->getStyle('C'.$contractPos.':T'.$contractPos)->getFill()
               ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('BFBFBF');
         $sheet->getStyle('C'.$contractPos)->getFont()->getColor()->applyFromArray(['rgb' => 'FF0000']);
     }
@@ -203,31 +225,43 @@ foreach($contracts as $contract) {
 if(sizeof($contracts) == 0) {
     $sheet->setCellValue('A'.$contractPos, '');// （担当）
     $sheet->setCellValue('C'.$contractPos, '');// 売却・等価交換
-    $sheet->setCellValue('D'.$contractPos, '');// 所在地
-    $sheet->setCellValue('E'.$contractPos, '');// 地権者
-    $sheet->setCellValue('F'.$contractPos, '');// 契約日
-    $sheet->setCellValue('G'.$contractPos, '');// 金額
-    $sheet->setCellValue('H'.$contractPos, '');// 内金（手付等）
-    $sheet->setCellValue('I'.$contractPos, '');// 内金（手付）支払日
-    $sheet->setCellValue('J'.$contractPos, '');// 決済代金
-    $sheet->setCellValue('L'.$contractPos, '');// 固都税清算金
-    $sheet->setCellValue('M'.$contractPos, '');// 引渡期日
-    $sheet->setCellValue('N'.$contractPos, '');// 決済日
-    $sheet->setCellValue('O'.$contractPos, '');// 即決和解の有無等
-    $sheet->setCellValue('P'.$contractPos, '');// 留保金
-    $sheet->setCellValue('Q'.$contractPos, '');// 明渡期日
-    $sheet->setCellValue('R'.$contractPos, '');// 留保金支払（明渡）日
-    $sheet->setCellValue('S'.$contractPos, '');// 売買面積（㎡）
+    // 20210320 S_Delete
+//    $sheet->setCellValue('D'.$contractPos, '');// 所在地
+    // 20210320 E_Delete
+    // 20210320 S_Add
+    $sheet->setCellValue('D'.$contractPos, '');// 地番
+    $sheet->setCellValue('E'.$contractPos, '');// 家屋番号
+    // 20210320 E_Add
+    $sheet->setCellValue('F'.$contractPos, '');// 地権者
+    $sheet->setCellValue('G'.$contractPos, '');// 契約日
+    $sheet->setCellValue('H'.$contractPos, '');// 金額
+    $sheet->setCellValue('I'.$contractPos, '');// 内金（手付等）
+    $sheet->setCellValue('J'.$contractPos, '');// 内金（手付）支払日
+    $sheet->setCellValue('K'.$contractPos, '');// 決済代金
+    $sheet->setCellValue('M'.$contractPos, '');// 固都税清算金
+    $sheet->setCellValue('N'.$contractPos, '');// 引渡期日
+    $sheet->setCellValue('O'.$contractPos, '');// 決済日
+    $sheet->setCellValue('P'.$contractPos, '');// 即決和解の有無等
+    $sheet->setCellValue('Q'.$contractPos, '');// 留保金
+    $sheet->setCellValue('R'.$contractPos, '');// 明渡期日
+    $sheet->setCellValue('S'.$contractPos, '');// 留保金支払（明渡）日
+    $sheet->setCellValue('T'.$contractPos, '');// 売買面積（㎡）
     $contractPos++;
 }
 
 // 合計の計算式
-$sheet->setCellValue('G'.$contractPos, '=SUM(G' . $firstContractPos . ':G' . ($contractPos - 1) .')');
-$sheet->setCellValue('J'.$contractPos, '=SUM(J' . $firstContractPos . ':K' . ($contractPos - 1) .')');
-$sheet->setCellValue('S'.$contractPos, '=SUM(S' . $firstContractPos . ':S' . ($contractPos - 1) .')');
+$sheet->setCellValue('H'.$contractPos, '=SUM(H' . $firstContractPos . ':H' . ($contractPos - 1) .')');
+$sheet->setCellValue('K'.$contractPos, '=SUM(K' . $firstContractPos . ':L' . ($contractPos - 1) .')');
+$sheet->setCellValue('T'.$contractPos, '=SUM(T' . $firstContractPos . ':T' . ($contractPos - 1) .')');
 
 // 情報提供者
-$sheet->setCellValue('P'.($contractPos + 2), getInfoOffer($bukken['infoOffer']));
+$sheet->setCellValue('Q'.($contractPos + 2), getInfoOffer($bukken['infoOffer']));
+
+// 20210320 S_Add
+// 居住表示
+if($residence === '') $residence = $bukken['residence'];
+$sheet->setCellValue('D2', $residence);
+// 20210320 E_Add
 
 // 手数料等費用一覧
 $payList1 = [];// 手数料等費用一覧
@@ -262,7 +296,7 @@ foreach($payList1 as $payDetail) {
     // 支払先
     $sheet->setCellValue('C'.$payPos, $payDetail['supplierName']);
     // 摘要
-    $sheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
+    $sheet->setCellValue('G'.$payPos, $payDetail['paymentName']);
     // 契約金額
 //    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['contractPrice']));
     // 20200921 S_Update
@@ -270,15 +304,15 @@ foreach($payList1 as $payDetail) {
     $contractPriceTax = $payDetail['contractPriceTax'];
     if($contractPriceTax === '0') $contractPriceTax = '';
     else $contractPriceTax = formatYenNumber($contractPriceTax);
-    $sheet->setCellValue('G'.$payPos, $contractPriceTax);
+    $sheet->setCellValue('H'.$payPos, $contractPriceTax);
     // 20200921 E_Update
     // 支払金額
 //    $sheet->setCellValue('H'.$payPos, formatYenNumber($payDetail['payPrice']));
-    $sheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
+    $sheet->setCellValue('I'.$payPos, $payDetail['payPriceTax']);
     // 支払時期
-    $sheet->setCellValue('I'.$payPos, $payDetail['paymentSeason']);
+    $sheet->setCellValue('J'.$payPos, $payDetail['paymentSeason']);
     // 支払予定日
-    $sheet->setCellValue('J'.$payPos, convert_jpdt($payDetail['contractDay']));
+    $sheet->setCellValue('K'.$payPos, convert_jpdt($payDetail['contractDay']));
     // 支払日
     // 20201107 S_Update
     /*
@@ -294,30 +328,30 @@ foreach($payList1 as $payDetail) {
         $sheet->setCellValue('K'.$payPos, convert_jpdt($payDetail['contractFixDay']));
     }
     */
-    $sheet->setCellValue('K'.$payPos, convert_jpdt($payDetail['contractFixDay']));
+    $sheet->setCellValue('L'.$payPos, convert_jpdt($payDetail['contractFixDay']));
     // 20201107 E_Update
     // 契約者
-    $sheet->setCellValue('L'.$payPos, getContractor($newList, $payDetail));
+    $sheet->setCellValue('M'.$payPos, getContractor($newList, $payDetail));
     // 備考
-    $sheet->setCellValue('O'.$payPos, $payDetail['detailRemarks']);
+    $sheet->setCellValue('P'.$payPos, $payDetail['detailRemarks']);
     $payPos++;
 }
 // データが存在しない場合
 if(sizeof($payList1) == 0) {
     $sheet->setCellValue('C'.$payPos, '');// 支払先
-    $sheet->setCellValue('F'.$payPos, '');// 摘要
-    $sheet->setCellValue('G'.$payPos, '');// 契約金額
-    $sheet->setCellValue('H'.$payPos, '');// 支払金額
-    $sheet->setCellValue('I'.$payPos, '');// 支払時期
-    $sheet->setCellValue('J'.$payPos, '');// 支払予定日
-    $sheet->setCellValue('K'.$payPos, '');// 支払日
-    $sheet->setCellValue('L'.$payPos, '');// 契約者
-    $sheet->setCellValue('O'.$payPos, '');// 備考
+    $sheet->setCellValue('G'.$payPos, '');// 摘要
+    $sheet->setCellValue('H'.$payPos, '');// 契約金額
+    $sheet->setCellValue('I'.$payPos, '');// 支払金額
+    $sheet->setCellValue('J'.$payPos, '');// 支払時期
+    $sheet->setCellValue('K'.$payPos, '');// 支払予定日
+    $sheet->setCellValue('L'.$payPos, '');// 支払日
+    $sheet->setCellValue('M'.$payPos, '');// 契約者
+    $sheet->setCellValue('P'.$payPos, '');// 備考
     $payPos++;
 }
 
 // 合計の計算式
-$sheet->setCellValue('H'.$payPos, '=SUM(H' . $firstPayPos . ':H' . ($payPos - 1) .')');
+$sheet->setCellValue('I'.$payPos, '=SUM(I' . $firstPayPos . ':I' . ($payPos - 1) .')');
 
 // 水道光熱費等経費一覧
 $payPos += 4;
@@ -329,12 +363,12 @@ foreach($payList2 as $payDetail) {
     // 支払先
     $sheet->setCellValue('C'.$payPos, $payDetail['supplierName']);
     // 摘要
-    $sheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
+    $sheet->setCellValue('G'.$payPos, $payDetail['paymentName']);
     // 金額
 //    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
-    $sheet->setCellValue('G'.$payPos, $payDetail['payPriceTax']);
+    $sheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
     // 支払方法
-    $sheet->setCellValue('H'.$payPos, getPayMethodName($payDetail['paymentMethod']));
+    $sheet->setCellValue('I'.$payPos, getPayMethodName($payDetail['paymentMethod']));
     // 支払日
     // 20201107 S_Update
     /*
@@ -350,26 +384,26 @@ foreach($payList2 as $payDetail) {
         $sheet->setCellValue('I'.$payPos, convert_jpdt($payDetail['contractFixDay']));
     }
     */
-    $sheet->setCellValue('I'.$payPos, convert_jpdt($payDetail['contractFixDay']));
+    $sheet->setCellValue('J'.$payPos, convert_jpdt($payDetail['contractFixDay']));
     // 20201107 E_Update
     // 備考
-    $sheet->setCellValue('J'.$payPos, $payDetail['detailRemarks']);
+    $sheet->setCellValue('K'.$payPos, $payDetail['detailRemarks']);
 
     $payPos++;
 }
 // データが存在しない場合
 if(sizeof($payList2) == 0) {
     $sheet->setCellValue('C'.$payPos, ''); //支払先
-    $sheet->setCellValue('F'.$payPos, ''); //摘要
-    $sheet->setCellValue('G'.$payPos, ''); //金額
-    $sheet->setCellValue('H'.$payPos, ''); //支払方法
-    $sheet->setCellValue('I'.$payPos, ''); //支払日
-    $sheet->setCellValue('J'.$payPos, ''); //備考
+    $sheet->setCellValue('G'.$payPos, ''); //摘要
+    $sheet->setCellValue('H'.$payPos, ''); //金額
+    $sheet->setCellValue('I'.$payPos, ''); //支払方法
+    $sheet->setCellValue('J'.$payPos, ''); //支払日
+    $sheet->setCellValue('K'.$payPos, ''); //備考
     $payPos++;
 }
 
 // 合計の計算式
-$sheet->setCellValue('G'.$payPos, '=SUM(G' . $firstPayPos . ':G' . ($payPos - 1) .')');
+$sheet->setCellValue('H'.$payPos, '=SUM(H' . $firstPayPos . ':H' . ($payPos - 1) .')');
 
 // ﾒﾄﾛｽ買取シート
 $hasBaikai = false;
@@ -401,8 +435,11 @@ foreach($contracts as $contract) {
 
         // 契約物件番号
         $clonedWorksheet->setCellValue('A2', $bukken['contractBukkenNo']);
+        // 20210320 S_Update
         // 居住表示
-        $clonedWorksheet->setCellValue('D2', $bukken['residence']);
+//        $clonedWorksheet->setCellValue('D2', $bukken['residence']);
+        $clonedWorksheet->setCellValue('D2', $residence);
+        // 20210320 E_Update
 
         // 契約ブロック
         $contractPos = 5;
@@ -414,36 +451,46 @@ foreach($contracts as $contract) {
         $clonedWorksheet->setCellValue('C'.$contractPos, $data['status']);
         */
         // 20201027 E_Delete
+        // 20210320 S_Delete
+        /*
         // 所在地
         $clonedWorksheet->setCellValue('D'.$contractPos, $data['address']);
         $clonedWorksheet->getStyle('D'.$contractPos)->getAlignment()->setWrapText(true);
+        */
+        // 20210320 E_Delete
+        // 20210320 S_Add
+        // 地番
+        $clonedWorksheet->setCellValue('D'.$contractPos, $data['blockNumber']);
+        // 家屋番号
+        $clonedWorksheet->setCellValue('E'.$contractPos, $data['buildingNumber']);
+        // 20210320 E_Add
         // 売主
-        $clonedWorksheet->setCellValue('E'.$contractPos, $data['contractorName']);
+        $clonedWorksheet->setCellValue('F'.$contractPos, $data['contractorName']);
         // 契約日
-        $clonedWorksheet->setCellValue('F'.$contractPos, convert_jpdt($contract['contractDay']));
+        $clonedWorksheet->setCellValue('G'.$contractPos, convert_jpdt($contract['contractDay']));
         // 金額
-        $clonedWorksheet->setCellValue('G'.$contractPos, formatYenNumber($contract['tradingPrice']));
+        $clonedWorksheet->setCellValue('H'.$contractPos, formatYenNumber($contract['tradingPrice']));
         // 内金（手付等）
-        $clonedWorksheet->setCellValue('H'.$contractPos, getDeposit2($contract));
-        $clonedWorksheet->getStyle('H'.$contractPos)->getAlignment()->setWrapText(true);
-        // 内金（手付）支払日
-        $clonedWorksheet->setCellValue('I'.$contractPos, getDepositDay2($contract));
+        $clonedWorksheet->setCellValue('I'.$contractPos, getDeposit2($contract));
         $clonedWorksheet->getStyle('I'.$contractPos)->getAlignment()->setWrapText(true);
+        // 内金（手付）支払日
+        $clonedWorksheet->setCellValue('J'.$contractPos, getDepositDay2($contract));
+        $clonedWorksheet->getStyle('J'.$contractPos)->getAlignment()->setWrapText(true);
         // 決済代金
-        $clonedWorksheet->setCellValue('J'.$contractPos, formatYenNumber($contract['decisionPrice']));
+        $clonedWorksheet->setCellValue('K'.$contractPos, formatYenNumber($contract['decisionPrice']));
         // 固都税清算金
-        $clonedWorksheet->setCellValue('L'.$contractPos, formatYenNumber($contract['fixedTax']));
+        $clonedWorksheet->setCellValue('M'.$contractPos, formatYenNumber($contract['fixedTax']));
         // 支払完了日
-        $clonedWorksheet->setCellValue('M'.$contractPos, convert_jpdt($contract['decisionDay']));
+        $clonedWorksheet->setCellValue('N'.$contractPos, convert_jpdt($contract['decisionDay']));
         // 留保金
-        $clonedWorksheet->setCellValue('N'.$contractPos, formatYenNumber($contract['retainage']));
+        $clonedWorksheet->setCellValue('O'.$contractPos, formatYenNumber($contract['retainage']));
         // 明渡期日
-        $clonedWorksheet->setCellValue('O'.$contractPos, convert_jpdt($contract['vacationDay']));
+        $clonedWorksheet->setCellValue('P'.$contractPos, convert_jpdt($contract['vacationDay']));
         // 留保金支払（明渡）日
-        $clonedWorksheet->setCellValue('P'.$contractPos, convert_jpdt($contract['retainageDay']));
+        $clonedWorksheet->setCellValue('Q'.$contractPos, convert_jpdt($contract['retainageDay']));
         // 売買面積（㎡）
-        $clonedWorksheet->setCellValue('Q'.$contractPos, $data['area']);
-        $clonedWorksheet->getStyle('Q'.$contractPos)->getAlignment()->setWrapText(true);
+        $clonedWorksheet->setCellValue('R'.$contractPos, $data['area']);
+        $clonedWorksheet->getStyle('R'.$contractPos)->getAlignment()->setWrapText(true);
 
         // 手数料等費用一覧
         $payPos = 9;
@@ -461,14 +508,14 @@ foreach($contracts as $contract) {
             // 支払先
             $clonedWorksheet->setCellValue('C'.$payPos, $payDetail['supplierName']);
             // 摘要
-            $clonedWorksheet->setCellValue('F'.$payPos, $payDetail['paymentName']);
+            $clonedWorksheet->setCellValue('G'.$payPos, $payDetail['paymentName']);
             // 支払金額
 //            $clonedWorksheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
-            $clonedWorksheet->setCellValue('G'.$payPos, $payDetail['payPriceTax']);
+            $clonedWorksheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
             // 支払時期
-            $clonedWorksheet->setCellValue('H'.$payPos, $payDetail['paymentSeason']);
+            $clonedWorksheet->setCellValue('I'.$payPos, $payDetail['paymentSeason']);
             // 支払予定日
-            $clonedWorksheet->setCellValue('I'.$payPos, convert_jpdt($payDetail['contractDay']));
+            $clonedWorksheet->setCellValue('J'.$payPos, convert_jpdt($payDetail['contractDay']));
             // 支払日
             // 20201107 S_Update
             /*
@@ -479,24 +526,24 @@ foreach($contracts as $contract) {
                 $clonedWorksheet->setCellValue('J'.$payPos, convert_jpdt($payDetail['contractFixDay']));
             }
             */
-            $clonedWorksheet->setCellValue('J'.$payPos, convert_jpdt($payDetail['contractFixDay']));
+            $clonedWorksheet->setCellValue('K'.$payPos, convert_jpdt($payDetail['contractFixDay']));
             // 20201107 E_Update
             // 契約者
-            $clonedWorksheet->setCellValue('K'.$payPos, $data['contractorName']);
+            $clonedWorksheet->setCellValue('L'.$payPos, $data['contractorName']);
             // 備考
-            $clonedWorksheet->setCellValue('N'.$payPos, $payDetail['detailRemarks']);
+            $clonedWorksheet->setCellValue('O'.$payPos, $payDetail['detailRemarks']);
             $payPos++;
         }
         // データが存在しない場合
         if(sizeof($subPayList) == 0) {
             $clonedWorksheet->setCellValue('C'.$payPos, '');// 支払先
-            $clonedWorksheet->setCellValue('F'.$payPos, '');// 摘要
-            $clonedWorksheet->setCellValue('G'.$payPos, '');// 支払金額
-            $clonedWorksheet->setCellValue('H'.$payPos, '');// 支払時期
-            $clonedWorksheet->setCellValue('I'.$payPos, '');// 支払予定日
-            $clonedWorksheet->setCellValue('J'.$payPos, '');// 支払日
-            $clonedWorksheet->setCellValue('K'.$payPos, '');// 契約者
-            $clonedWorksheet->setCellValue('N'.$payPos, '');// 備考
+            $clonedWorksheet->setCellValue('G'.$payPos, '');// 摘要
+            $clonedWorksheet->setCellValue('H'.$payPos, '');// 支払金額
+            $clonedWorksheet->setCellValue('I'.$payPos, '');// 支払時期
+            $clonedWorksheet->setCellValue('J'.$payPos, '');// 支払予定日
+            $clonedWorksheet->setCellValue('K'.$payPos, '');// 支払日
+            $clonedWorksheet->setCellValue('L'.$payPos, '');// 契約者
+            $clonedWorksheet->setCellValue('O'.$payPos, '');// 備考
             $payPos++;
         }
     }
@@ -571,6 +618,7 @@ function getLocation($contractPid) {
     $lst = ORM::for_table(TBLCONTRACTDETAILINFO)
     ->table_alias('p1')
     ->select('p2.locationType', 'locationType')
+    ->select('p2.address', 'address')// 20210320 Add
     ->select('p2.blockNumber', 'blockNumber')
     ->select('p2.buildingNumber', 'buildingNumber')
     ->select('p2.area', 'area')
@@ -582,9 +630,11 @@ function getLocation($contractPid) {
     return $lst;
 }
 
+// 20210320 S_Delete
 /**
  * 所在地取得
  */
+/*
 function getAddress($lst) {
     $ret = [];
     if(isset($lst)) {
@@ -595,6 +645,51 @@ function getAddress($lst) {
     }
     return implode(chr(10), $ret);
 }
+*/
+// 20210320 E_Delete
+// 20210320 S_Add
+/**
+ * 所在地取得（土地の１件目）
+ */
+function getAddress($lst) {
+    $ret = '';
+    if(isset($lst)) {
+        foreach($lst as $data) {
+            if($data['locationType'] === '01' && $data['address'] !== '') {
+                $ret = $data['address'];
+                break;
+            }
+        }
+    }
+    return $ret;
+}
+
+/**
+ * 地番取得（改行区切り）
+ */
+function getBlockNumber($lst) {
+    $ret = [];
+    if(isset($lst)) {
+        foreach($lst as $data) {
+            if($data['locationType'] === '01' && $data['blockNumber'] !== '') $ret[] = mb_convert_kana($data['blockNumber'], 'kvrn');
+        }
+    }
+    return implode(chr(10), $ret);
+}
+
+/**
+ * 家屋番号取得（改行区切り）
+ */
+function getBuildingNumber($lst) {
+    $ret = [];
+    if(isset($lst)) {
+        foreach($lst as $data) {
+            if($data['locationType'] !== '01' && $data['buildingNumber'] !== '') $ret[] = mb_convert_kana($data['buildingNumber'], 'kvrn');
+        }
+    }
+    return implode(chr(10), $ret);
+}
+// 20210320 E_Add
 
 /**
  * 売買面積（㎡）合計取得
