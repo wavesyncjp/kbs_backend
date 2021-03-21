@@ -45,7 +45,7 @@ $sheet->setCellValue('A2', $bukken['contractBukkenNo']);
 $pos = 5;
 // データが複数ある場合、ブロックをコピー
 if(sizeof($sales) > 1) {
-    copyBlockWithVal($sheet, $pos, 5, sizeof($sales) - 1, 20);
+    copyBlockWithVal($sheet, $pos, 5, sizeof($sales) - 1, 21);
 }
 foreach($sales as $sale) {
     // 買主
@@ -97,12 +97,12 @@ $contractPos = 12 + 5 * (sizeof($sales) >= 1 ? sizeof($sales) - 1 : 0);
 $firstContractPos = $contractPos;
 
 // 11行目に1行余白をいれる　※通貨・ユーザー定義の書式が不正になるバグの暫定対応
-copyBlockWithVal($sheet, $contractPos -2, 1, 1, 20);
+copyBlockWithVal($sheet, $contractPos -2, 1, 1, 21);
 $contractPos += 1;
 
 // データが複数ある場合、ブロックをコピー
 if(sizeof($contracts) > 1) {
-    copyBlockWithVal($sheet, $contractPos, 1, sizeof($contracts) - 1, 20);
+    copyBlockWithVal($sheet, $contractPos, 1, sizeof($contracts) - 1, 21);
 }
 $newList = [];
 $residence = '';// 20210320 Add
@@ -290,7 +290,7 @@ foreach($payContracts as $pay) {
 }
 // データが複数ある場合、ブロックをコピー
 if(sizeof($payList1) > 1) {
-    copyBlockWithVal($sheet, $payPos, 1, sizeof($payList1) - 1, 20);
+    copyBlockWithVal($sheet, $payPos, 1, sizeof($payList1) - 1, 21);
 }
 foreach($payList1 as $payDetail) {
     // 支払先
@@ -357,7 +357,7 @@ $sheet->setCellValue('I'.$payPos, '=SUM(I' . $firstPayPos . ':I' . ($payPos - 1)
 $payPos += 4;
 $firstPayPos = $payPos;
 if(sizeof($payList2) > 1) {
-    copyBlockWithVal($sheet, $payPos, 1, sizeof($payList2) - 1, 20);
+    copyBlockWithVal($sheet, $payPos, 1, sizeof($payList2) - 1, 21);
 }
 foreach($payList2 as $payDetail) {
     // 支払先
@@ -502,7 +502,7 @@ foreach($contracts as $contract) {
         }
         // データが複数ある場合、ブロックをコピー
         if(sizeof($subPayList) > 1) {
-            copyBlockWithVal($clonedWorksheet, $payPos, 1, sizeof($subPayList) - 1, 20);
+            copyBlockWithVal($clonedWorksheet, $payPos, 1, sizeof($subPayList) - 1, 21);
         }
         foreach($subPayList as $payDetail) {
             // 支払先
