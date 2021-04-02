@@ -48,6 +48,14 @@ if(sizeof($sales) > 1) {
     copyBlockWithVal($sheet, $pos, 5, sizeof($sales) - 1, 21);
 }
 foreach($sales as $sale) {
+    // 20210402 S_Add
+    // 売主
+    // 売主対象が1:Royal Houseの場合
+    if($bukken['seller'] === '1')
+    {
+        $sheet->setCellValue('C'.$pos, 'Royal House株式会社');
+    }
+    // 20210402 E_Add
     // 買主
     $sheet->setCellValue('G'.$pos, $sale['salesName']);
     // 金額
