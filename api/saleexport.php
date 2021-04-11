@@ -11,6 +11,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
+// 20210411 S_Add
+// 権利形態List
+$codeRightsFormList = ORM::for_table(TBLCODE)->where('code', '011')->where_null('deleteDate')->findArray();
+// 20210411 E_Add
 $bukken = ORM::for_table(TBLTEMPLANDINFO)->findOne($param->pid)->asArray();
 $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
 // 20201020 S_Update
@@ -123,7 +127,10 @@ foreach($contracts as $contract) {
 //    $address = getAddress($locs);// 20210320 Delete
     // 20210320 S_Add
     $residence = getAddress($locs);
-    $blockNumber = getBlockNumber($locs);
+    // 20210411 S_Update
+//    $blockNumber = getBlockNumber($locs);
+    $blockNumber = getBlockNumber($locs, $codeRightsFormList);
+    // 20210411 E_Update
     $buildingNumber = getBuildingNumber($locs);
     // 20210320 E_Add
     $deposit = getDeposit($contract);
@@ -630,6 +637,7 @@ function getLocation($contractPid) {
     ->select('p2.blockNumber', 'blockNumber')
     ->select('p2.buildingNumber', 'buildingNumber')
     ->select('p2.area', 'area')
+    ->select('p2.rightsForm', 'rightsForm')// 20210411 Add
     ->select('p1.contractHave', 'contractHave')// 20201014 Add
     ->inner_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p2.pid'), 'p2')
     ->where('p1.contractDataType', '01')
@@ -675,11 +683,19 @@ function getAddress($lst) {
 /**
  * 地番取得（改行区切り）
  */
-function getBlockNumber($lst) {
+function getBlockNumber($lst, $codeList) {
     $ret = [];
     if(isset($lst)) {
         foreach($lst as $data) {
+            // 区分が01:土地かつ、地番に指定がある場合
             if($data['locationType'] === '01' && $data['blockNumber'] !== '') $ret[] = mb_convert_kana($data['blockNumber'], 'kvrn');
+            // 20210411 S_Add
+            // 区分が02:建物かつ、権利形態に指定がある場合
+            else if($data['locationType'] === '02' && getCodeTitle($codeList, $data['rightsForm']) !== '')
+            {
+                $ret[] = getCodeTitle($codeList, $data['rightsForm']);
+            }
+            // 20210411 E_Add
         }
     }
     return implode(chr(10), $ret);
