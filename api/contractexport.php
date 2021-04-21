@@ -261,7 +261,7 @@ foreach($contract['details'] as $detail) {
 $matsubi1Comment = [];
 $count = 0;
 if(sizeof($detailIds) > 0) {
-    $count = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('inheritanceNotyet', 1)->where_null('deleteDate')->count();
+    $count = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('buildingNotyet', 1)->where_null('deleteDate')->count();
 }
 //$specialTerms7_start$
 if($pos < 150) $pos = 150;
@@ -272,7 +272,7 @@ $termEnd = searchCellPos($sheet, $keyword, $nextPos);
 if($count > 0) {
     bindCell('A' . $nextPos, $sheet, 'specialTerms7_start' , '', false);
     bindCell('A' . $termEnd, $sheet, 'specialTerms7_end' , '', false);
-    $matsubi1Comment[] = '※上記　　、相続手続き中';
+    $matsubi1Comment[] = '※土地、　　　　　　　　　　　地番上に未登記建物あり';
 } else {
     while($termEnd >= $nextPos) {
         $sheet->removeRow($termEnd);
@@ -286,11 +286,11 @@ $nextPos = searchCellPos($sheet, $keyword, $pos);
 if($nextPos > 0) {
     $count = 0;
     if(sizeof($detailIds) > 0) {
-        $count = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('buildingNotyet', 1)->where_null('deleteDate')->count();
+        $count = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('inheritanceNotyet', 1)->where_null('deleteDate')->count();
     }
     if($count > 0) {
         bindCell('A' . $nextPos, $sheet, 'specialTerms8' , '', false);
-        $matsubi1Comment[] = '※土地、　　　　　　　　　　　地番上に未登記建物あり';
+        $matsubi1Comment[] = '※上記　　、相続手続き中';
     } else {
         $sheet->removeRow($nextPos);
     }
