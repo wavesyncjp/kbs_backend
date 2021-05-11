@@ -792,7 +792,7 @@ function getDeposit($contract) {
         $hasTarget = true;
     }
     // 20201020 E_Update
-    else $deposit[] = '－';
+//    else $deposit[] = '－';// 20210511 Delete
     // 20201020 S_Update
 //    if($contract['deposit1DayChk']=='1' && $contract['deposit1'] > 0) $deposit[] = '¥'.number_format($contract['deposit1']);
     if($contract['deposit1'] > 0) {
@@ -800,7 +800,7 @@ function getDeposit($contract) {
         $hasTarget = true;
     }
     // 20201020 E_Update
-    else $deposit[] = '－';
+//    else $deposit[] = '－';// 20210511 Delete
     // 20201020 S_Update
 //    if($contract['deposit2DayChk']=='1' && $contract['deposit2'] > 0) $deposit[] = '¥'.number_format($contract['deposit2']);
     if($contract['deposit2'] > 0) {
@@ -808,18 +808,18 @@ function getDeposit($contract) {
         $hasTarget = true;
     }
     // 20201020 E_Update
-    else $deposit[] = '－';
+//    else $deposit[] = '－';// 20210511 Delete
     // 20210510 S_Add
     if($contract['deposit3'] > 0) {
         $deposit[] = '¥'.number_format($contract['deposit3']);
         $hasTarget = true;
     }
-    else $deposit[] = '－';
+//    else $deposit[] = '－';// 20210511 Delete
     if($contract['deposit4'] > 0) {
         $deposit[] = '¥'.number_format($contract['deposit4']);
         $hasTarget = true;
     }
-    else $deposit[] = '－';
+//    else $deposit[] = '－';// 20210511 Delete
 
     // すべて対象外の場合、－を設定
     if(!$hasTarget) {
@@ -844,28 +844,28 @@ function getDepositDay($contract) {
         $depositDay[] = convert_jpdt($contract['earnestPriceDay']);
         $hasTarget = true;
     }
-    else $depositDay[] = '－';
+//    else $depositDay[] = '－';// 20210511 Delete
     if($contract['deposit1DayChk'] == '1' && isset($contract['deposit1Day']) && $contract['deposit1Day'] != '') {
         $depositDay[] = convert_jpdt($contract['deposit1Day']);
         $hasTarget = true;
     }
-    else $depositDay[] = '－';
+//    else $depositDay[] = '－';// 20210511 Delete
     if($contract['deposit2DayChk'] == '1' && isset($contract['deposit2Day']) && $contract['deposit2Day'] != '') {
         $depositDay[] = convert_jpdt($contract['deposit2Day']);
         $hasTarget = true;
     }
-    else $depositDay[] = '－';
+//    else $depositDay[] = '－';// 20210511 Delete
     // 20210510 S_Add
     if($contract['deposit3DayChk'] == '1' && isset($contract['deposit3Day']) && $contract['deposit3Day'] != '') {
         $depositDay[] = convert_jpdt($contract['deposit3Day']);
         $hasTarget = true;
     }
-    else $depositDay[] = '－';
+//    else $depositDay[] = '－';// 20210511 Delete
     if($contract['deposit4DayChk'] == '1' && isset($contract['deposit4Day']) && $contract['deposit4Day'] != '') {
         $depositDay[] = convert_jpdt($contract['deposit4Day']);
         $hasTarget = true;
     }
-    else $depositDay[] = '－';
+//    else $depositDay[] = '－';// 20210511 Delete
 
     // すべて対象外の場合、－を設定
     if(!$hasTarget) {
@@ -890,7 +890,7 @@ function getDeposit2($contract) {
         $hasTarget = true;
     }
     // 20201124 E_Update
-    else $deposit[] = '－';
+//    else $deposit[] = '－';// 20210511 Delete
     // 20201124 S_Update
 //    if($contract['deposit1DayChk'] == '1' && $contract['deposit1'] > 0) $deposit[] = '¥'.number_format($contract['deposit1']);
     if($contract['deposit1'] > 0) {
@@ -898,7 +898,7 @@ function getDeposit2($contract) {
         $hasTarget = true;
     }
     // 20201124 E_Update
-    else $deposit[] = '－';
+//    else $deposit[] = '－';// 20210511 Delete
     // 20201124 S_Update
 //    if($contract['deposit2DayChk'] == '1' && $contract['deposit2'] > 0) $deposit[] = '¥'.number_format($contract['deposit2']);
     if($contract['deposit2'] > 0) {
@@ -906,18 +906,18 @@ function getDeposit2($contract) {
         $hasTarget = true;
     }
     // 20201124 E_Update
-    else $deposit[] = '－';
+//    else $deposit[] = '－';// 20210511 Delete
     // 20210510 S_Add
     if($contract['deposit3'] > 0) {
         $deposit[] = '¥'.number_format($contract['deposit3']);
         $hasTarget = true;
     }
-    else $deposit[] = '－';
+//    else $deposit[] = '－';// 20210511 Delete
     if($contract['deposit4'] > 0) {
         $deposit[] = '¥'.number_format($contract['deposit4']);
         $hasTarget = true;
     }
-    else $deposit[] = '－';
+//    else $deposit[] = '－';// 20210511 Delete
 
     // すべて対象外の場合、－を設定
     if(!$hasTarget) {
@@ -939,28 +939,28 @@ function getDepositDay2($contract) {
         $depositDay[] = convert_jpdt($contract['earnestPriceDay']);
         $hasTarget = true;
     }
-    else $depositDay[] = '－';
+//    else $depositDay[] = '－';// 20210511 Delete
     if($contract['deposit1DayChk'] == '1' && isset($contract['deposit1Day']) && $contract['deposit1Day'] != '') {
         $depositDay[] = convert_jpdt($contract['deposit1Day']);
         $hasTarget = true;
     }
-    else $depositDay[] = '－';
+//    else $depositDay[] = '－';// 20210511 Delete
     if($contract['deposit2DayChk'] == '1' && isset($contract['deposit2Day']) && $contract['deposit2Day'] != '') {
         $depositDay[] = convert_jpdt($contract['deposit2Day']);
         $hasTarget = true;
     }
-    else $depositDay[] = '－';
+//    else $depositDay[] = '－';// 20210511 Delete
     // 20210510 S_Add
     if($contract['deposit3DayChk'] == '1' && isset($contract['deposit3Day']) && $contract['deposit3Day'] != '') {
         $depositDay[] = convert_jpdt($contract['deposit3Day']);
         $hasTarget = true;
     }
-    else $depositDay[] = '－';
+//    else $depositDay[] = '－';// 20210511 Delete
     if($contract['deposit4DayChk'] == '1' && isset($contract['deposit4Day']) && $contract['deposit4Day'] != '') {
         $depositDay[] = convert_jpdt($contract['deposit4Day']);
         $hasTarget = true;
     }
-    else $depositDay[] = '－';
+//    else $depositDay[] = '－';// 20210511 Delete
 
     // すべて対象外の場合、－を設定
     if(!$hasTarget) {
