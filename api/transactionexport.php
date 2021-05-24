@@ -19,12 +19,13 @@ $bukken = ORM::for_table(TBLTEMPLANDINFO)->findOne($param->pid)->asArray();
 $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
 // 20201020 S_Update
 //$contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')>order_by_asc('pid')->findArray();
+// 仕入契約情報
 $contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_not_null('contractNow')->where_not_equal('contractNow', '')->where_null('deleteDate')->order_by_asc('pid')->findArray();
 // 20201020 E_Update
-
+/*
 $payContracts = ORM::for_table(TBLPAYCONTRACT)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
 $paymentTypeData = ORM::for_table(TBLPAYMENTTYPE)->where_null('deleteDate')->findArray();
-
+*/
 
 header("Content-disposition: attachment; filename=sample.xlsx");
 header("Content-Type: application/vnd.ms-excel");
@@ -37,21 +38,56 @@ $filePath = $fullPath.'/取引成立台帳.xlsx';
 $reader = new PhpOffice\PhpSpreadsheet\Reader\Xlsx();
 $spreadsheet = $reader->load($filePath);
 
-// 買主
+// 買主シート
 $sheet = $spreadsheet->getSheet(0);
 
-$currentColumn = 1;
+$index = 1;
 $endColumn = 25;
-$currentRow = 1;
 $endRow = 50;
 
-// 契約物件番号
-$cell = searchCell($sheet, 'contractBukkenNo', $currentColumn, $endColumn, $currentRow, $endRow);
-if($cell != null) {
-    $currentRow = $cell->getRow();
-    $currentColumn = $cell->getColumn();
-    $cellName = $currentColumn.$currentRow;
-    $sheet->setCellValue($cellName, $bukken['contractBukkenNo']);
+// 仕入契約情報
+foreach($contracts as $contract) {
+    
+    // シートをコピー
+    $sheet = clone $spreadsheet->getSheet(0);
+    $sheet->setTitle('買主' . $index);
+    $spreadsheet->addSheet($sheet);
+
+    $currentColumn = 1;
+    $currentRow = 1;
+
+    // 契約物件番号
+    $cell = searchCell($sheet, 'contractBukkenNo', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+        $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $bukken['contractBukkenNo']);
+    }
+    // 契約書番号
+    $cell = searchCell($sheet, 'contractFormNumber', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+        $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $contract['contractFormNumber']);
+    }
+    // 契約日
+    $cell = searchCell($sheet, 'contractDay', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+        $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, convert_jpdt_kanji($contract['contractDay']));
+    }
+    // 決済日
+    $cell = searchCell($sheet, 'decisionDay', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+        $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, convert_jpdt_kanji($contract['decisionDay']));
+    }
+
+
+
+    $index++;
 }
 
 /*

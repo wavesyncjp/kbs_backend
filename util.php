@@ -662,20 +662,24 @@ function searchCell($sheet, $keyword, $startColumn, $endColumn, $startRow, $endR
 	if(strpos('$', $keyword) === false) {
 		$keyword = '$' . $keyword . '$';
 	}
-	
-	// 列ループ
-	while ($startColumn <= $endColumn) {
-		$checkRow = $startRow;// 行番号初期化
-		// 行ループ
-		while($checkRow <= $endRow) {
-			$val = $sheet->getCellByColumnAndRow($startColumn, $checkRow)->getValue();
+
+	$checkRow = $startRow;
+	// 行ループ
+	while($checkRow <= $endRow) {
+		// 列番号初期化
+		if($checkRow == $startRow) $checkColumn = $startColumn;
+		else $checkColumn = 1;
+		
+		// 列ループ
+		while ($checkColumn <= $endColumn) {
+			$val = $sheet->getCellByColumnAndRow($checkColumn, $checkRow)->getValue();
 			if (strpos($val, $keyword) !== false) {
-				$ret = $sheet->getCellByColumnAndRow($startColumn, $checkRow);
+				$ret = $sheet->getCellByColumnAndRow($checkColumn, $checkRow);
 				return $ret;
 			}
-			$checkRow++;
+			$checkColumn++;
 		}
-		$startColumn++;
+		$checkRow++;
 	}
 	return $ret;
 }
@@ -727,6 +731,32 @@ function convert_jpdt($date) {
 	$day = new DateTime($date);
 	return $name.$year.'.'.date_format($day, 'm.d');
 }
+// 20210525 S_Add
+function convert_jpdt_kanji($date) {
+	if(!isset($date) || $date == '') return '';
+	$year = substr($date, 0, 4);
+	if ($date >= 20190501) {        //令和元年（2019年5月1日以降）
+		$name = "令和";
+		$year = $year - 2018;
+	} else if ($date >= 19890108) { //平成元年（1989年1月8日以降）
+		$name = "平成";	
+		$year = $year - 1988;
+	} else if ($date >= 19261225) { //昭和元年（1926年12月25日以降）
+		$name = "昭和";
+		$year = $year - 1925;
+	} else if ($date >= 19120730) { //大正元年（1912年7月30日以降）
+		$name = "大正";
+		$year = $year - 1911;
+	} else if ($date >= 18680125) { //明治元年（1868年1月25日以降）
+		$name = "明治";
+		$year = $year - 1867;
+	} else {
+		$name = 'AD';
+	}
+	$day = new DateTime($date);
+	return $name.$year.'年'.date_format($day, 'm月d日');
+}
+// 20210525 E_Add
 
 function notNull($val) {
 	return isset($val) && $val != '';
