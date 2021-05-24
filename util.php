@@ -751,7 +751,7 @@ function convert_jpdt_kanji($date) {
 		$name = "明治";
 		$year = $year - 1867;
 	} else {
-		$name = 'AD';
+		$name = '西暦';
 	}
 	$day = new DateTime($date);
 	return $name.$year.'年'.date_format($day, 'm月d日');
