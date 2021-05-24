@@ -655,6 +655,32 @@ function searchCellPos($sheet, $keyword, $startPos) {
 	return $startPos;
 }
 
+// 20210524 S_Add
+function searchCell($sheet, $keyword, $startColumn, $endColumn, $startRow, $endRow) {
+	$ret = null;
+
+	if(strpos('$', $keyword) === false) {
+		$keyword = '$' . $keyword . '$';
+	}
+	
+	// 列ループ
+	while ($startColumn <= $endColumn) {
+		$checkRow = $startRow;// 行番号初期化
+		// 行ループ
+		while($checkRow <= $endRow) {
+			$val = $sheet->getCellByColumnAndRow($startColumn, $checkRow)->getValue();
+			if (strpos($val, $keyword) !== false) {
+				$ret = $sheet->getCellByColumnAndRow($startColumn, $checkRow);
+				return $ret;
+			}
+			$checkRow++;
+		}
+		$startColumn++;
+	}
+	return $ret;
+}
+// 20210524 E_Add
+
 /**
  * 物件プラン取得
  */
