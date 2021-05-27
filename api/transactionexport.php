@@ -15,12 +15,12 @@ $param = json_decode($postparam);
 // 権利形態List
 $codeRightsFormList = ORM::for_table(TBLCODE)->where('code', '011')->where_null('deleteDate')->findArray();
 // 20210411 E_Add
-$bukken = ORM::for_table(TBLTEMPLANDINFO)->findOne($param->pid)->asArray();
+//$bukken = ORM::for_table(TBLTEMPLANDINFO)->findOne($param->pid)->asArray();
 $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
 // 20201020 S_Update
 //$contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')>order_by_asc('pid')->findArray();
 // 仕入契約情報
-$contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_not_null('contractNow')->where_not_equal('contractNow', '')->where_null('deleteDate')->order_by_asc('pid')->findArray();
+//$contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_not_null('contractNow')->where_not_equal('contractNow', '')->where_null('deleteDate')->order_by_asc('pid')->findArray();
 // 20201020 E_Update
 /*
 $payContracts = ORM::for_table(TBLPAYCONTRACT)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
@@ -41,18 +41,35 @@ $spreadsheet = $reader->load($filePath);
 // 買主シート
 $sheet = $spreadsheet->getSheet(0);
 
-$index = 1;
+// 最終列数
 $endColumn = 25;
+// 最終行数
 $endRow = 50;
 
-// 仕入契約情報
+// 土地情報を取得
+$bukken = ORM::for_table(TBLTEMPLANDINFO)->findOne($param->pid)->asArray();
+// 売主対象コードList 0:メトロス開発 ,1:Royal House
+$sellerCodeList = ORM::for_table(TBLCODE)->where('code', '027')->where_null('deleteDate')->findArray();
+// 地目コードList
+$landCategoryCodeList = ORM::for_table(TBLCODE)->where('code', '002')->where_null('deleteDate')->findArray();
+// 権利形態コードList
+$rightsFormCodeList = ORM::for_table(TBLCODE)->where('code', '011')->where_null('deleteDate')->findArray();
+// 種類コードList
+$dependTypeCodeList = ORM::for_table(TBLCODE)->where('code', '003')->where_null('deleteDate')->findArray();
+
+$cntContracts = 0;
+
+// 仕入契約情報を取得
+$contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_not_null('contractNow')->where_not_equal('contractNow', '')->where_null('deleteDate')->order_by_asc('pid')->findArray();
 foreach($contracts as $contract) {
-    
+    $cntContracts++;
+
     // シートをコピー
     $sheet = clone $spreadsheet->getSheet(0);
-    $sheet->setTitle('買主' . $index);
+    $sheet->setTitle('買主' . $cntContracts);
     $spreadsheet->addSheet($sheet);
 
+    // 列・行の位置を初期化
     $currentColumn = 1;
     $currentRow = 1;
 
@@ -70,14 +87,14 @@ foreach($contracts as $contract) {
         $currentRow = $cell->getRow();
         $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $contract['contractFormNumber']);
     }
-    // 契約日
+    // 成立年月日<-契約日
     $cell = searchCell($sheet, 'contractDay', $currentColumn, $endColumn, $currentRow, $endRow);
     if($cell != null) {
         $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
         $currentRow = $cell->getRow();
         $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, convert_jpdt_kanji($contract['contractDay']));
     }
-    // 決済日
+    // 引渡年月日<-決済日
     $cell = searchCell($sheet, 'decisionDay', $currentColumn, $endColumn, $currentRow, $endRow);
     if($cell != null) {
         $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
@@ -85,10 +102,309 @@ foreach($contracts as $contract) {
         $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, convert_jpdt_kanji($contract['decisionDay']));
     }
 
+    $cntSellers = 0;
+
+    // 仕入契約者情報を取得
+    $sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
+    
+    // 仕入契約者情報が３件を超える場合
+    if(sizeof($sellers) > 3) {
+        // 売主氏名・売主住所の行をコピー
+        copyBlockWithVal($sheet, $currentRow + 3, 1, sizeof($sellers) - 3, $endColumn);
+    }
+    foreach($sellers as $seller) {
+        $cntSellers++;
+        if($cntSellers == 1) $sheet->setTitle($seller['contractorName'] . '様');
+
+        // 売主氏名<-契約者名
+        $cell = searchCell($sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $seller['contractorName']);
+        }
+        // 売主住所<-契約者住所
+        $cell = searchCell($sheet, 'contractorAdress', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $seller['contractorAdress']);
+        }
+    }
+    // 仕入契約者情報が３件未満の場合、Emptyを設定
+    for ($i = 1; $i <= 3 - sizeof($sellers); $i++) {
+        // 売主氏名<-Empty
+        $cell = searchCell($sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+        // 売主住所<-Empty
+        $cell = searchCell($sheet, 'contractorAdress', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+    }
+
+    // 買主名称<-売主対象
+    $sellerName = '';
+    if($bukken['seller'] === '0') $sellerName = '株式会社' . getCodeTitle($sellerCodeList, $bukken['seller']);
+    else if($bukken['seller'] === '1') $sellerName = getCodeTitle($sellerCodeList, $bukken['seller']) . '株式会社';
+    $cell = searchCell($sheet, 'sellerName', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+        $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $sellerName);
+    }
+    // 物件所在地（住居表示）<-居住表示
+    $cell = searchCell($sheet, 'residence', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+        $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $bukken['residence']);
+    }
+
+    $detailIds = [];
+    // 仕入契約詳細情報を取得
+    $details = ORM::for_table(TBLCONTRACTDETAILINFO)->where('contractInfoPid', $contract['pid'])->where('contractDataType', '01')->where_null('deleteDate')->order_by_asc('pid')->findArray();
+    foreach($details as $detail) {
+        $detailIds[] = $detail['locationInfoPid'];
+    }
+
+    $locsLand = [];     // 土地
+    $locsBuilding = []; // 建物
+    if(sizeof($detailIds) > 0) {
+        // 所在地情報を取得
+        $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where_null('deleteDate')->order_by_asc('pid')->findArray();
+        foreach($locs as $loc) {
+            // 区分が01：土地の場合
+            if($loc['locationType'] === '01') {
+                $locsLand[] = $loc;
+            }
+            // 区分が02：建物の場合
+            else if($loc['locationType'] === '02') {
+                $locsBuilding[] = $loc;
+                // 権利形態が01：借地権の場合
+                if($loc['rightsForm'] === '01' && $loc['bottomLandPid'] !== '') {
+                    // 底地を土地に追加
+                    $bottomLand = ORM::for_table(TBLLOCATIONINFO)->find_one($loc['bottomLandPid']);
+                    if(isset($bottomLand)) {
+                        $bottomLand['rightsForm'] = '01';// 01：借地権
+                        $locsLand[] = $bottomLand;
+                    }
+                }
+            }
+            // 区分が04：区分所有（専有）の場合
+            else if($loc['locationType'] === '04') {
+                // 一棟の建物の所在地を設定
+                if($loc['ridgePid'] !== '') {
+                    $ridge = ORM::for_table(TBLLOCATIONINFO)->find_one($loc['ridgePid']);
+                    if(isset($ridge)) $loc['address'] = $ridge['address'];
+                }
+                $locsBuilding[] = $loc;
+            }
+        }
+    }
+
+    // 土地
+    $cell = searchCell($sheet, 'l_address', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+    }
+
+    // 所在地情報（土地）が複数存在する場合
+    if(sizeof($locsLand) > 1) {
+        // 土地の行をコピー
+        copyBlockWithVal($sheet, $currentRow, 3, sizeof($locsLand) - 1, $endColumn);
+    }
+    foreach($locsLand as $loc) {
+        // 所 在（地番）
+        $cell = searchCell($sheet, 'l_address', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $loc['address'] . $loc['blockNumber']);
+        }
+        // 地目
+        $cell = searchCell($sheet, 'l_landCategory', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, getCodeTitle($landCategoryCodeList, $loc['landCategory']));
+        }
+        // 借地対象面積
+        $cell = searchCell($sheet, 'l_leasedArea', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $loc['leasedArea']);
+        }
+        // 地積
+        $cell = searchCell($sheet, 'l_area', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $loc['area']);
+        }
+        // 権利の種類
+        $cell = searchCell($sheet, 'l_rightsForm', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, getCodeTitle($rightsFormCodeList, $loc['rightsForm']));
+        }
+    }
+    // 所在地情報（土地）が存在しない場合、Emptyを設定
+    for ($i = 1; $i <= 1 - sizeof($locsLand); $i++) {
+        // 所 在（地番）<-Empty
+        $cell = searchCell($sheet, 'l_address', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+        // 地目<-Empty
+        $cell = searchCell($sheet, 'l_landCategory', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+        // 借地対象面積<-Empty
+        $cell = searchCell($sheet, 'l_leasedArea', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+        // 地積<-Empty
+        $cell = searchCell($sheet, 'l_area', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+        // 権利の種類<-Empty
+        $cell = searchCell($sheet, 'l_rightsForm', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+    }
+
+    // 建物
+    $cell = searchCell($sheet, 'b_address', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+    }
+
+    // 所在地情報（建物）が複数存在する場合
+    if(sizeof($locsBuilding) > 1) {
+        // 建物の行をコピー
+        copyBlockWithVal($sheet, $currentRow, 6, sizeof($locsBuilding) - 1, $endColumn);
+    }
+    foreach($locsBuilding as $loc) {
+        // 所在
+        $cell = searchCell($sheet, 'b_address', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $loc['address']);
+        }
+        // 家屋番号
+        $cell = searchCell($sheet, 'b_buildingNumber', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $loc['buildingNumber']);
+        }
+        // 構造
+        $cell = searchCell($sheet, 'b_structure', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $loc['structure']);
+        }
+        // 階建
+        $cell = searchCell($sheet, 'b_dependFloor', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $loc['dependFloor']);
+        }
+        // 種類
+        $cell = searchCell($sheet, 'b_dependType', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, getCodeTitle($dependTypeCodeList, $loc['dependType']));
+        }
+        // 床面積
+        $cell = searchCell($sheet, 'b_grossFloorArea', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, $loc['grossFloorArea']);
+        }
+    }
+    // 所在地情報（建物）が存在しない場合、Emptyを設定
+    for ($i = 1; $i <= 1 - sizeof($locsBuilding); $i++) {
+        // 所在<-Empty
+        $cell = searchCell($sheet, 'b_address', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+        // 家屋番号<-Empty
+        $cell = searchCell($sheet, 'b_buildingNumber', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+        // 構造<-Empty
+        $cell = searchCell($sheet, 'b_structure', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+        // 階建<-Empty
+        $cell = searchCell($sheet, 'b_dependFloor', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+        // 種類<-Empty
+        $cell = searchCell($sheet, 'b_dependType', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+        // 床面積<-Empty
+        $cell = searchCell($sheet, 'b_grossFloorArea', $currentColumn, $endColumn, $currentRow, $endRow);
+        if($cell != null) {
+            $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+            $currentRow = $cell->getRow();
+            $sheet->setCellValueByColumnAndRow($currentColumn, $currentRow, '');
+        }
+    }
 
 
-    $index++;
+
+
 }
+// コピー元買主シート削除
+$spreadsheet->removeSheetByIndex(0);
 
 /*
 //$sheet->setCellValue('A2', $bukken['contractBukkenNo']);
