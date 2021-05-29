@@ -78,24 +78,30 @@ foreach($contracts as $contract) {
     // 仕入契約者情報を取得
     $sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
     
+    $cell = searchCell($sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+    }
+
     // 仕入契約者情報が３件を超える場合
     if(sizeof($sellers) > 3) {
         // 売主氏名・売主住所の行をコピー
-        copyBlockWithVal($sheet, $currentRow + 3, 1, sizeof($sellers) - 3, $endColumn);
+        copyBlockWithVal($sheet, $currentRow + 2, 1, sizeof($sellers) - 3, $endColumn + 1);
     }
     foreach($sellers as $seller) {
         $cntSellers++;
         if($cntSellers == 1 && $seller['contractorName'] !== '') $sheet->setTitle($seller['contractorName'] . '様');
 
         // 売主氏名<-契約者名
-        $cell = setCell($cell, $sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow, $seller['contractorName']);
+        $cell = setCell(null, $sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow, $seller['contractorName']);
         // 売主住所<-契約者住所
         $cell = setCell($cell, $sheet, 'contractorAdress', $currentColumn, $endColumn, $currentRow, $endRow, $seller['contractorAdress']);
     }
     // 仕入契約者情報が３件未満の場合、Emptyを設定
     for ($i = 1; $i <= 3 - sizeof($sellers); $i++) {
         // 売主氏名<-Empty
-        $cell = setCell($cell, $sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        $cell = setCell(null, $sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow, '');
         // 売主住所<-Empty
         $cell = setCell($cell, $sheet, 'contractorAdress', $currentColumn, $endColumn, $currentRow, $endRow, '');
     }
@@ -432,18 +438,15 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
 
     // 所在地情報（土地）が複数存在する場合
     if(sizeof($locsLand) > 1) {
-
-        //20210529 S_Add
-        $sheet->unmergeCells('A'.$currentRow.':A'.($currentRow + 6));
-        //20210529 E_Add
+        // セル結合を解除
+        $sheet->unmergeCells('A' . $currentRow . ':A' . ($currentRow + 6));
 
         // 土地の行をコピー
-        copyBlockWithVal($sheet, $currentRow, 3, sizeof($locsLand) - 1, $endColumn);
+        copyBlockWithVal($sheet, $currentRow, 3, sizeof($locsLand) - 1, $endColumn + 1);
 
-        //20210529 S_Add マージ
+        // セルを再結合
         $mergeTo = $currentRow + (sizeof($locsLand) - 1) * 3 + 6;
-        $sheet->mergeCells('A'.$currentRow.':A'.$mergeTo);
-        //20210529 E_Add マージ
+        $sheet->mergeCells('A' . $currentRow . ':A' . $mergeTo);
     }
     foreach($locsLand as $loc) {
         // 所 在（地番）
@@ -480,19 +483,15 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
 
     // 所在地情報（建物）が複数存在する場合
     if(sizeof($locsBuilding) > 1) {
-        
-        //20210529 S_Add
-        $sheet->unmergeCells('A'.$currentRow.':A'.($currentRow + 9));
-        //20210529 E_Add
+        // セル結合を解除
+        $sheet->unmergeCells('A' . $currentRow . ':A' . ($currentRow + 9));
 
         // 建物の行をコピー
-        copyBlockWithVal($sheet, $currentRow, 6, sizeof($locsBuilding) - 1, $endColumn);
+        copyBlockWithVal($sheet, $currentRow, 6, sizeof($locsBuilding) - 1, $endColumn + 1);
 
-        //20210529 S_Add マージ
+        // セルを再結合
         $mergeTo = $currentRow + (sizeof($locsBuilding) - 1) * 6 + 9;
-        $sheet->mergeCells('A'.$currentRow.':A'.$mergeTo);
-        //20210529 E_Add マージ
-
+        $sheet->mergeCells('A' . $currentRow . ':A' . $mergeTo);
     }
     foreach($locsBuilding as $loc) {
         // 所在
