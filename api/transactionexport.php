@@ -432,8 +432,18 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
 
     // 所在地情報（土地）が複数存在する場合
     if(sizeof($locsLand) > 1) {
+
+        //20210529 S_Add
+        $sheet->unmergeCells('A'.$currentRow.':A'.($currentRow + 6));
+        //20210529 E_Add
+
         // 土地の行をコピー
         copyBlockWithVal($sheet, $currentRow, 3, sizeof($locsLand) - 1, $endColumn);
+
+        //20210529 S_Add マージ
+        $mergeTo = $currentRow + (sizeof($locsLand) - 1) * 3 + 6;
+        $sheet->mergeCells('A'.$currentRow.':A'.$mergeTo);
+        //20210529 E_Add マージ
     }
     foreach($locsLand as $loc) {
         // 所 在（地番）
@@ -470,8 +480,19 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
 
     // 所在地情報（建物）が複数存在する場合
     if(sizeof($locsBuilding) > 1) {
+        
+        //20210529 S_Add
+        $sheet->unmergeCells('A'.$currentRow.':A'.($currentRow + 9));
+        //20210529 E_Add
+
         // 建物の行をコピー
         copyBlockWithVal($sheet, $currentRow, 6, sizeof($locsBuilding) - 1, $endColumn);
+
+        //20210529 S_Add マージ
+        $mergeTo = $currentRow + (sizeof($locsBuilding) - 1) * 6 + 9;
+        $sheet->mergeCells('A'.$currentRow.':A'.$mergeTo);
+        //20210529 E_Add マージ
+
     }
     foreach($locsBuilding as $loc) {
         // 所在
