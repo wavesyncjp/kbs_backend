@@ -87,7 +87,7 @@ foreach($contracts as $contract) {
     // 仕入契約者情報が３件を超える場合
     if(sizeof($sellers) > 3) {
         // 売主氏名・売主住所の行をコピー
-        copyBlockWithVal($sheet, $currentRow + 2, 1, sizeof($sellers) - 3, $endColumn + 1);
+        copyBlockWithVal($sheet, $currentRow + 2, 1, sizeof($sellers) - 3, $endColumn);
     }
     foreach($sellers as $seller) {
         $cntSellers++;
@@ -363,7 +363,7 @@ function copyBlockWithVal($sheet, $startPos, $blockRowCount, $copyCount, $colums
     $lastPos = $startPos + ($blockRowCount * $copyCount);
     for($cursor = 0 ; $cursor < $copyCount ; $cursor++) {
         $copyPos = $startPos  + $blockRowCount * $cursor;
-        copyRowsWithValue($sheet, $lastPos, $copyPos, $blockRowCount, $colums);
+        copyRowsWithValue($sheet, $lastPos, $copyPos, $blockRowCount, $colums + 1);
     }
 }
 
@@ -442,7 +442,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $sheet->unmergeCells('A' . $currentRow . ':A' . ($currentRow + 6));
 
         // 土地の行をコピー
-        copyBlockWithVal($sheet, $currentRow, 3, sizeof($locsLand) - 1, $endColumn + 1);
+        copyBlockWithVal($sheet, $currentRow, 3, sizeof($locsLand) - 1, $endColumn);
 
         // セルを再結合
         $mergeTo = $currentRow + (sizeof($locsLand) - 1) * 3 + 6;
@@ -487,7 +487,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $sheet->unmergeCells('A' . $currentRow . ':A' . ($currentRow + 9));
 
         // 建物の行をコピー
-        copyBlockWithVal($sheet, $currentRow, 6, sizeof($locsBuilding) - 1, $endColumn + 1);
+        copyBlockWithVal($sheet, $currentRow, 6, sizeof($locsBuilding) - 1, $endColumn);
 
         // セルを再結合
         $mergeTo = $currentRow + (sizeof($locsBuilding) - 1) * 6 + 9;
