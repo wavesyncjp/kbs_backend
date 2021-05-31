@@ -458,7 +458,9 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         // 地積
         $cell = setCell($cell, $sheet, 'l_area', $currentColumn, $endColumn, $currentRow, $endRow, $loc['area']);
         // 権利の種類
-        $cell = setCell($cell, $sheet, 'l_rightsForm', $currentColumn, $endColumn, $currentRow, $endRow, getCodeTitle($codeLists['rightsForm'], $loc['rightsForm']));
+        $rightsForm = getCodeTitle($codeLists['rightsForm'], $loc['rightsForm']);
+        if($rightsForm === '') $rightsForm = '所有権';
+        $cell = setCell($cell, $sheet, 'l_rightsForm', $currentColumn, $endColumn, $currentRow, $endRow, $rightsForm);
     }
     // 所在地情報（土地）が存在しない場合、Emptyを設定
     for ($i = 1; $i <= 1 - sizeof($locsLand); $i++) {
