@@ -24,7 +24,7 @@ else {
 }
 // 20210311 S_Update
 //copyData($param, $loc, array('pid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate'));
-copyData($param, $loc, array('pid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'attachFiles'));
+copyData($param, $loc, array('pid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'attachFiles', 'bottomLands', 'delBottomLands'));
 // 20210311 E_Update
 $loc->save();
 
@@ -58,6 +58,34 @@ if(isset($param->delSharers)) {
 
     ORM::for_table(TBLSHARERINFO)->where_in('pid', $param->delSharers)->delete_many();
 }
+// 20210614 S_Add
+// 底地
+if(isset($param->bottomLands)) {
+
+    // 底地ループ
+    $bottomLandPos = 1;
+    foreach($param->bottomLands as $bottomLand){
+        if(isset($bottomLand->pid) && $bottomLand->pid > 0) {
+            $bottomLandSave = ORM::for_table(TBLBOTTOMLANDINFO)->find_one($bottomLand->pid);
+            setUpdate($bottomLandSave, $param->updateUserId);
+        }
+        else {
+            $bottomLandSave = ORM::for_table(TBLBOTTOMLANDINFO)->create();
+            setInsert($bottomLandSave, $param->createUserId > 0 ? $param->createUserId : $param->updateUserId );
+        }
+        copyData($bottomLand, $bottomLandSave, array());	
+        $bottomLandSave->registPosition = $bottomLandPos;
+        $bottomLandSave->tempLandInfoPid = $loc->tempLandInfoPid;
+        $bottomLandSave->locationInfoPid = $loc->pid;
+        $bottomLandSave->save();
+        $bottomLandPos++;
+    }
+}
+// 削除
+if(isset($param->delBottomLands)) {
+    ORM::for_table(TBLBOTTOMLANDINFO)->where_in('pid', $param->delBottomLands)->delete_many();
+}
+// 20210614 E_Add
 ORM::get_db()->commit();
 
 $locationPid = $loc->pid;
@@ -68,6 +96,10 @@ $loc['sharers'] = $sharers;
 $attachFiles = ORM::for_table(TBLLOCATIONATTACH)->where('locationInfoPid', $locationPid)->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
 $loc['attachFiles'] = $attachFiles;
 // 20210311 E_Add
+// 20210614 S_Add
+$bottomLands = ORM::for_table(TBLBOTTOMLANDINFO)->where('locationInfoPid', $locationPid)->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
+$loc['bottomLands'] = $bottomLands;
+// 20210614 E_Add
 echo json_encode($loc);
 
 ?>

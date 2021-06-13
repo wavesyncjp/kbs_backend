@@ -31,20 +31,20 @@ $endColumn = 25;
 $endRow = 200;
 
 // 土地情報を取得
-$bukken = ORM::for_table(TBLTEMPLANDINFO)->findOne($param->pid)->asArray();
+$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->select('seller')->select('residence')->findOne($param->pid)->asArray();
 
 $codeLists = [];
 // 売主対象コードList 0:メトロス開発 ,1:Royal House
-$sellerCodeList = ORM::for_table(TBLCODE)->where('code', '027')->where_null('deleteDate')->findArray();
+$sellerCodeList = ORM::for_table(TBLCODE)->select('codeDetail')->select('name')->where('code', '027')->where_null('deleteDate')->findArray();
 $codeLists['seller'] = $sellerCodeList;
 // 地目コードList
-$landCategoryCodeList = ORM::for_table(TBLCODE)->where('code', '002')->where_null('deleteDate')->findArray();
+$landCategoryCodeList = ORM::for_table(TBLCODE)->select('codeDetail')->select('name')->where('code', '002')->where_null('deleteDate')->findArray();
 $codeLists['landCategory'] = $landCategoryCodeList;
 // 権利形態コードList
-$rightsFormCodeList = ORM::for_table(TBLCODE)->where('code', '011')->where_null('deleteDate')->findArray();
+$rightsFormCodeList = ORM::for_table(TBLCODE)->select('codeDetail')->select('name')->where('code', '011')->where_null('deleteDate')->findArray();
 $codeLists['rightsForm'] = $rightsFormCodeList;
 // 種類コードList
-$dependTypeCodeList = ORM::for_table(TBLCODE)->where('code', '003')->where_null('deleteDate')->findArray();
+$dependTypeCodeList = ORM::for_table(TBLCODE)->select('codeDetail')->select('name')->where('code', '003')->where_null('deleteDate')->findArray();
 $codeLists['dependType'] = $dependTypeCodeList;
 
 $cntContracts = 0;
@@ -76,7 +76,7 @@ foreach($contracts as $contract) {
     $cntSellers = 0;
 
     // 仕入契約者情報を取得
-    $sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
+    $sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->select('contractorName')->select('contractorAdress')->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
     
     $cell = searchCell($sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow);
     if($cell != null) {
@@ -116,7 +116,7 @@ foreach($contracts as $contract) {
 
     $detailIds = [];
     // 仕入契約詳細情報を取得
-    $details = ORM::for_table(TBLCONTRACTDETAILINFO)->where('contractInfoPid', $contract['pid'])->where('contractDataType', '01')->where_null('deleteDate')->order_by_asc('pid')->findArray();
+    $details = ORM::for_table(TBLCONTRACTDETAILINFO)->select('locationInfoPid')->where('contractInfoPid', $contract['pid'])->where('contractDataType', '01')->where_null('deleteDate')->order_by_asc('pid')->findArray();
     foreach($details as $detail) {
         $detailIds[] = $detail['locationInfoPid'];
     }
@@ -410,10 +410,42 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                 // 権利形態が01：借地権の場合
                 if($loc['rightsForm'] === '01' && $loc['bottomLandPid'] !== '') {
                     // 底地を土地に追加
-                    $bottomLand = ORM::for_table(TBLLOCATIONINFO)->find_one($loc['bottomLandPid']);
+                    $bottomLand = ORM::for_table(TBLLOCATIONINFO)
+                        ->select('address')
+                        ->select('blockNumber')
+                        ->select('landCategory')
+                        ->select('leasedArea')
+                        ->select('area')
+                        ->find_one($loc['bottomLandPid']);
                     if(isset($bottomLand)) {
                         $bottomLand['rightsForm'] = '01';// 01：借地権
                         $locsLand[] = $bottomLand;
+
+                        // 20210614 S_Add
+                        // 底地情報が２行以上存在する場合、土地に追加する
+                        $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)
+                            ->table_alias('p1')
+                            ->inner_join(TBLLOCATIONINFO, array('p1.bottomLandPid', '=', 'p2.pid'), 'p2')
+                            ->select('p2.address', 'address')
+                            ->select('p2.blockNumber', 'blockNumber')
+                            ->select('p2.landCategory', 'landCategory')
+                            ->select('p1.leasedArea', 'leasedArea')
+                            ->select('p2.area', 'area')
+                            ->where('p1.locationInfoPid', $loc['pid'])
+                            ->where_null('p1.deleteDate')
+                            ->order_by_asc('p1.registPosition')
+                            ->findArray();
+                        if(isset($bottomLandInfos) && sizeof($bottomLandInfos) > 1) {
+                            $cntBottomLandInfos = 0;
+                            foreach($bottomLandInfos as $bottomLandInfo) {
+                                $cntBottomLandInfos++;
+                                if($cntBottomLandInfos > 1) {
+                                    $bottomLandInfo['rightsForm'] = '01';// 01：借地権
+                                    $locsLand[] = $bottomLandInfo;
+                                }
+                            }
+                        }
+                        // 20210614 E_Add
                     }
                 }
             }
@@ -421,7 +453,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
             else if($loc['locationType'] === '04') {
                 // 一棟の建物の所在地を設定
                 if($loc['ridgePid'] !== '') {
-                    $ridge = ORM::for_table(TBLLOCATIONINFO)->find_one($loc['ridgePid']);
+                    $ridge = ORM::for_table(TBLLOCATIONINFO)->select('address')->find_one($loc['ridgePid']);
                     if(isset($ridge)) $loc['address'] = $ridge['address'];
                 }
                 $locsBuilding[] = $loc;
