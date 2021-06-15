@@ -77,12 +77,16 @@ if(isset($param->locations)) {
 
 	$pidList = [];
 	$newLocations = [];
+	$newBottomLands = [];// 20210616 Add
 	foreach($locations as $location) {
 		$loc = ORM::for_table(TBLLOCATIONINFO)->create();	
 		setInsert($loc, $param->createUserId);
 		$loc->tempLandInfoPid = $land->pid;
 
-		copyData($location, $loc, array('pid', 'tempLandInfoPid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'attachFiles'));
+		// 20210616 S_Update
+//		copyData($location, $loc, array('pid', 'tempLandInfoPid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'attachFiles'));
+		copyData($location, $loc, array('pid', 'tempLandInfoPid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'attachFiles', 'bottomLands', 'delBottomLands'));
+		// 20210616 E_Update
 		$loc->save();
 
 		// key:oldPid,value:newPid
@@ -122,6 +126,34 @@ if(isset($param->locations)) {
 				$newLocFile->save();
 			}
 		}
+
+		// 20210616 S_Add
+		// 共有者情報
+		if(isset($location->sharers)) {
+			foreach($location->sharers as $sharer) {
+				$newSharer = ORM::for_table(TBLSHARERINFO)->create();
+				setInsert($newSharer, $param->createUserId);
+				copyData($sharer, $newSharer, array('pid', 'tempLandInfoPid','locationInfoPid', 'createUserId', 'createDate', 'updateUserId', 'updateDate'));
+				$newSharer->tempLandInfoPid = $land->pid;
+				$newSharer->locationInfoPid = $loc->pid;
+				$newSharer->save();
+			}
+		}
+		// 底地情報
+		if(isset($location->bottomLands)) {
+			foreach($location->bottomLands as $bottomLand) {
+				$newBottomLand = ORM::for_table(TBLBOTTOMLANDINFO)->create();
+				setInsert($newBottomLand, $param->createUserId);
+				copyData($bottomLand, $newBottomLand, array('pid', 'tempLandInfoPid','locationInfoPid', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'leasedAreaMap'));
+				$newBottomLand->tempLandInfoPid = $land->pid;
+				$newBottomLand->locationInfoPid = $loc->pid;
+				$newBottomLand->save();
+
+				// 作成データ
+				$newBottomLands[] = $newBottomLand;
+			}
+		}
+		// 20210616 E_Add
 	}
 
 	foreach($newLocations as $newLocation) {
@@ -137,6 +169,16 @@ if(isset($param->locations)) {
 		}
 		$loc->save();
 	}
+	// 20210616 S_Add
+	foreach($newBottomLands as $newBottomLand) {
+		$bottomLand = ORM::for_table(TBLBOTTOMLANDINFO)->find_one($newBottomLand->pid);
+		// 底地（bottomLandPid）を更新
+		if(isset($pidList[$bottomLand->bottomLandPid])) {
+			$bottomLand->bottomLandPid = $pidList[$bottomLand->bottomLandPid];
+		}
+		$bottomLand->save();
+	}
+	// 20210616 E_Add
 }
 
 echo json_encode(getLandInfo($land->pid));
