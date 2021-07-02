@@ -197,7 +197,7 @@ foreach($contracts as $contract) {
     $sheet->setCellValue('K'.$contractPos, emptyStatus($status, $contract['decisionPrice']));
     // 固都税清算金
     $sheet->setCellValue('M'.$contractPos, emptyStatus($status, formatYenNumber($contract['fixedTax'])));
-    // 引渡期日
+    // 決済予定日
     $sheet->setCellValue('N'.$contractPos, emptyStatus($status, convert_jpdt($contract['deliveryFixedDay'])));
     // 決済日
     $sheet->setCellValue('O'.$contractPos, emptyStatus($status, convert_jpdt($contract['decisionDay'])));
@@ -254,7 +254,7 @@ if(sizeof($contracts) == 0) {
     $sheet->setCellValue('J'.$contractPos, '');// 内金（手付）支払日
     $sheet->setCellValue('K'.$contractPos, '');// 決済代金
     $sheet->setCellValue('M'.$contractPos, '');// 固都税清算金
-    $sheet->setCellValue('N'.$contractPos, '');// 引渡期日
+    $sheet->setCellValue('N'.$contractPos, '');// 決済予定日
     $sheet->setCellValue('O'.$contractPos, '');// 決済日
     $sheet->setCellValue('P'.$contractPos, '');// 即決和解の有無等
     $sheet->setCellValue('Q'.$contractPos, '');// 留保金
