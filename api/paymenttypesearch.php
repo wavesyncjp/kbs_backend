@@ -37,7 +37,7 @@ if(isset($param->categoryFlg)  && $param->categoryFlg !== ''){
 }
 // 支払登録対象
 if(isset($param->payContractEntryFlg)  && $param->payContractEntryFlg !== ''){
-	$query = $query->where('payContractEntryFlg', $param->payContractEntryFlg);
+	$query = $query->where('payContractEntryFlg', $param->payContractEntryFlg)->order_by_asc('displayOrder');
 }
 
 $ret = $query->order_by_asc('paymentCode')->find_array();
