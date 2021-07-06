@@ -30,43 +30,45 @@ ORM::configure('password', 'password32');
 #ORM::configure('password', '');
 
 ORM::configure('id_column_overrides', array(
-		'tbltemplandinfo'=>'pid',
-		'tbllocationinfo'=>'pid',
-		'tblcontractinfo'=>'pid',
-		'tblcontractdetailinfo'=>'pid',
-		'tblbukken'=>'bukkenId',
-		'tbluser'=>'userId',
-		'tbltoken'=>'userId',
-		'tbldepartment'=>'depCode',
-		'tblemployee'=>'employeeCode',
-		'tblfileattach'=>'pid',
-		'tblmapattach'=>'pid',
-		'tblcontractfile'=>'pid',
-		'tbllocationattach'=>'pid',
-		'tblinformation'=>'pid',
-		'tblsharerinfo'=>'pid',
-		'tblcode'=>array('code', 'codeDetail'),
-		'tblcodenamemst' => 'code',
-		'tblcontractsellerinfo'=>'pid',
-		'tblcontractregistrant'=>'pid',
-		'tblpaymenttype'=>'paymentCode',
-		'tblplan'=>'pid',
-		'tblplandetail'=>'pid',
-		'tblpaycontract'=>'pid',
-		'tblpaycontractdetail'=>'pid',
-		'tblplanrentroll' => 'pid',
-		'tblplanrentrolldetail' => 'pid',
-		'tbltax'=>'pid',
-		'tblbukkenplaninfo' =>'pid',
-		'tblbukkensalesinfo'=>'pid',
-		'tblcontracttypefix'=>'pid',
-		'tblcsvinfo' => 'pid',
-		'tblcsvinfodetail' => 'pid',
-		'tblplanhistory'=>'pid',
-		'tblplandetailhistory'=>'pid',
-		'tblplanrentrollhistory' => 'pid',
-		'tblplanrentrolldetailhistory' => 'pid',
-		'tblbottomlandinfo'=>'pid',
+		'tbltemplandinfo'=>'pid'
+		, 'tbllocationinfo'=>'pid'
+		, 'tblcontractinfo'=>'pid'
+		, 'tblcontractdetailinfo'=>'pid'
+		, 'tblbukken'=>'bukkenId'
+		, 'tbluser'=>'userId'
+		, 'tbltoken'=>'userId'
+		, 'tbldepartment'=>'depCode'
+		, 'tblemployee'=>'employeeCode'
+		, 'tblfileattach'=>'pid'
+		, 'tblmapattach'=>'pid'
+		, 'tblcontractfile'=>'pid'
+		, 'tbllocationattach'=>'pid'
+		, 'tblinformation'=>'pid'
+		, 'tblsharerinfo'=>'pid'
+		, 'tblcode'=>array('code', 'codeDetail')
+		, 'tblkanjyo'=>'kanjyoCode'
+		, 'tblkanjyofix'=>'pid'
+		, 'tblcodenamemst' => 'code'
+		, 'tblcontractsellerinfo'=>'pid'
+		, 'tblcontractregistrant'=>'pid'
+		, 'tblpaymenttype'=>'paymentCode'
+		, 'tblplan'=>'pid'
+		, 'tblplandetail'=>'pid'
+		, 'tblpaycontract'=>'pid'
+		, 'tblpaycontractdetail'=>'pid'
+		, 'tblplanrentroll' => 'pid'
+		, 'tblplanrentrolldetail' => 'pid'
+		, 'tbltax'=>'pid'
+		, 'tblbukkenplaninfo' =>'pid'
+		, 'tblbukkensalesinfo'=>'pid'
+		, 'tblcontracttypefix'=>'pid'
+		, 'tblcsvinfo' => 'pid'
+		, 'tblcsvinfodetail' => 'pid'
+		, 'tblplanhistory'=>'pid'
+		, 'tblplandetailhistory'=>'pid'
+		, 'tblplanrentrollhistory' => 'pid'
+		, 'tblplanrentrolldetailhistory' => 'pid'
+		, 'tblbottomlandinfo'=>'pid'
 ) );
 
 $FILE_PATH = 'uploads';
@@ -87,6 +89,8 @@ define('TBLLOCATIONATTACH','tbllocationattach');
 define('TBLINFORMATION','tblinformation');
 define('TBLSHARERINFO', 'tblsharerinfo');
 define('TBLCODE', 'tblcode');
+define('TBLKANJYO','tblkanjyo');
+define('TBLKANJYOFIX','tblkanjyofix');
 define('TBLCODENAMEMST', 'tblcodenamemst');
 define('TBLCONTRACTSELLERINFO', 'tblcontractsellerinfo');
 define('TBLCONTRACTREGISTRANT', 'tblcontractregistrant');
