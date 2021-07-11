@@ -426,7 +426,19 @@ if(isset($locs) && sizeof($locs) > 0) {
         //登記名義人
         // 20210204 S_Update
 //        $regists = getRegistrants($contract['details'], $loc);
-        $regists = getRegistrants($contract['details'], $loc, true);
+        // 20210711 S_Update
+//        $regists = getRegistrants($contract['details'], $loc, true);
+        $regists = getSharers($loc, true);
+        $targetRegists = getRegistrants($contract['details'], $loc, true);
+        $index = 0;
+        foreach($regists as $regist) {
+            foreach($targetRegists as $targetRegist) {
+                if($regist == $targetRegist) $regist .= '※売買対象分';
+            }
+            $regists[$index] = $regist;
+            $index++;
+        }
+        // 20210711 E_Update
         // 20210204 E_Update
 
         $keyword = 'l_address';
@@ -525,7 +537,19 @@ if(isset($locs) && sizeof($locs) > 0) {
         //登記名義人
         // 20210204 S_Update
 //        $regists = getRegistrants($contract['details'], $loc);
-        $regists = getRegistrants($contract['details'], $loc, true);
+        // 20210711 S_Update
+//        $regists = getRegistrants($contract['details'], $loc, true);
+        $regists = getSharers($loc, true);
+        $targetRegists = getRegistrants($contract['details'], $loc, true);
+        $index = 0;
+        foreach($regists as $regist) {
+            foreach($targetRegists as $targetRegist) {
+                if($regist == $targetRegist) $regist .= '※売買対象分';
+            }
+            $regists[$index] = $regist;
+            $index++;
+        }
+        // 20210711 E_Update
         // 20210204 E_Update
 
         $keyword = 'b_address';
@@ -837,6 +861,17 @@ if(sizeof($locs) > 0) {
                 // 20210204 S_Update
 //                $regists = getSharers($subLoc);
                 $regists = getSharers($subLoc, true);
+                // 20210711 S_Add
+                $targetRegists = getRegistrants($contract['details'], $subLoc, true);
+                $index = 0;
+                foreach($regists as $regist) {
+                    foreach($targetRegists as $targetRegist) {
+                        if($regist == $targetRegist) $regist .= '※売買対象分';
+                    }
+                    $regists[$index] = $regist;
+                    $index++;
+                }
+                // 20210711 E_Add
                 // 20210204 E_Update
 
 //                $keyword = 'p_address';

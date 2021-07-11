@@ -1,9 +1,16 @@
 <?php
 require '../header.php';
 
-$postdata = file_get_contents("php://input");
+$postparam = file_get_contents("php://input");
+$param = json_decode($postparam);
 
-$emps = ORM::for_table(TBLUSER)->where_null('deleteDate')->find_array();
+$query = ORM::for_table(TBLUSER)->where_null('deleteDate');
+
+if(isset($param->activeUser) && $param->activeUser === '1'){
+	$query = $query->where_not_null('loginId')->where_not_equal("loginId","");
+}
+
+$emps = $query->find_array();
 echo json_encode($emps);
 
 ?>
