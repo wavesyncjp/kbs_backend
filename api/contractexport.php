@@ -306,9 +306,14 @@ if($nextPos > 0) {
         for($cnt = 0 ; $cnt < sizeof($sellers) ; $cnt++) {
             $term9[] = '甲' . mb_convert_kana(($cnt + 1), 'N');
         }
+        // 20210711 S_Update
+        /*
         $str = '　　  ６　本契約に基づく甲の義務について、' . implode('、', $term9) . 'は、連帯して乙に対して責任を負';
-    //    bindCell('A' . $nextPos, $sheet, 'specialTerms9_1' , $str, false);
         $sheet->setCellValue('A' . $nextPos, $str);
+        */
+        bindCell('A' . $nextPos, $sheet, 'specialTerms9_1' , '', false);
+        bindCell('A' . $nextPos, $sheet, 'specialTerms9_1_val' , implode('、', $term9), false);
+        // 20210711 E_Update
     } else {
         $sheet->removeRow($nextPos);
     }
