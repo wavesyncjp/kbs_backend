@@ -430,13 +430,15 @@ if(isset($locs) && sizeof($locs) > 0) {
 //        $regists = getRegistrants($contract['details'], $loc, true);
         $regists = getSharers($loc, true);
         $targetRegists = getRegistrants($contract['details'], $loc, true);
-        $index = 0;
-        foreach($regists as $regist) {
-            foreach($targetRegists as $targetRegist) {
-                if($regist == $targetRegist) $regist .= '※売買対象分';
+        if(sizeof($regists) != sizeof($targetRegists)) {
+            $index = 0;
+            foreach($regists as $regist) {
+                foreach($targetRegists as $targetRegist) {
+                    if($regist == $targetRegist) $regist .= '※売買対象分';
+                }
+                $regists[$index] = $regist;
+                $index++;
             }
-            $regists[$index] = $regist;
-            $index++;
         }
         // 20210711 E_Update
         // 20210204 E_Update
@@ -541,13 +543,15 @@ if(isset($locs) && sizeof($locs) > 0) {
 //        $regists = getRegistrants($contract['details'], $loc, true);
         $regists = getSharers($loc, true);
         $targetRegists = getRegistrants($contract['details'], $loc, true);
-        $index = 0;
-        foreach($regists as $regist) {
-            foreach($targetRegists as $targetRegist) {
-                if($regist == $targetRegist) $regist .= '※売買対象分';
+        if(sizeof($regists) != sizeof($targetRegists)) {
+            $index = 0;
+            foreach($regists as $regist) {
+                foreach($targetRegists as $targetRegist) {
+                    if($regist == $targetRegist) $regist .= '※売買対象分';
+                }
+                $regists[$index] = $regist;
+                $index++;
             }
-            $regists[$index] = $regist;
-            $index++;
         }
         // 20210711 E_Update
         // 20210204 E_Update
@@ -863,13 +867,15 @@ if(sizeof($locs) > 0) {
                 $regists = getSharers($subLoc, true);
                 // 20210711 S_Add
                 $targetRegists = getRegistrants($contract['details'], $subLoc, true);
-                $index = 0;
-                foreach($regists as $regist) {
-                    foreach($targetRegists as $targetRegist) {
-                        if($regist == $targetRegist) $regist .= '※売買対象分';
+                if(sizeof($regists) != sizeof($targetRegists)) {
+                    $index = 0;
+                    foreach($regists as $regist) {
+                        foreach($targetRegists as $targetRegist) {
+                            if($regist == $targetRegist) $regist .= '※売買対象分';
+                        }
+                        $regists[$index] = $regist;
+                        $index++;
                     }
-                    $regists[$index] = $regist;
-                    $index++;
                 }
                 // 20210711 E_Add
                 // 20210204 E_Update
