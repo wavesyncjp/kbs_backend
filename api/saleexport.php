@@ -1027,12 +1027,26 @@ function isCancel($lst, $payDetail) {
  * 支払いに紐づく契約者
  */
 function getContractor($lst, $payDetail) {
+    $names = [];// 20210715 Add
     foreach($lst as $contract) {
+        // 20210715 S_Update
+        /*
         if($contract['contractor'] == $payDetail['contractor']) {
             return $contract['contractorName'];
         }
+        */
+        $contractors = explode('|', $payDetail['contractor']);
+        foreach($contractors as $contractor) {
+            if($contract['contractor'] == $contractor) {
+                $names[] = $contract['contractorName'];
+            }
+        }
+        // 20210715 E_Update
     }
-    return '';
+    // 20210715 S_Update
+    /*return '';*/
+    return implode('、', $names);
+    // 20210715 E_Update
 }
 
 /**
