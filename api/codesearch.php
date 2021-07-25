@@ -12,8 +12,8 @@ $query = ORM::for_table(TBLCODE)
 
 $query = $query->inner_join(TBLCODENAMEMST, array('p1.code', '=', 'p2.code'), 'p2');
 
-$query = $query->where_null('p1.deleteDate');
-
+//$query = $query->where_null('p1.deleteDate');
+$query = $query->where_null('p1.deleteDate')->where_not_like('p1.code', 'SYS%');
 
 if(isset($param->code) && $param->code !== ''){
 	$query = $query->where_like('p1.code', $param->code.'%');
