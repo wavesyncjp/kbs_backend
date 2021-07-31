@@ -14,8 +14,9 @@ $param = json_decode($postparam);
 $query = ORM::for_table(TBLCONTRACTSELLERINFO)
 			->table_alias('p1')
 			->select('p1.*')
-            ->inner_join(TBLCONTRACTINFO, array('p1.contractInfoPid', '=', 'p2.pid'), 'p2')
-            ->where('p2.tempLandInfoPid', $param->tempLandInfoPid);
+			->inner_join(TBLCONTRACTINFO, array('p1.contractInfoPid', '=', 'p2.pid'), 'p2')
+			->where('p2.tempLandInfoPid', $param->tempLandInfoPid)
+			->where_null('p1.deleteDate');
 
 $sellers = $query->find_array();
 echo json_encode($sellers);

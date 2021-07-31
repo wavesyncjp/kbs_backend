@@ -9,16 +9,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
+$userId = null;// 20210728 Add
 
 //更新
 if(isset($param->pid) && $param->pid > 0){
 	$paycontract = ORM::for_table(TBLPAYCONTRACT)->find_one($param->pid);
 	setUpdate($paycontract, $param->updateUserId);
+	$userId = $param->updateUserId;// 20210728 Add
 }
 //登録
 else {
 	$paycontract = ORM::for_table(TBLPAYCONTRACT)->create();	
 	setInsert($paycontract, $param->createUserId);
+	$userId = $param->createUserId;// 20210728 Add
 }
 
 copyData($param, $paycontract, array('pid', 'details', 'land', 'contractDayMap','contractFixDayMap','taxEffectiveDayMap', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
@@ -50,6 +53,11 @@ if(isset($param->details)){
 		}
 	}
 }
+
+// 20210728 S_Add
+setContractByPay($paycontract, $userId);
+setSaleByPay($paycontract, $userId);
+// 20210728 E_Add
 
 echo json_encode(getPayContractInfo($paycontract->pid));
 

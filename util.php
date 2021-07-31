@@ -55,10 +55,10 @@ function getLandInfo($pid){
 	$attachFiles = ORM::for_table(TBLFILEATTACH)->where('tempLandInfoPid', $pid)->order_by_desc('updateDate')->findArray();
 	if(isset($attachFiles)){
 		$land['attachFiles'] = $attachFiles;
-	}	
+	}
 	$locList = [];
 	$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->findArray();
-	if(isset($locs)){	
+	if(isset($locs)){
 
 		foreach($locs as $loc){
 			$sharers = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
@@ -85,15 +85,15 @@ function getLandInfo($pid){
  */
 function getContractInfo($pid){
 	$contract = ORM::for_table(TBLCONTRACTINFO)->findOne($pid)->asArray();
-	
+
 	$detailList = [];
 	$details = ORM::for_table(TBLCONTRACTDETAILINFO)->where('contractInfoPid', $pid)->where_null('deleteDate')->findArray();
-	if(isset($details)){	
+	if(isset($details)){
 
 		foreach($details as $detail){
-			$registrants = ORM::for_table(TBLCONTRACTREGISTRANT)->where('contractDetailInfoPid', $detail['pid'])->where_null('deleteDate')->findArray();			
-			$detail['registrants'] = $registrants;	
-			$detailList[] = $detail;		
+			$registrants = ORM::for_table(TBLCONTRACTREGISTRANT)->where('contractDetailInfoPid', $detail['pid'])->where_null('deleteDate')->findArray();
+			$detail['registrants'] = $registrants;
+			$detailList[] = $detail;
 		}
 
 		$contract['details'] = $detailList;
@@ -102,16 +102,16 @@ function getContractInfo($pid){
 		$contract['details'] = [];
 	}
 
-	//契約者	
+	// 契約者
 	$sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where('contractInfoPid', $pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
-	if(isset($sellers)){	
+	if(isset($sellers)){
 		$contract['sellers'] = $sellers;
 	}
 	else {
 		$contract['sellers'] = [];
-	}	
+	}
 
-	//地図添付
+	// 地図添付
 	$contractFiles = ORM::for_table(TBLCONTRACTFILE)->where('contractInfoPid', $pid)->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
 	if(isset($contractFiles)){
 		$contract['contractFiles'] = $contractFiles;
@@ -121,21 +121,27 @@ function getContractInfo($pid){
 }
 
 /**
- * 
+ * 削除情報設定
  * @param unknown $data
  */
 function setDelete($data, $userId){
 	$data->deleteUserId = $userId;
 	$data->deleteDate = date('Y-m-d H:i:s');
 }
-
+/**
+ * 登録情報設定
+ * @param unknown $data
+ */
 function setInsert($data, $userId){
 	$data->createUserId = $userId;
 	$data->createDate = date('Y-m-d H:i:s');
 	//$data->updateUserId = $userId;
 	//$data->updateDate = date('Y-m-d H:i:s');
 }
-
+/**
+ * 更新情報設定
+ * @param unknown $data
+ */
 function setUpdate($data, $userId){
 	$data->updateDate = date('Y-m-d H:i:s');
 	$data->updateUserId = $userId;
@@ -148,7 +154,6 @@ function copyData($source, $dest, $excludes){
 		}
 	}
 }
-
 
 function formatNumber($number, $is2Byte) {
 	if(!isset($number) || $number == '') {
@@ -164,22 +169,26 @@ function formatNumber($number, $is2Byte) {
 
 //-----------------------出力-----------------------------
 
-//セルに値設定
+/**
+ * セルに値設定
+ */
 function bindCell($cellName, $sheet, $keywords, $vals) {
-    $str = $sheet->getCell($cellName)->getValue();
+	$str = $sheet->getCell($cellName)->getValue();
 
-    if(is_array($keywords)) {
-        for($i = 0; $i < sizeof($keywords); $i++) {
-            $str = str_replace('$'. $keywords[$i] . '$', isset($vals[$i])? $vals[$i] : '' , $str);
-        }
-    }    
-    else {
-        $str = str_replace('$'. $keywords . '$', $vals, $str);
-    }
-    $sheet->setCellValue($cellName, $str);
+	if(is_array($keywords)) {
+		for($i = 0; $i < sizeof($keywords); $i++) {
+			$str = str_replace('$'. $keywords[$i] . '$', isset($vals[$i])? $vals[$i] : '' , $str);
+		}
+	}
+	else {
+		$str = str_replace('$'. $keywords . '$', $vals, $str);
+	}
+	$sheet->setCellValue($cellName, $str);
 }
 
-//ブロックコピー
+/**
+ * ブロックコピー
+ */
 function copyBlock($sheet, $startPos, $blockRowCount, $copyCount, $hasSingleRow = false) {
 
 	$styleArray = [
@@ -200,13 +209,13 @@ function copyBlock($sheet, $startPos, $blockRowCount, $copyCount, $hasSingleRow 
 
 	$str = $sheet->getCell('A' . $startPos)->getValue();
 	$sheet->insertNewRowBefore($startPos, $blockRowCount * $copyCount);
-	$lastPos = $startPos + ($blockRowCount * $copyCount);		
+	$lastPos = $startPos + ($blockRowCount * $copyCount);
 	for($cursor = 0 ; $cursor < $copyCount ; $cursor++) {
 
 		$copyPos = $startPos  + $blockRowCount * $cursor;
 		copyRows($sheet, $lastPos, $copyPos, $blockRowCount, 1);
-		
-		$sheet->setCellValue('A'. $copyPos, $str);		
+
+		$sheet->setCellValue('A'. $copyPos, $str);
 
 		$range = 'A'. $copyPos . ':A' . ($copyPos + $blockRowCount - 1);
 		$sheet->getStyle($range)->applyFromArray($styleArray);
@@ -214,13 +223,12 @@ function copyBlock($sheet, $startPos, $blockRowCount, $copyCount, $hasSingleRow 
 		if(isset($hasSingleRow) && $hasSingleRow == true) {
 			$sheet->setCellValue('A'. ($copyPos + $blockRowCount -1), $single);
 		}
-		
-
-	}	
-
+	}
 }
 
-//cellコピー
+/**
+ * cellコピー
+ */
 function copyRows($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false, $hasmerge = true) {
 
 	$styleArray = [
@@ -234,23 +242,23 @@ function copyRows($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false, $has
 		]
 	];
 
-    for ($row = 0; $row < $height; $row++) {
-        for ($col = 0; $col <= $width; $col++) {
-            $cell = $sheet->getCellByColumnAndRow($col, $srcRow + $row);
-			$style = $sheet->getStyleByColumnAndRow($col, $srcRow + $row);						
-			$dstCell = 'A' . (string)($dstRow + $row);		
-            $sheet->setCellValue($dstCell, $cell->getValue());
+	for ($row = 0; $row < $height; $row++) {
+		for ($col = 0; $col <= $width; $col++) {
+			$cell = $sheet->getCellByColumnAndRow($col, $srcRow + $row);
+			$style = $sheet->getStyleByColumnAndRow($col, $srcRow + $row);
+			$dstCell = 'A' . (string)($dstRow + $row);
+			$sheet->setCellValue($dstCell, $cell->getValue());
 			$sheet->duplicateStyle($style, $dstCell);
-			
+
 			if($setStyle) {
 				$sheet->getStyle($dstCell)->applyFromArray($styleArray);
 			}
+		}
 
-        }
-
-        $h = $sheet->getRowDimension($srcRow + $row)->getRowHeight();
-        $sheet->getRowDimension($dstRow + $row)->setRowHeight($h);
+		$h = $sheet->getRowDimension($srcRow + $row)->getRowHeight();
+		$sheet->getRowDimension($dstRow + $row)->setRowHeight($h);
 	}
+
 	if($hasmerge) {
 		foreach ($sheet->getMergeCells() as $mergeCell) {
 			$mc = explode(":", $mergeCell);
@@ -258,17 +266,18 @@ function copyRows($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false, $has
 			$col_e = preg_replace("/[0-9]*/", "", $mc[1]);
 			$row_s = ((int)preg_replace("/[A-Z]*/", "", $mc[0])) - $srcRow;
 			$row_e = ((int)preg_replace("/[A-Z]*/", "", $mc[1])) - $srcRow;
-	
+
 			if (0 <= $row_s && $row_s < $height) {
 				$merge = $col_s . (string)($dstRow + $row_s) . ":" . $col_e . (string)($dstRow + $row_e);
 				$sheet->mergeCells($merge);
 			} 
 		}
 	}
-    
 }
 
-//cellコピー
+/**
+ * cellコピー
+ */
 function copyRowsReverse($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false, $hasmerge = true) {
 
 	$styleArray = [
@@ -282,23 +291,23 @@ function copyRowsReverse($sheet,$srcRow,$dstRow,$height,$width, $setStyle = fals
 		]
 	];
 
-    for ($row = 0; $row < $height; $row++) {
-        for ($col = 0; $col <= $width; $col++) {
-            $cell = $sheet->getCellByColumnAndRow($col, $srcRow);
-			$style = $sheet->getStyleByColumnAndRow($col, $srcRow);						
-			$dstCell = 'A' . (string)($dstRow + $row);		
-            $sheet->setCellValue($dstCell, $cell->getValue());
+	for ($row = 0; $row < $height; $row++) {
+		for ($col = 0; $col <= $width; $col++) {
+			$cell = $sheet->getCellByColumnAndRow($col, $srcRow);
+			$style = $sheet->getStyleByColumnAndRow($col, $srcRow);
+			$dstCell = 'A' . (string)($dstRow + $row);
+			$sheet->setCellValue($dstCell, $cell->getValue());
 			$sheet->duplicateStyle($style, $dstCell);
-			
+
 			if($setStyle) {
 				$sheet->getStyle($dstCell)->applyFromArray($styleArray);
 			}
+		}
 
-        }
-
-        $h = $sheet->getRowDimension($srcRow + $row)->getRowHeight();
-        $sheet->getRowDimension($dstRow + $row)->setRowHeight($h);
+		$h = $sheet->getRowDimension($srcRow + $row)->getRowHeight();
+		$sheet->getRowDimension($dstRow + $row)->setRowHeight($h);
 	}
+
 	if($hasmerge) {
 		foreach ($sheet->getMergeCells() as $mergeCell) {
 			$mc = explode(":", $mergeCell);
@@ -306,14 +315,13 @@ function copyRowsReverse($sheet,$srcRow,$dstRow,$height,$width, $setStyle = fals
 			$col_e = preg_replace("/[0-9]*/", "", $mc[1]);
 			$row_s = ((int)preg_replace("/[A-Z]*/", "", $mc[0])) - $srcRow;
 			$row_e = ((int)preg_replace("/[A-Z]*/", "", $mc[1])) - $srcRow;
-	
+
 			if (0 <= $row_s && $row_s < $height) {
 				$merge = $col_s . (string)($dstRow + $row_s) . ":" . $col_e . (string)($dstRow + $row_e);
 				$sheet->mergeCells($merge);
 			} 
 		}
 	}
-    
 }
 
 /**
@@ -334,16 +342,15 @@ function copyBlockWithValue($sheet, $startPos, $blockRowCount, $copyCount, $colu
 	];
 
 	$sheet->insertNewRowBefore($startPos, $blockRowCount * $copyCount);
-	$lastPos = $startPos + ($blockRowCount * $copyCount);		
+	$lastPos = $startPos + ($blockRowCount * $copyCount);
 	for($cursor = 0 ; $cursor < $copyCount ; $cursor++) {
 
 		$copyPos = $startPos  + $blockRowCount * $cursor;
-		copyRowsWithValue($sheet, $lastPos, $copyPos, $blockRowCount, $colums);		
+		copyRowsWithValue($sheet, $lastPos, $copyPos, $blockRowCount, $colums);
 
 		$range = 'A'. $copyPos . ':A' . ($copyPos + $blockRowCount - 1);
-		$sheet->getStyle($range)->applyFromArray($styleArray);		
-	}	
-
+		$sheet->getStyle($range)->applyFromArray($styleArray);
+	}
 }
 
 function copyRowsWithValue($sheet,$srcRow,$dstRow,$height,$width, $setStyle = false) {
@@ -359,35 +366,35 @@ function copyRowsWithValue($sheet,$srcRow,$dstRow,$height,$width, $setStyle = fa
 		]
 	];
 
-    for ($row = 0; $row < $height; $row++) {
-        for ($col = 0; $col < $width; $col++) {
-            $cell = $sheet->getCellByColumnAndRow($col, $srcRow + $row);
-			$style = $sheet->getStyleByColumnAndRow($col, $srcRow + $row);						
-			$dstCell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::stringFromColumnIndex($col) . ($dstRow + $row);//'A' . (string)($dstRow + $row);		
-            $sheet->setCellValue($dstCell, $cell->getValue());
+	for ($row = 0; $row < $height; $row++) {
+		for ($col = 0; $col < $width; $col++) {
+		$cell = $sheet->getCellByColumnAndRow($col, $srcRow + $row);
+			$style = $sheet->getStyleByColumnAndRow($col, $srcRow + $row);
+			$dstCell = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::stringFromColumnIndex($col) . ($dstRow + $row);//'A' . (string)($dstRow + $row);
+			$sheet->setCellValue($dstCell, $cell->getValue());
 			$sheet->duplicateStyle($style, $dstCell);
-			
+
 			if($setStyle) {
 				$sheet->getStyle($dstCell)->applyFromArray($styleArray);
 			}
+		}
 
-        }
+		$h = $sheet->getRowDimension($srcRow + $row)->getRowHeight();
+		$sheet->getRowDimension($dstRow + $row)->setRowHeight($h);
+	}
 
-        $h = $sheet->getRowDimension($srcRow + $row)->getRowHeight();
-        $sheet->getRowDimension($dstRow + $row)->setRowHeight($h);
-    }
-    foreach ($sheet->getMergeCells() as $mergeCell) {
-        $mc = explode(":", $mergeCell);
-        $col_s = preg_replace("/[0-9]*/", "", $mc[0]);
-        $col_e = preg_replace("/[0-9]*/", "", $mc[1]);
-        $row_s = ((int)preg_replace("/[A-Z]*/", "", $mc[0])) - $srcRow;
-        $row_e = ((int)preg_replace("/[A-Z]*/", "", $mc[1])) - $srcRow;
+	foreach ($sheet->getMergeCells() as $mergeCell) {
+		$mc = explode(":", $mergeCell);
+		$col_s = preg_replace("/[0-9]*/", "", $mc[0]);
+		$col_e = preg_replace("/[0-9]*/", "", $mc[1]);
+		$row_s = ((int)preg_replace("/[A-Z]*/", "", $mc[0])) - $srcRow;
+		$row_e = ((int)preg_replace("/[A-Z]*/", "", $mc[1])) - $srcRow;
 
-        if (0 <= $row_s && $row_s < $height) {
-            $merge = $col_s . (string)($dstRow + $row_s) . ":" . $col_e . (string)($dstRow + $row_e);
-            $sheet->mergeCells($merge);
-        } 
-    }
+		if (0 <= $row_s && $row_s < $height) {
+			$merge = $col_s . (string)($dstRow + $row_s) . ":" . $col_e . (string)($dstRow + $row_e);
+			$sheet->mergeCells($merge);
+		} 
+	}
 }
 
 // 20201021 S_Update
@@ -464,10 +471,9 @@ function getRegistrants($details, $loc, $setShareRatio = false) {
 			}
 		}
 		// 20210204 E_Update
-	}	
+	}
 	return $ret;
 }
-
 
 /**
  * ロケーションのSharer
@@ -477,7 +483,7 @@ function getRegistrants($details, $loc, $setShareRatio = false) {
 function getSharers($loc, $setShareRatio = false) {
 // 20210204 E_Update
 	$ret = [];
-	
+
 	// 20210204 S_Update
 	/*
 	$lst = ORM::for_table(TBLSHARERINFO)->where('locationInfoPid', $loc['pid'])->order_by_asc('pid')->select('sharer')->findArray();
@@ -514,15 +520,15 @@ function getSharers($loc, $setShareRatio = false) {
  */
 function getPayContractInfo($pid){
 	$paycontract = ORM::for_table(TBLPAYCONTRACT)->findOne($pid)->asArray();
-	
+
 	$detailList = [];
 	$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $pid)->where_null('deleteDate')->findArray();
-	if(isset($details)){	
+	if(isset($details)){
 
 		// foreach($details as $detail){
-		// 	$registrants = ORM::for_table(TBLCONTRACTREGISTRANT)->where('payContractPid', $detail['pid'])->where_null('deleteDate')->findArray();			
-		// 	$detail['registrants'] = $registrants;	
-		// 	$detailList[] = $detail;		
+		// 	$registrants = ORM::for_table(TBLCONTRACTREGISTRANT)->where('payContractPid', $detail['pid'])->where_null('deleteDate')->findArray();
+		// 	$detail['registrants'] = $registrants;
+		// 	$detailList[] = $detail;
 		// }
 
 		//$paycontract['details'] = $detailList;
@@ -542,10 +548,10 @@ function getPayContractInfo($pid){
  */
 function getPlan($pid){
 	$plan = ORM::for_table(TBLPLAN)->findOne($pid)->asArray();
-	
+
 	$detailList = [];
 	$details = ORM::for_table(TBLPLANDETAIL)->where('planPid', $pid)->where_null('deleteDate')->findArray();
-	if(isset($details)){	
+	if(isset($details)){
 
 		$plan['details'] = $details;
 	}
@@ -555,16 +561,17 @@ function getPlan($pid){
 
 	return $plan;
 }
+
 /**
  * 事業収支情報取得
  * @param unknown $pid
  */
 function getPlanInfo($pid){
 	$plan = ORM::for_table(TBLPLAN)->findOne($pid)->asArray();
-	
+
 	$detailList = [];
 	$details = ORM::for_table(TBLPLANDETAIL)->where('planPid', $pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
-	if(isset($details)){	
+	if(isset($details)){
 
 		$plan['details'] = $details;
 	}
@@ -573,7 +580,7 @@ function getPlanInfo($pid){
 	}
 
 	$rent = ORM::for_table(TBLPLANRENTROLL)->where('planPid', $pid)->where_null('deleteDate')->findArray();
-	if(isset($rent) && sizeof($rent) > 0 ){	
+	if(isset($rent) && sizeof($rent) > 0 ){
 		$plan['rent'] = $rent[0];
 	}
 	else {
@@ -581,7 +588,7 @@ function getPlanInfo($pid){
 	}
 
 	$rentdetails = ORM::for_table(TBLPLANRENTROLLDETAIL)->where('planPid', $pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
-	if(isset($rentdetails)){	
+	if(isset($rentdetails)){
 
 		$plan['rentdetails'] = $rentdetails;
 	}
@@ -599,7 +606,7 @@ function getPlanInfo($pid){
  */
 function getPlanInfoHistory($pid){
 	$planHistory = ORM::for_table(TBLPLANHISTORY)->findOne($pid)->asArray();
-	
+
 	$detailHistorys = ORM::for_table(TBLPLANDETAILHISTORY)->where('planHistoryPid', $pid)->where_null('deleteDate')->order_by_asc('backNumber')->findArray();
 	if(isset($detailHistorys)) {
 		$planHistory['details'] = $detailHistorys;
@@ -640,21 +647,19 @@ function searchCellPos($sheet, $keyword, $startPos) {
 	do {
 		if(!isset($str) || $str === '' || strpos($str, $keyword) === false) {
 			$startPos++;
-			$str = $sheet->getCell('A'.$startPos)->getValue();		
-			$loop++;	
+			$str = $sheet->getCell('A'.$startPos)->getValue();
+			$loop++;
 		}
-		else {		
-			$hasKeyword = true;	
+		else {
+			$hasKeyword = true;
 			break;
 		}
-		
 	}
 	while((!$hasKeyword || $startPos < 450) && $loop < 200);
 
 	if(!$hasKeyword) {
 		return -1;
 	}
-	
 
 	return $startPos;
 }
@@ -673,7 +678,7 @@ function searchCell($sheet, $keyword, $startColumn, $endColumn, $startRow, $endR
 		// 列番号初期化
 		if($checkRow == $startRow) $checkColumn = $startColumn;
 		else $checkColumn = 1;
-		
+
 		// 列ループ
 		while ($checkColumn <= $endColumn) {
 			$val = $sheet->getCellByColumnAndRow($checkColumn, $checkRow)->getValue();
@@ -697,19 +702,18 @@ function getLandPlan($pid) {
 
 	$land = ORM::for_table(TBLTEMPLANDINFO)->findOne($pid)->asArray();
 	$data->land = $land;
-	
+
 	$plans = ORM::for_table(TBLBUKKENPLANINFO)->where('tempLandInfoPid', $pid)->order_by_asc('pid')->findArray();
 	if(isset($plans)){
 		$data->plans = $plans;
 	}
-	
+
 	$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $pid)->order_by_asc('pid')->findArray();
 	if(isset($sales)){
 		$data->sales = $sales;
 	}
 	return $data;
 }
-
 
 function convert_jpdt($date) {
 	if(!isset($date) || $date == '') return '';
@@ -718,7 +722,7 @@ function convert_jpdt($date) {
 		$name = "R";
 		$year = $year - 2018;
 	} else if ($date >= 19890108) { //平成元年（1989年1月8日以降）
-		$name = "H";	
+		$name = "H";
 		$year = $year - 1988;
 	} else if ($date >= 19261225) { //昭和元年（1926年12月25日以降）
 		$name = "S";
@@ -743,7 +747,7 @@ function convert_jpdt_kanji($date) {
 		$name = "令和";
 		$year = $year - 2018;
 	} else if ($date >= 19890108) { //平成元年（1989年1月8日以降）
-		$name = "平成";	
+		$name = "平成";
 		$year = $year - 1988;
 	} else if ($date >= 19261225) { //昭和元年（1926年12月25日以降）
 		$name = "昭和";
@@ -779,5 +783,385 @@ function showDay($day) {
 	}
 	return $val;
 }
+
+// 20210728 S_Add
+/**
+ * 仕入契約情報から支払契約情報連携
+ */
+function setPayByContract($contract, $userId) {
+	// コード名称マスタを取得
+	$codenames = ORM::for_table(TBLCODENAMEMST)->where_Like('code', 'SYS1%')->order_by_asc('code')->findArray();
+	if(sizeof($codenames) > 0) {
+		foreach($codenames as $codename) {
+			$paycontract = null;
+			$contractor = null;// 契約者
+			// 契約カテゴリ<-コード名称.コードからSYS1を除外した値
+			// SYS101:契約支払連携（売買代金）,SYS102:契約支払連携（仲介手数料）,SYS103:契約支払連携（業務委託料）
+			$contractCategory = $codename['code'];
+			$contractCategory = str_replace('SYS1', '', $contractCategory);
+
+			// 支払契約情報を取得
+			$paycontracts = ORM::for_table(TBLPAYCONTRACT)->where('contractInfoPid', $contract['pid'])->where('contractCategory', $contractCategory)->order_by_asc('pid')->findArray();
+			if(sizeof($paycontracts) == 0) {
+				$paycontract = ORM::for_table(TBLPAYCONTRACT)->create();
+				$paycontract['tempLandInfoPid'] = $contract['tempLandInfoPid'];// 土地情報PID
+				$paycontract['contractInfoPid'] = $contract['pid'];            // 仕入契約情報PID
+				$paycontract['contractCategory'] = $contractCategory;          // 契約カテゴリ
+				$paycontract['taxEffectiveDay'] = date("Ymd");                 // 消費税適応日<-システム日付
+				setInsert($paycontract, $userId);
+			} else {
+				$pid = null;
+				foreach($paycontracts as $temp) {
+					$pid = $temp['pid'];
+					break;
+				}
+				$paycontract = ORM::for_table(TBLPAYCONTRACT)->findOne($pid);
+				setUpdate($paycontract, $userId);
+			}
+
+			// 支取引先名称・取引先住所を設定する
+			$supplierName = null;
+			$supplierAddress = null;
+			// 仕入契約者情報を取得
+			$sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
+			if(isset($sellers)) {
+				$index = 0;
+				foreach($sellers as $seller) {
+					$index++;
+					// 契約カテゴリが01:売買代金の場合
+					if($paycontract['contractCategory'] === '01' && $index == 1) {
+						$supplierName = $seller['contractorName'];     // 取引先名称<-契約者名
+						$supplierAddress = $seller['contractorAdress'];// 取引先住所<-契約者住所
+					}
+					if(strlen($contractor) > 0) $contractor .= ',';
+					$contractor .= $seller['pid'];
+				}
+			}
+			// 契約カテゴリが02:仲介手数料の場合
+			if($paycontract['contractCategory'] === '02') {
+				$supplierName = $contract['intermediaryName'];         // 取引先名称<-仲介会社
+				$supplierAddress = $contract['intermediaryAddress'];   // 取引先住所<-仲介会社住所
+			}
+			// 契約カテゴリが03:業務委託料の場合
+			else if($paycontract['contractCategory'] === '03') {
+				$supplierName = $contract['outsourcingName'];          // 取引先名称<-業務委託先
+				$supplierAddress = $contract['outsourcingAddress'];    // 取引先住所<-業務委託先住所
+			}
+			$paycontract['supplierName'] = $supplierName;              // 取引先名称
+			$paycontract['supplierAddress'] = $supplierAddress;        // 取引先住所
+			// 契約カテゴリが01:売買代金の場合
+			if($paycontract['contractCategory'] === '01') {
+				$paycontract['bank'] = $contract['bank'];              // 銀行名
+				$paycontract['branchName'] = $contract['branchName'];  // 支店
+				$paycontract['accountType'] = $contract['accountType'];// 口座種別
+				$paycontract['accountName'] = $contract['accountName'];// 口座
+				$paycontract['bankName'] = $contract['bankName'];      // 名義
+			}
+			$paycontract->save();
+
+			// コードマスタを取得
+			$codes = ORM::for_table(TBLCODE)->where('code', $codename['code'])->order_by_asc('displayOrder')->findArray();
+			if(sizeof($codes) > 0) {
+				foreach($codes as $code) {
+					$paycontractdetail = null;
+
+					// 支払契約詳細情報を取得
+					$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $paycontract['pid'])->where('paymentCode', $code['name'])->order_by_asc('pid')->findArray();
+					if(sizeof($details) == 0) {
+						$paycontractdetail = ORM::for_table(TBLPAYCONTRACTDETAIL)->create();
+						$paycontractdetail['payContractPid'] = $paycontract['pid'];          // 支払契約情報PID
+						$paycontractdetail['tempLandInfoPid'] = $contract['tempLandInfoPid'];// 土地情報PID
+						$paycontractdetail['paymentCode'] = $code['name'];                   // 支払コード<-コード.名称
+						$paycontractdetail['fbOutPutFlg'] = '0';                             // FB出力済フラグ<-0:未連携
+						setInsert($paycontractdetail, $userId);
+					} else {
+						$pid = null;
+						foreach($details as $temp) {
+							$pid = $temp['pid'];
+							break;
+						}
+						$paycontractdetail = ORM::for_table(TBLPAYCONTRACTDETAIL)->findOne($pid);
+						setUpdate($paycontractdetail, $userId);
+					}
+					$paycontractdetail['contractor'] = $contractor;                    // 契約者
+					$paycontractdetail['payPriceTax'] = $contract[$code['codeDetail']];// 支払金額（税込）
+
+					// 支払金額（税別）・消費税を設定する
+					// 支払種別を取得
+					$paymentType = ORM::for_table(TBLPAYMENTTYPE)->findOne($paycontractdetail['paymentCode'])->asArray();
+					// 課税フラグが1:対象の場合
+					if($paymentType['taxFlg'] === '1') {
+						// 税率を取得する
+						$taxRate = ORM::for_table(TBLTAX)->where_lte('effectiveDay', $paycontract['taxEffectiveDay'])->max('taxRate');
+						$taxRate = intval($taxRate);
+						$payPriceTax = intval($paycontractdetail['payPriceTax']);
+						$payPrice = ceil($payPriceTax / (1 + $taxRate / 100));
+						$payTax = $payPriceTax - $payPrice;
+						$paycontractdetail['payPrice'] = $payPrice;
+						$paycontractdetail['payTax'] = $payTax;
+					}
+
+					// 支払予定日・支払確定日を設定する
+					// 決済代金
+					if($code['codeDetail'] === 'decisionPrice') {
+						$paycontractdetail['contractFixDay'] = $contract['decisionDay'];  // 支払確定日<-決済日
+						$paycontractdetail['contractDay'] = $contract['deliveryFixedDay'];// 支払予定日<-決済予定日
+					}
+					// 内金１
+					else if($code['codeDetail'] === 'deposit1') {
+						if($contract['deposit1DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit1Day'];// 支払確定日<-内金１日付
+						else $paycontractdetail['contractDay'] = $contract['deposit1Day'];                                     // 支払予定日<-内金１日付
+					}
+					// 内金２
+					else if($code['codeDetail'] === 'deposit2') {
+						if($contract['deposit2DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit2Day'];// 支払確定日<-内金２日付
+						else $paycontractdetail['contractDay'] = $contract['deposit2Day'];                                     // 支払予定日<-内金２日付
+					}
+					// 内金３
+					else if($code['codeDetail'] === 'deposit3') {
+						if($contract['deposit3DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit3Day'];// 支払確定日<-内金３日付
+						else $paycontractdetail['contractDay'] = $contract['deposit3Day'];                                     // 支払予定日<-内金３日付
+					}
+					// 内金４
+					else if($code['codeDetail'] === 'deposit4') {
+						if($contract['deposit4DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit4Day'];// 支払確定日<-内金４日付
+						else $paycontractdetail['contractDay'] = $contract['deposit4Day'];                                     // 支払予定日<-内金４日付
+					}
+					// 手付金
+					else if($code['codeDetail'] === 'earnestPrice') {
+						if($contract['earnestPriceDayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['earnestPriceDay'];// 支払確定日<-手付金日付
+						else $paycontractdetail['contractDay'] = $contract['earnestPriceDay'];                                         // 支払予定日<-手付金日付
+					}
+					// 固都税清算金
+					else if($code['codeDetail'] === 'fixedTax') {
+						if($contract['decisionDayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['decisionDay'];// 支払確定日<-決済日
+						else $paycontractdetail['contractDay'] = $contract['decisionDay'];                                     // 支払予定日<-決済日
+					}
+					// 留保金
+					else if($code['codeDetail'] === 'retainage') {
+						if($contract['retainageDayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['retainageDay'];// 支払確定日<-<-留保金支払(明渡)日
+						else $paycontractdetail['contractDay'] = $contract['retainageDay'];                                      // 支払予定日<-<-留保金支払(明渡)日
+					}
+					// 仲介手数料
+					else if($code['codeDetail'] === 'intermediaryPrice') {
+						$paycontractdetail['contractFixDay'] = $contract['intermediaryPricePayDay'];// 支払確定日<-仲介手数料支払日
+					}
+					// 業務委託料
+					else if($code['codeDetail'] === 'outsourcingPrice') {
+						$paycontractdetail['contractFixDay'] = $contract['outsourcingPricePayDay'];// 支払確定日<-業務委託料支払日
+					}
+					$paycontractdetail->save();
+				}
+			}
+		}
+	}
+}
+
+/**
+ * 売り契約情報から支払契約情報連携
+ */
+function setPayBySale($sale, $userId) {
+	// コード名称マスタを取得
+	$codenames = ORM::for_table(TBLCODENAMEMST)->where_Like('code', 'SYS2%')->order_by_asc('code')->findArray();
+	if(sizeof($codenames) > 0) {
+		foreach($codenames as $codename) {
+			$paycontract = null;
+			// 契約カテゴリ<-コード名称.コードからSYS2を除外した値
+			// SYS202:売契約支払連携（仲介手数料）,SYS203:売契約支払連携（業務委託料）
+			$contractCategory = $codename['code'];
+			$contractCategory = str_replace('SYS2', '', $contractCategory);
+
+			// 支払契約情報を取得
+			$paycontracts = ORM::for_table(TBLPAYCONTRACT)->where('bukkenSalesInfoPid', $sale['pid'])->where('contractCategory', $contractCategory)->order_by_asc('pid')->findArray();
+			if(sizeof($paycontracts) == 0) {
+				$paycontract = ORM::for_table(TBLPAYCONTRACT)->create();
+				$paycontract['tempLandInfoPid'] = $sale['tempLandInfoPid'];// 土地情報PID
+				$paycontract['bukkenSalesInfoPid'] = $sale['pid'];         // 物件売契約情報PID
+				$paycontract['contractCategory'] = $contractCategory;      // 契約カテゴリ
+				$paycontract['taxEffectiveDay'] = date("Ymd");             // 消費税適応日<-システム日付
+				setInsert($paycontract, $userId);
+			} else {
+				$pid = null;
+				foreach($paycontracts as $temp) {
+					$pid = $temp['pid'];
+					break;
+				}
+				$paycontract = ORM::for_table(TBLPAYCONTRACT)->findOne($pid);
+				setUpdate($paycontract, $userId);
+			}
+
+			// 支取引先名称・取引先住所を設定する
+			$supplierName = null;
+			$supplierAddress = null;
+			// 契約カテゴリが02:仲介手数料の場合
+			if($paycontract['contractCategory'] === '02') {
+				$supplierName = $sale['salesIntermediary'];            // 取引先名称<-仲介会社
+				$supplierAddress = $sale['salesIntermediaryAddress'];  // 取引先住所<-仲介会社住所
+			}
+			// 契約カテゴリが03:業務委託料の場合
+			else if($paycontract['contractCategory'] === '03') {
+				$supplierName = $sale['salesOutsourcingName'];         // 取引先名称<-業務委託先
+				$supplierAddress = $sale['salesOutsourcingAddress'];   // 取引先住所<-業務委託先住所
+			}
+			$paycontract['supplierName'] = $supplierName;              // 取引先名称
+			$paycontract['supplierAddress'] = $supplierAddress;        // 取引先住所
+
+			$paycontract->save();
+
+			// コードマスタを取得
+			$codes = ORM::for_table(TBLCODE)->where('code', $codename['code'])->order_by_asc('displayOrder')->findArray();
+			if(sizeof($codes) > 0) {
+				foreach($codes as $code) {
+					$paycontractdetail = null;
+
+					// 支払契約詳細情報を取得
+					$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $paycontract['pid'])->where('paymentCode', $code['name'])->order_by_asc('pid')->findArray();
+					if(sizeof($details) == 0) {
+						$paycontractdetail = ORM::for_table(TBLPAYCONTRACTDETAIL)->create();
+						$paycontractdetail['payContractPid'] = $paycontract['pid'];          // 支払契約情報PID
+						$paycontractdetail['tempLandInfoPid'] = $sale['tempLandInfoPid'];    // 土地情報PID
+						$paycontractdetail['paymentCode'] = $code['name'];                   // 支払コード<-コード.名称
+						$paycontractdetail['fbOutPutFlg'] = '0';                             // FB出力済フラグ<-0:未連携
+						setInsert($paycontractdetail, $userId);
+					} else {
+						$pid = null;
+						foreach($details as $temp) {
+							$pid = $temp['pid'];
+							break;
+						}
+						$paycontractdetail = ORM::for_table(TBLPAYCONTRACTDETAIL)->findOne($pid);
+						setUpdate($paycontractdetail, $userId);
+					}
+					$paycontractdetail['payPriceTax'] = $sale[$code['codeDetail']];// 支払金額（税込）
+
+					// 支払金額（税別）・消費税を設定する
+					// 支払種別を取得
+					$paymentType = ORM::for_table(TBLPAYMENTTYPE)->findOne($paycontractdetail['paymentCode'])->asArray();
+					// 課税フラグが1:対象の場合
+					if($paymentType['taxFlg'] === '1') {
+						// 税率を取得する
+						$taxRate = ORM::for_table(TBLTAX)->where_lte('effectiveDay', $paycontract['taxEffectiveDay'])->max('taxRate');
+						$taxRate = intval($taxRate);
+						$payPriceTax = intval($paycontractdetail['payPriceTax']);
+						$payPrice = ceil($payPriceTax / (1 + $taxRate / 100));
+						$payTax = $payPriceTax - $payPrice;
+						$paycontractdetail['payPrice'] = $payPrice;
+						$paycontractdetail['payTax'] = $payTax;
+					}
+
+					// 支払予定日・支払確定日を設定する
+					// 仲介手数料
+					if($code['codeDetail'] === 'salesBrokerageFee') {
+						$paycontractdetail['contractFixDay'] = $sale['salesBrokerageFeePayDay'];    // 支払確定日<-仲介手数料支払日
+					}
+					// 業務委託料
+					else if($code['codeDetail'] === 'salesOutsourcingPrice') {
+						$paycontractdetail['contractFixDay'] = $sale['salesOutsourcingPricePayDay'];// 支払確定日<-業務委託料支払日
+					}
+					$paycontractdetail->save();
+				}
+			}
+		}
+	}
+}
+
+/**
+ * 支払契約情報から仕入契約情報連携
+ */
+function setContractByPay($paycontract, $userId) {
+	// 仕入契約情報PID・契約カテゴリが未設定の場合、対象外
+	if($paycontract['contractInfoPid'] == 0 || $paycontract['contractCategory'] == '') return;
+	// 契約カテゴリが01:売買代金の場合、対象外
+	if($paycontract['contractCategory'] === '01') return;
+
+	// 仕入契約情報を取得
+	$contract = ORM::for_table(TBLCONTRACTINFO)->findOne($paycontract['contractInfoPid']);
+	if(sizeof($contract) > 0) {
+		// コード<-SYS1+契約カテゴリの値
+		$code = 'SYS1' . $paycontract['contractCategory'];
+		// コード名称マスタを取得
+		$codename = ORM::for_table(TBLCODENAMEMST)->findOne($code);
+		if(sizeof($codename) > 0) {
+			// コードマスタを取得
+			$codes = ORM::for_table(TBLCODE)->where('code', $codename['code'])->order_by_asc('displayOrder')->findArray();
+			if(sizeof($codes) > 0) {
+				$hasData = false;
+				foreach($codes as $code) {
+					// 支払契約詳細情報を取得
+					$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $paycontract['pid'])->where('paymentCode', $code['name'])->order_by_asc('pid')->findArray();
+					if(sizeof($details) > 0) {
+						foreach($details as $detail) {
+							// 仲介手数料
+							if($code['codeDetail'] === 'intermediaryPrice') {
+								$contract['intermediaryPrice'] = $detail['payPriceTax'];         // 仲介手数料<-支払金額（税込）
+								$contract['intermediaryPricePayDay'] = $detail['contractFixDay'];// 仲介手数料支払日<-支払確定日
+								$hasData = true;
+							}
+							// 業務委託料
+							else if($code['codeDetail'] === 'outsourcingPrice') {
+								$contract['outsourcingPrice'] = $detail['payPriceTax'];         // 業務委託料<-支払金額（税込）
+								$contract['outsourcingPricePayDay'] = $detail['contractFixDay'];// 業務委託料支払日<-支払確定日
+								$hasData = true;
+							}
+						}
+					}
+				}
+				if($hasData) {
+					setUpdate($contract, $userId);
+					$contract->save();
+				}
+			}
+		}
+	}
+}
+
+/**
+ * 支払契約情報から物件売契約情報連携
+ */
+function setSaleByPay($paycontract, $userId) {
+	// 物件売契約情報PID・契約カテゴリが未設定の場合、対象外
+	if($paycontract['bukkenSalesInfoPid'] == 0 || $paycontract['contractCategory'] == '') return;
+
+	// 物件売契約情報を取得
+	$sale = ORM::for_table(TBLBUKKENSALESINFO)->findOne($paycontract['bukkenSalesInfoPid']);
+	if(sizeof($sale) > 0) {
+		// コード<-SYS2+契約カテゴリの値
+		$code = 'SYS2' . $paycontract['contractCategory'];
+		// コード名称マスタを取得
+		$codename = ORM::for_table(TBLCODENAMEMST)->findOne($code);
+		if(sizeof($codename) > 0) {
+			// コードマスタを取得
+			$codes = ORM::for_table(TBLCODE)->where('code', $codename['code'])->order_by_asc('displayOrder')->findArray();
+			if(sizeof($codes) > 0) {
+				$hasData = false;
+				foreach($codes as $code) {
+					// 支払契約詳細情報を取得
+					$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $paycontract['pid'])->where('paymentCode', $code['name'])->order_by_asc('pid')->findArray();
+					if(sizeof($details) > 0) {
+						foreach($details as $detail) {
+							// 仲介手数料
+							if($code['codeDetail'] === 'salesBrokerageFee') {
+								$sale['salesBrokerageFee'] = $detail['payPriceTax'];             // 仲介手数料<-支払金額（税込）
+								$sale['salesBrokerageFeePayDay'] = $detail['contractFixDay'];    // 仲介手数料支払日<-支払確定日
+								$hasData = true;
+							}
+							// 業務委託料
+							else if($code['codeDetail'] === 'salesOutsourcingPrice') {
+								$sale['salesOutsourcingPrice'] = $detail['payPriceTax'];         // 業務委託料<-支払金額（税込）
+								$sale['salesOutsourcingPricePayDay'] = $detail['contractFixDay'];// 業務委託料支払日<-支払確定日
+								$hasData = true;
+							}
+						}
+					}
+				}
+				if($hasData) {
+					setUpdate($sale, $userId);
+					$sale->save();
+				}
+			}
+		}
+	}
+}
+// 20210728 E_Add
 
 ?>

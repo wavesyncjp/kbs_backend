@@ -9,11 +9,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
+$userId = null;// 20210728 Add
 
 //更新
 if(isset($param->pid) && $param->pid > 0){
 	$contract = ORM::for_table(TBLCONTRACTINFO)->find_one($param->pid);
 	setUpdate($contract, $param->updateUserId);
+	$userId = $param->updateUserId;// 20210728 Add
 }
 //登録
 else {
@@ -29,11 +31,14 @@ else {
 	}	
 	$contract->contractNumber = $nextNo;
 	setInsert($contract, $param->createUserId);
+	$userId = $param->createUserId;// 20210728 Add
 }
 
 
 copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'sellers', 'locations', 'contractFiles', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 $contract->save();
+
+setPayByContract($contract, $userId);// 20210728 Add
 
 //契約詳細
 if(isset($param->details)){
