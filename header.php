@@ -69,6 +69,7 @@ ORM::configure('id_column_overrides', array(
 		, 'tblplanrentrollhistory' => 'pid'
 		, 'tblplanrentrolldetailhistory' => 'pid'
 		, 'tblbottomlandinfo'=>'pid'
+		, 'tblsorting'=>'pid'
 ) );
 
 $FILE_PATH = 'uploads';
@@ -112,5 +113,5 @@ define('TBLPLANDETAILHISTORY', 'tblplandetailhistory');
 define('TBLPLANRENTROLLHISTORY', 'tblplanrentrollhistory');
 define('TBLPLANRENTROLLDETAILHISTORY', 'tblplanrentrolldetailhistory');
 define('TBLBOTTOMLANDINFO', 'tblbottomlandinfo');
-
+define('TBLSORTING', 'tblsorting');
 ?>

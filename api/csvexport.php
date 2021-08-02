@@ -148,6 +148,25 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
 }
 // 20210103 E_Add 
 
+//20210719 S_Add
+// 対象テーブルが08:支払契約詳細情報（明細単位）の場合
+else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '08') {
+    $query = 'SELECT ' . $selectContent . ' FROM tblpaycontractdetail
+            INNER JOIN tblpaycontract ON tblpaycontractdetail.payContractPid = tblpaycontract.pid
+            INNER JOIN tbltemplandinfo ON tblpaycontractdetail.tempLandInfoPid = tbltemplandinfo.pid
+            WHERE tblpaycontractdetail.pid IN (' . $param->ids . ')
+            ORDER BY tblpaycontractdetail.tempLandInfoPid, tblpaycontractdetail.pid';
+}
+
+// 対象テーブルが09:仕訳情報 の場合
+else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '09') {
+    $query = 'SELECT ' . $selectContent . ' FROM tblsorting
+            INNER JOIN tbltemplandinfo ON tblsorting.tempLandInfoPid = tbltemplandinfo.pid
+            WHERE tblsorting.pid IN (' . $param->ids . ')
+            ORDER BY tblsorting.tempLandInfoPid';
+}
+// 20210719 E_Add 
+
 $res = ORM::raw_execute($query);
 $statement = ORM::get_last_statement();
 $rows = array();
@@ -343,6 +362,9 @@ function convertMaster($val, $conversionCode) {
             return $lst->asArray()['contractorName'];
         }
     }
+
+
+    
     // 上記以外の場合
     else {
         $lst = ORM::for_table(TBLCODE)->where(array(
