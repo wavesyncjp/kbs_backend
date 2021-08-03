@@ -34,9 +34,9 @@ if(isset($param->ids)){
 
 				// 出力済フラグが1:出力済ではない場合
 				if($sorting['outPutFlg'] != '1') {
-					$sorting['outPutFlg'] = '1';         // FB出力済フラグ<-1:出力済
-					$sorting['outPutDate'] = date("Ymd");// FB出力日<-システム日付
-					$sorting['outPutTime'] = date("His");// FB出力時刻<-システム時刻
+					$sorting['outPutFlg'] = '1';         // 出力済フラグ<-1:出力済
+					$sorting['outPutDate'] = date("Ymd");// 出力日<-システム日付
+					$sorting['outPutTime'] = date("His");// 出力時刻<-システム時刻
 				}
 				$sorting->save();
 			}
