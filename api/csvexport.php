@@ -146,9 +146,8 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
             WHERE tblcontractinfo.pid IN (' . $param->ids . ')
             ORDER BY tbltemplandinfo.pid, tblcontractinfo.contractNumber';
 }
-// 20210103 E_Add 
-
-//20210719 S_Add
+// 20210103 E_Add
+// 20210804 S_Add
 // 対象テーブルが08:支払契約詳細情報（明細単位）の場合
 else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '08') {
     $query = 'SELECT ' . $selectContent . ' FROM tblpaycontractdetail
@@ -157,15 +156,14 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
             WHERE tblpaycontractdetail.pid IN (' . $param->ids . ')
             ORDER BY tblpaycontractdetail.tempLandInfoPid, tblpaycontractdetail.pid';
 }
-
-// 対象テーブルが09:仕訳情報 の場合
+// 対象テーブルが09:仕訳情報の場合
 else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '09') {
     $query = 'SELECT ' . $selectContent . ' FROM tblsorting
             INNER JOIN tbltemplandinfo ON tblsorting.tempLandInfoPid = tbltemplandinfo.pid
             WHERE tblsorting.pid IN (' . $param->ids . ')
             ORDER BY tblsorting.tempLandInfoPid';
 }
-// 20210719 E_Add 
+// 20210804 E_Add
 
 $res = ORM::raw_execute($query);
 $statement = ORM::get_last_statement();
@@ -297,6 +295,12 @@ function convertValue($val, $conversionType, $conversionCode) {
     else if($conversionType == 4) {
         return convertPercent($val, $conversionCode);
     }
+    // 20210804 S_Add
+    // 変換区分が5:固定値の場合
+    else if($conversionType == 5) {
+        return $val = $conversionCode;
+    }
+    // 20210804 E_Add
     return $val;
 }
 
@@ -362,9 +366,17 @@ function convertMaster($val, $conversionCode) {
             return $lst->asArray()['contractorName'];
         }
     }
-
-
+    // 20210804 S_Add
+    else if($conversionCode === 'kanjyoCode') {
+        $lst = ORM::for_table(TBLKANJYO)->where(array(
+            'kanjyoCode' => $val
+        ))->select('kanjyoName')->findOne();
     
+        if(isset($lst) && $lst) {
+            return $lst->asArray()['kanjyoName'];
+        }
+    }
+    // 20210804 E_Add
     // 上記以外の場合
     else {
         $lst = ORM::for_table(TBLCODE)->where(array(
