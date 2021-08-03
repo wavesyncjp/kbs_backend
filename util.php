@@ -817,6 +817,11 @@ function setPayByContract($contract, $userId) {
 				}
 				$paycontract = ORM::for_table(TBLPAYCONTRACT)->findOne($pid);
 				setUpdate($paycontract, $userId);
+				// 削除扱いの場合
+				if($paycontract['deleteDate'] != null) {
+					$paycontract['deleteUserId'] = null;
+					$paycontract['deleteDate'] = null;
+				}
 			}
 
 			// 支取引先名称・取引先住所を設定する
@@ -882,6 +887,11 @@ function setPayByContract($contract, $userId) {
 						}
 						$paycontractdetail = ORM::for_table(TBLPAYCONTRACTDETAIL)->findOne($pid);
 						setUpdate($paycontractdetail, $userId);
+						// 削除扱いの場合
+						if($paycontractdetail['deleteDate'] != null) {
+							$paycontractdetail['deleteUserId'] = null;
+							$paycontractdetail['deleteDate'] = null;
+						}
 					}
 					$paycontractdetail['contractor'] = $contractor;                    // 契約者
 					$paycontractdetail['payPriceTax'] = $contract[$code['codeDetail']];// 支払金額（税込）
@@ -988,6 +998,11 @@ function setPayBySale($sale, $userId) {
 				}
 				$paycontract = ORM::for_table(TBLPAYCONTRACT)->findOne($pid);
 				setUpdate($paycontract, $userId);
+				// 削除扱いの場合
+				if($paycontract['deleteDate'] != null) {
+					$paycontract['deleteUserId'] = null;
+					$paycontract['deleteDate'] = null;
+				}
 			}
 
 			// 支取引先名称・取引先住所を設定する
@@ -1031,6 +1046,11 @@ function setPayBySale($sale, $userId) {
 						}
 						$paycontractdetail = ORM::for_table(TBLPAYCONTRACTDETAIL)->findOne($pid);
 						setUpdate($paycontractdetail, $userId);
+						// 削除扱いの場合
+						if($paycontractdetail['deleteDate'] != null) {
+							$paycontractdetail['deleteUserId'] = null;
+							$paycontractdetail['deleteDate'] = null;
+						}
 					}
 					$paycontractdetail['payPriceTax'] = $sale[$code['codeDetail']];// 支払金額（税込）
 
@@ -1088,7 +1108,7 @@ function setContractByPay($paycontract, $userId) {
 				$hasData = false;
 				foreach($codes as $code) {
 					// 支払契約詳細情報を取得
-					$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $paycontract['pid'])->where('paymentCode', $code['name'])->order_by_asc('pid')->findArray();
+					$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $paycontract['pid'])->where('paymentCode', $code['name'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
 					if(sizeof($details) > 0) {
 						foreach($details as $detail) {
 							// 仲介手数料
@@ -1136,7 +1156,7 @@ function setSaleByPay($paycontract, $userId) {
 				$hasData = false;
 				foreach($codes as $code) {
 					// 支払契約詳細情報を取得
-					$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $paycontract['pid'])->where('paymentCode', $code['name'])->order_by_asc('pid')->findArray();
+					$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $paycontract['pid'])->where('paymentCode', $code['name'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
 					if(sizeof($details) > 0) {
 						foreach($details as $detail) {
 							// 仲介手数料
