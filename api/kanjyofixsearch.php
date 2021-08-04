@@ -17,9 +17,9 @@ if(isset($param->debtorKanjyoCode) && $param->debtorKanjyoCode !== ''){
 	$query = $query->where('debtorKanjyoCode', $param->debtorKanjyoCode);
 }
 
-// 借方補助科目コード
-if(isset($param->debtorKanjyoDetailCode_Like) && $param->debtorKanjyoDetailCode_Like !== ''){
-	$query = $query->where_Like('debtorKanjyoDetailCode', $param->debtorKanjyoDetailCode_Like.'%');
+// 借方補助科目名称
+if(isset($param->debtorKanjyoDetailName_Like) && $param->debtorKanjyoDetailName_Like !== ''){
+	$query = $query->where_Like('debtorKanjyoDetailName', $param->debtorKanjyoDetailName_Like.'%');
 }
 
 // 貸方勘定科目コード
@@ -27,9 +27,9 @@ if(isset($param->creditorKanjyoCode) && $param->creditorKanjyoCode !== ''){
 	$query = $query->where('creditorKanjyoCode', $param->creditorKanjyoCode);
 }
 
-// 貸方補助科目コード
-if(isset($param->creditorKanjyoDetailCode_Like) && $param->creditorKanjyoDetailCode_Like !== ''){
-	$query = $query->where_Like('creditorKanjyoDetailCode', $param->creditorKanjyoDetailCode_Like.'%');
+// 貸方補助科目名称
+if(isset($param->creditorKanjyoDetailName_Like) && $param->creditorKanjyoDetailName_Like !== ''){
+	$query = $query->where_Like('creditorKanjyoDetailName', $param->creditorKanjyoDetailName_Like.'%');
 }
 
 //振替フラグ
