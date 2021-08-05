@@ -83,7 +83,7 @@ $contracts = $query->order_by_desc('p3.bukkenNo')->find_array();
 
 $ret = [];
 foreach($contracts as $contract) {
-	$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $contract['pid'])->find_array();
+	$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $contract['pid'])->where_null('deleteDate')->find_array();
 	$contract['details'] = $details;
 	$ret[] = $contract;
 }

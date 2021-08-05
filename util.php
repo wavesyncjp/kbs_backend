@@ -864,6 +864,8 @@ function setPayByContract($contract, $userId) {
 			}
 			$paycontract->save();
 
+			$cntDetail = 0;// 明細件数
+
 			// コードマスタを取得
 			$codes = ORM::for_table(TBLCODE)->where('code', $codename['code'])->order_by_asc('displayOrder')->findArray();
 			if(sizeof($codes) > 0) {
@@ -895,6 +897,7 @@ function setPayByContract($contract, $userId) {
 					}
 					$paycontractdetail['contractor'] = $contractor;                    // 契約者
 					$paycontractdetail['payPriceTax'] = $contract[$code['codeDetail']];// 支払金額（税込）
+					$payPriceTax = intval($paycontractdetail['payPriceTax']);
 
 					// 支払金額（税別）・消費税を設定する
 					// 支払種別を取得
@@ -904,7 +907,6 @@ function setPayByContract($contract, $userId) {
 						// 税率を取得する
 						$taxRate = ORM::for_table(TBLTAX)->where_lte('effectiveDay', $paycontract['taxEffectiveDay'])->max('taxRate');
 						$taxRate = intval($taxRate);
-						$payPriceTax = intval($paycontractdetail['payPriceTax']);
 						$payPrice = ceil($payPriceTax / (1 + $taxRate / 100));
 						$payTax = $payPriceTax - $payPrice;
 						$paycontractdetail['payPrice'] = $payPrice;
@@ -960,8 +962,20 @@ function setPayByContract($contract, $userId) {
 					else if($code['codeDetail'] === 'outsourcingPrice') {
 						$paycontractdetail['contractFixDay'] = $contract['outsourcingPricePayDay'];// 支払確定日<-業務委託料支払日
 					}
+
+					// 支払金額（税込）が0の場合、削除扱いとする
+					if($payPriceTax == 0) {
+						setDelete($paycontractdetail, $userId);
+					}
+					else $cntDetail++;
+
 					$paycontractdetail->save();
 				}
+			}
+			// 明細件数が0の場合、削除扱いとする
+			if($cntDetail == 0) {
+				setDelete($paycontract, $userId);
+				$paycontract->save();
 			}
 		}
 	}
@@ -1023,6 +1037,8 @@ function setPayBySale($sale, $userId) {
 
 			$paycontract->save();
 
+			$cntDetail = 0;// 明細件数
+
 			// コードマスタを取得
 			$codes = ORM::for_table(TBLCODE)->where('code', $codename['code'])->order_by_asc('displayOrder')->findArray();
 			if(sizeof($codes) > 0) {
@@ -1053,6 +1069,7 @@ function setPayBySale($sale, $userId) {
 						}
 					}
 					$paycontractdetail['payPriceTax'] = $sale[$code['codeDetail']];// 支払金額（税込）
+					$payPriceTax = intval($paycontractdetail['payPriceTax']);
 
 					// 支払金額（税別）・消費税を設定する
 					// 支払種別を取得
@@ -1062,7 +1079,6 @@ function setPayBySale($sale, $userId) {
 						// 税率を取得する
 						$taxRate = ORM::for_table(TBLTAX)->where_lte('effectiveDay', $paycontract['taxEffectiveDay'])->max('taxRate');
 						$taxRate = intval($taxRate);
-						$payPriceTax = intval($paycontractdetail['payPriceTax']);
 						$payPrice = ceil($payPriceTax / (1 + $taxRate / 100));
 						$payTax = $payPriceTax - $payPrice;
 						$paycontractdetail['payPrice'] = $payPrice;
@@ -1078,8 +1094,20 @@ function setPayBySale($sale, $userId) {
 					else if($code['codeDetail'] === 'salesOutsourcingPrice') {
 						$paycontractdetail['contractFixDay'] = $sale['salesOutsourcingPricePayDay'];// 支払確定日<-業務委託料支払日
 					}
+
+					// 支払金額（税込）が0の場合、削除扱いとする
+					if($payPriceTax == 0) {
+						setDelete($paycontractdetail, $userId);
+					}
+					else $cntDetail++;
+
 					$paycontractdetail->save();
 				}
+			}
+			// 明細件数が0の場合、削除扱いとする
+			if($cntDetail == 0) {
+				setDelete($paycontract, $userId);
+				$paycontract->save();
 			}
 		}
 	}
