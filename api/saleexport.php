@@ -196,7 +196,17 @@ foreach($contracts as $contract) {
 //    $sheet->setCellValue('J'.$contractPos, emptyStatus($status, formatYenNumber($contract['decisionPrice'])));
     $sheet->setCellValue('K'.$contractPos, emptyStatus($status, $contract['decisionPrice']));
     // 固都税清算金
+    // 20210905 S_Update
+    /*
     $sheet->setCellValue('M'.$contractPos, emptyStatus($status, formatYenNumber($contract['fixedTax'])));
+    */
+    if(intval($contract['fixedTax']) > 0) {
+        $sheet->setCellValue('M'.$contractPos, emptyStatus($status, formatYenNumber($contract['fixedTax'])));
+    } else {
+        $fixedTax = intval($contract['fixedLandTax']) + intval($contract['fixedBuildingTax']) + intval($contract['fixedBuildingTaxOnlyTax']);
+        $sheet->setCellValue('M'.$contractPos, emptyStatus($status, formatYenNumber($fixedTax)));
+    }
+    // 20210905 E_Update
     // 決済予定日
     $sheet->setCellValue('N'.$contractPos, emptyStatus($status, convert_jpdt($contract['deliveryFixedDay'])));
     // 決済日
@@ -494,7 +504,17 @@ foreach($contracts as $contract) {
         // 決済代金
         $clonedWorksheet->setCellValue('K'.$contractPos, formatYenNumber($contract['decisionPrice']));
         // 固都税清算金
+        // 20210905 S_Update
+        /*
         $clonedWorksheet->setCellValue('M'.$contractPos, formatYenNumber($contract['fixedTax']));
+        */
+        if(intval($contract['fixedTax']) > 0) {
+            $sheet->setCellValue('M'.$contractPos, emptyStatus($status, formatYenNumber($contract['fixedTax'])));
+        } else {
+            $fixedTax = intval($contract['fixedLandTax']) + intval($contract['fixedBuildingTax']) + intval($contract['fixedBuildingTaxOnlyTax']);
+            $sheet->setCellValue('M'.$contractPos, emptyStatus($status, formatYenNumber($fixedTax)));
+        }
+        // 20210905 E_Update
         // 支払完了日
         $clonedWorksheet->setCellValue('N'.$contractPos, convert_jpdt($contract['decisionDay']));
         // 留保金
