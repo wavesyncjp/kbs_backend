@@ -509,10 +509,10 @@ foreach($contracts as $contract) {
         $clonedWorksheet->setCellValue('M'.$contractPos, formatYenNumber($contract['fixedTax']));
         */
         if(intval($contract['fixedTax']) > 0) {
-            $sheet->setCellValue('M'.$contractPos, emptyStatus($status, formatYenNumber($contract['fixedTax'])));
+            $clonedWorksheet->setCellValue('M'.$contractPos, formatYenNumber($contract['fixedTax']));
         } else {
             $fixedTax = intval($contract['fixedLandTax']) + intval($contract['fixedBuildingTax']) + intval($contract['fixedBuildingTaxOnlyTax']);
-            $sheet->setCellValue('M'.$contractPos, emptyStatus($status, formatYenNumber($fixedTax)));
+            $clonedWorksheet->setCellValue('M'.$contractPos, formatYenNumber($fixedTax));
         }
         // 20210905 E_Update
         // 支払完了日
