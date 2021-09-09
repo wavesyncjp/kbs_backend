@@ -15,7 +15,8 @@ $query = ORM::for_table(TBLTEMPLANDINFO)
 			->distinct()
 			->select('p1.*')
 			->inner_join(TBLCONTRACTINFO, array('p1.pid', '=', 'p2.tempLandInfoPid'), 'p2')
-			->where_null('p1.deleteDate');
+			->where_null('p1.deleteDate')
+			->where_null('p2.deleteDate');// 20210909 Add
 
 // 物件番号
 if(isset($param->bukkenNo) && $param->bukkenNo !== ''){
