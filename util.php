@@ -543,6 +543,26 @@ function getPayContractInfo($pid){
 }
 
 /**
+ * 入金管理情報取得
+ * @param unknown $pid
+ */
+function getReceiveContractInfo($pid){
+	$receivecontract = ORM::for_table(TBLRECEIVECONTRACT)->findOne($pid)->asArray();
+
+	$detailList = [];
+	$details = ORM::for_table(TBLRECEIVECONTRACTDETAIL)->where('receiveContractPid', $pid)->where_null('deleteDate')->findArray();
+	if(isset($details)){
+
+		$receivecontract['details'] = $details;
+	}
+	else {
+		$receivecontract['details'] = [];
+	}
+
+	return $receivecontract;
+}
+
+/**
  * 事業収支情報取得
  * @param unknown $pid
  */

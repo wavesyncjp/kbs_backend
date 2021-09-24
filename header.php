@@ -52,10 +52,13 @@ ORM::configure('id_column_overrides', array(
 		, 'tblcontractsellerinfo'=>'pid'
 		, 'tblcontractregistrant'=>'pid'
 		, 'tblpaymenttype'=>'paymentCode'
+		, 'tblreceivetype'=>'receiveCode' // 20210916 Add
 		, 'tblplan'=>'pid'
 		, 'tblplandetail'=>'pid'
 		, 'tblpaycontract'=>'pid'
 		, 'tblpaycontractdetail'=>'pid'
+		, 'tblreceivecontract'=>'pid' // 20210916 Add
+		, 'tblreceivecontractdetail'=>'pid' // 20210916 Add
 		, 'tblplanrentroll' => 'pid'
 		, 'tblplanrentrolldetail' => 'pid'
 		, 'tbltax'=>'pid'
@@ -97,10 +100,13 @@ define('TBLCODENAMEMST', 'tblcodenamemst');
 define('TBLCONTRACTSELLERINFO', 'tblcontractsellerinfo');
 define('TBLCONTRACTREGISTRANT', 'tblcontractregistrant');
 define('TBLPAYMENTTYPE', 'tblpaymenttype');
+define('TBLRECEIVETYPE', 'tblreceivetype'); // 20210916 Add
 define('TBLPLAN', 'tblplan');
 define('TBLPLANDETAIL', 'tblplandetail');
 define('TBLPAYCONTRACT', 'tblpaycontract');
 define('TBLPAYCONTRACTDETAIL', 'tblpaycontractdetail');
+define('TBLRECEIVECONTRACT', 'tblreceivecontract'); // 20210916 Add
+define('TBLRECEIVECONTRACTDETAIL', 'tblreceivecontractdetail'); // 20210916 Add
 define('TBLPLANRENTROLL', 'tblplanrentroll');
 define('TBLPLANRENTROLLDETAIL', 'tblplanrentrolldetail');
 define('TBLTAX', 'tbltax');
