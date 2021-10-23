@@ -735,7 +735,17 @@ function getLandPlan($pid) {
 	return $data;
 }
 
-function convert_jpdt($date) {
+// 20211021 S_Add
+function convert_dt($date, $format) {
+	if(!isset($date) || $date == '') return '';
+	return date($format, strtotime($date));
+}
+// 20211021 E_Add
+
+// 20211021 S_Update
+//function convert_jpdt($date) {
+function convert_jpdt($date, $format = 'm.d') {
+// 20211021 E_Update
 	if(!isset($date) || $date == '') return '';
 	$year = substr($date, 0, 4);
 	if ($date >= 20190501) {        //令和元年（2019年5月1日以降）
@@ -757,10 +767,16 @@ function convert_jpdt($date) {
 		$name = 'AD';
 	}
 	$day = new DateTime($date);
-	return $name.$year.'.'.date_format($day, 'm.d');
+	// 20211021 S_Update
+//	return $name.$year.'.'.date_format($day, 'm.d');
+	return $name.$year.'.'.date_format($day, $format);
+	// 20211021 E_Update
 }
 // 20210525 S_Add
-function convert_jpdt_kanji($date) {
+// 20211021 S_Update
+//function convert_jpdt_kanji($date) {
+function convert_jpdt_kanji($date, $format = 'm月d日') {
+// 20211021 E_Update
 	if(!isset($date) || $date == '') return '';
 	$year = substr($date, 0, 4);
 	if ($date >= 20190501) {        //令和元年（2019年5月1日以降）
@@ -782,7 +798,10 @@ function convert_jpdt_kanji($date) {
 		$name = '西暦';
 	}
 	$day = new DateTime($date);
-	return $name.$year.'年'.date_format($day, 'm月d日');
+	// 20211021 S_Update
+//	return $name.$year.'年'.date_format($day, 'm月d日');
+	return $name.$year.'年'.date_format($day, $format);
+	// 20211021 E_Update
 }
 // 20210525 E_Add
 
@@ -821,7 +840,10 @@ function setPayByContract($contract, $userId) {
 			$contractCategory = str_replace('SYS1', '', $contractCategory);
 
 			// 支払契約情報を取得
-			$paycontracts = ORM::for_table(TBLPAYCONTRACT)->where('contractInfoPid', $contract['pid'])->where('contractCategory', $contractCategory)->order_by_asc('pid')->findArray();
+			// 20211021 S_Update
+//			$paycontracts = ORM::for_table(TBLPAYCONTRACT)->where('contractInfoPid', $contract['pid'])->where('contractCategory', $contractCategory)->order_by_asc('pid')->findArray();
+			$paycontracts = ORM::for_table(TBLPAYCONTRACT)->where('tempLandInfoPid', $contract['tempLandInfoPid'])->where('contractInfoPid', $contract['pid'])->where('contractCategory', $contractCategory)->order_by_asc('pid')->findArray();
+			// 20211021 E_Update
 			if(sizeof($paycontracts) == 0) {
 				$paycontract = ORM::for_table(TBLPAYCONTRACT)->create();
 				$paycontract['tempLandInfoPid'] = $contract['tempLandInfoPid'];// 土地情報PID
@@ -1016,7 +1038,10 @@ function setPayBySale($sale, $userId) {
 			$contractCategory = str_replace('SYS2', '', $contractCategory);
 
 			// 支払契約情報を取得
-			$paycontracts = ORM::for_table(TBLPAYCONTRACT)->where('bukkenSalesInfoPid', $sale['pid'])->where('contractCategory', $contractCategory)->order_by_asc('pid')->findArray();
+			// 20211021 S_Update
+//			$paycontracts = ORM::for_table(TBLPAYCONTRACT)->where('bukkenSalesInfoPid', $sale['pid'])->where('contractCategory', $contractCategory)->order_by_asc('pid')->findArray();
+			$paycontracts = ORM::for_table(TBLPAYCONTRACT)->where('tempLandInfoPid', $sale['tempLandInfoPid'])->where('bukkenSalesInfoPid', $sale['pid'])->where('contractCategory', $contractCategory)->order_by_asc('pid')->findArray();
+			// 20211021 S_Update
 			if(sizeof($paycontracts) == 0) {
 				$paycontract = ORM::for_table(TBLPAYCONTRACT)->create();
 				$paycontract['tempLandInfoPid'] = $sale['tempLandInfoPid'];// 土地情報PID
