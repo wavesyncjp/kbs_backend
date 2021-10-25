@@ -540,6 +540,12 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $cell = setCell($cell, $sheet, 'b_dependType', $currentColumn, $endColumn, $currentRow, $endRow, getCodeTitle($codeLists['dependType'], $loc['dependType']));
         // 床面積
         $cell = setCell($cell, $sheet, 'b_grossFloorArea', $currentColumn, $endColumn, $currentRow, $endRow, $loc['grossFloorArea']);
+        // 20211025 S_Add
+        // 建築時期 （竣工日）
+        $cell = setCell($cell, $sheet, 'b_completionDay_YYYY', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($loc['completionDay'], 'Y'));
+        $cell = setCell($cell, $sheet, 'b_completionDay_MM', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($loc['completionDay'], 'm'));
+        $cell = setCell($cell, $sheet, 'b_completionDay_DD', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($loc['completionDay'], 'd'));
+        // 20211025 E_Add
     }
     // 所在地情報（建物）が存在しない場合、Emptyを設定
     for ($i = 1; $i <= 1 - sizeof($locsBuilding); $i++) {
@@ -555,6 +561,12 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $cell = setCell($cell, $sheet, 'b_dependType', $currentColumn, $endColumn, $currentRow, $endRow, '');
         // 床面積<-Empty
         $cell = setCell($cell, $sheet, 'b_grossFloorArea', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 20211025 S_Add
+        // 建築時期 （竣工日）<-Empty
+        $cell = setCell($cell, $sheet, 'b_completionDay_YYYY', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        $cell = setCell($cell, $sheet, 'b_completionDay_MM', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        $cell = setCell($cell, $sheet, 'b_completionDay_DD', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 20211025 E_Add
     }
 }
 
