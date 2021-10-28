@@ -99,7 +99,7 @@ foreach($locs as $loc) {
     }
 }
 $blockOrBuildingNumber = $blockNumber;
-if($blockOrBuildingNumber !== '') $blockOrBuildingNumber = $buildingNumber;
+if($blockOrBuildingNumber === '') $blockOrBuildingNumber = $buildingNumber;
 
 $endColumn = 13;// 最終列数
 $endRow = 43;   // 最終行数
@@ -153,7 +153,7 @@ for($i = 0 ; $i < 4; $i++) {
     // 支払時間
     $cell = setCell(null, $sheet, 'contractFixTime', 1, $endColumn, 1, $endRow, $contractFixTime);
     // 売買代金
-    $cell = setCell(null, $sheet, 'tradingPrice', 1, $endColumn, 1, $endRow, formatNumber($contract['tradingPrice'], false));
+    $cell = setCell(null, $sheet, 'tradingPrice', 1, $endColumn, 1, $endRow, $contract['tradingPrice']);
     
     // ・固都税精算シート
     // 物件所在地<-所在地
@@ -188,11 +188,11 @@ for($i = 0 ; $i < 4; $i++) {
     }
     $cell = setCell(null, $sheet, 'sharingEndDayBuyer_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($sharingEndDayBuyer));
     // 固都税清算金（土地）
-    $cell = setCell(null, $sheet, 'fixedLandTax', 1, $endColumn, 1, $endRow, formatNumber($contract['fixedLandTax'], false));
+    $cell = setCell(null, $sheet, 'fixedLandTax', 1, $endColumn, 1, $endRow, $contract['fixedLandTax']);
     // 固都税清算金（建物）
-    $cell = setCell(null, $sheet, 'fixedBuildingTax', 1, $endColumn, 1, $endRow, formatNumber($contract['fixedBuildingTax'], false));
+    $cell = setCell(null, $sheet, 'fixedBuildingTax', 1, $endColumn, 1, $endRow, $contract['fixedBuildingTax']);
     // 建物分消費税
-    $cell = setCell(null, $sheet, 'fixedBuildingTaxOnlyTax', 1, $endColumn, 1, $endRow, formatNumber($contract['fixedBuildingTaxOnlyTax'], false));
+    $cell = setCell(null, $sheet, 'fixedBuildingTaxOnlyTax', 1, $endColumn, 1, $endRow, $contract['fixedBuildingTaxOnlyTax']);
 }
 
 // 保存
