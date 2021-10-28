@@ -35,7 +35,7 @@ $paymentCodeByretainage = '';
 $codes = ORM::for_table(TBLCODE)->where_Like('code', 'SYS1%')->order_by_asc('code')->findArray();
 if(sizeof($codes) > 0) {
     foreach($codes as $code) {
-        if($code['codeDetail'] === 'retainage') {
+        if($code['codeDetail'] == 'retainage') {
             $paymentCodeByretainage = $code['name'];
         }
     }
@@ -62,7 +62,7 @@ foreach($payContracts as $pay) {
     $details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $pay['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
     if(sizeof($details) > 0) {
         foreach($details as $detail) {
-            if($detail['paymentCode'] === $paymentCodeByretainage) {
+            if($detail['paymentCode'] == $paymentCodeByretainage) {
                 $contractFixDay = $detail['contractFixDay'];
                 $contractFixTime = $detail['contractFixTime'];
             }
@@ -89,7 +89,7 @@ foreach($locs as $loc) {
         $buildingNumber = $loc['buildingNumber'];
     }
     // 区分が01：土地の場合
-    if($loc['locationType'] === '01') {
+    if($loc['locationType'] == '01') {
         $l_propertyTax += $loc['propertyTax'];
         $l_cityPlanningTax += $loc['cityPlanningTax'];
     }
@@ -99,7 +99,7 @@ foreach($locs as $loc) {
     }
 }
 $blockOrBuildingNumber = $blockNumber;
-if($blockOrBuildingNumber === '') $blockOrBuildingNumber = $buildingNumber;
+if($blockOrBuildingNumber == '') $blockOrBuildingNumber = $buildingNumber;
 
 $endColumn = 13;// 最終列数
 $endRow = 43;   // 最終行数
@@ -118,16 +118,16 @@ for($i = 0 ; $i < 4; $i++) {
     $cell = setCell(null, $sheet, 'contractFixDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_dt($contractFixDay, 'Y年m月d日'));
     // 買主氏名<-売主対象
     $sellerName = '';
-    if($bukken['seller'] === '0') $sellerName = '（株）' . getCodeTitle($codeLists['seller'], $bukken['seller']);
-    else if($bukken['seller'] === '1') $sellerName = getCodeTitle($codeLists['seller'], $bukken['seller']);
+    if($bukken['seller'] == '0') $sellerName = '（株）' . getCodeTitle($codeLists['seller'], $bukken['seller']);
+    else if($bukken['seller'] == '1') $sellerName = getCodeTitle($codeLists['seller'], $bukken['seller']);
     $cell = setCell(null, $sheet, 'sellerName', 1, $endColumn, 1, $endRow, $sellerName);
     // 契約担当者
     $contractStaffName = getUserName($contract['contractStaff']);
     $cell = setCell(null, $sheet, 'contractStaffName', 1, $endColumn, 1, $endRow, $contractStaffName);
     // 日時
     $contractFixDateTime = convert_dt($contractFixDay, 'Y/m/d');
-    if($contractFixDateTime !== '') $contractFixDateTime .= '  ';
-    if($contractFixTime !== '') $contractFixDateTime .= $contractFixTime. '～';
+    if($contractFixDateTime != '') $contractFixDateTime .= '  ';
+    if($contractFixTime != '') $contractFixDateTime .= $contractFixTime. '～';
     $cell = setCell(null, $sheet, 'contractFixDateTime', 1, $endColumn, 1, $endRow, $contractFixDateTime);
     // 契約書番号
     $cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contract['contractFormNumber']);
@@ -174,14 +174,14 @@ for($i = 0 ; $i < 4; $i++) {
     $cell = setCell(null, $sheet, 'sharingEndDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contract['sharingEndDay']));
     // 分担期間開始日（買主）
     $sharingStartDayBuyer = $contract['sharingEndDay'];
-    if($sharingStartDayBuyer !== '')
+    if($sharingStartDayBuyer != '')
     {
         $sharingStartDayBuyer = date('Ymd', strtotime('+1 day', strtotime($sharingStartDayBuyer)));
     }
     $cell = setCell(null, $sheet, 'sharingStartDayBuyer_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($sharingStartDayBuyer));
     // 分担期間終了日（買主）
     $sharingEndDayBuyer = $contract['sharingStartDay'];
-    if($sharingEndDayBuyer !== '')
+    if($sharingEndDayBuyer != '')
     {
         $sharingEndDayBuyer = date('Ymd', strtotime('+1 year', strtotime($sharingEndDayBuyer)));
         $sharingEndDayBuyer = date('Ymd', strtotime('-1 day', strtotime($sharingEndDayBuyer)));
