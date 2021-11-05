@@ -30,13 +30,13 @@ $codeLists['seller'] = $sellerCodeList;
 $accountTypeCodeList = ORM::for_table(TBLCODE)->select('codeDetail')->select('name')->where('code', '026')->where_null('deleteDate')->findArray();
 $codeLists['accountType'] = $accountTypeCodeList;
 
-// 留保金の支払コードを取得
-$paymentCodeByretainage = '';
+// 決済代金の支払コードを取得
+$paymentCodeByDecisionPrice = '';
 $codes = ORM::for_table(TBLCODE)->where_Like('code', 'SYS1%')->order_by_asc('code')->findArray();
 if(sizeof($codes) > 0) {
     foreach($codes as $code) {
-        if($code['codeDetail'] == 'retainage') {
-            $paymentCodeByretainage = $code['name'];
+        if($code['codeDetail'] == 'decisionPrice') {
+            $paymentCodeByDecisionPrice = $code['name'];
         }
     }
 }
@@ -62,7 +62,7 @@ foreach($payContracts as $pay) {
     $details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $pay['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
     if(sizeof($details) > 0) {
         foreach($details as $detail) {
-            if($detail['paymentCode'] == $paymentCodeByretainage) {
+            if($detail['paymentCode'] == $paymentCodeByDecisionPrice) {
                 $contractFixDay = $detail['contractFixDay'];
                 $contractFixTime = $detail['contractFixTime'];
             }
