@@ -113,7 +113,7 @@ foreach($contracts as $contract) {
 //        $sheet = $spreadsheet->getSheet($i);
         $sheet = clone $spreadsheet->getSheet($i);
         $title = $sheet->getTitle(); 
-        $sheet->setTitle($title . '_' . $contract['pid']);
+        $sheet->setTitle($title . '_' . $contract['contractNumber']);
         $spreadsheet->addSheet($sheet);
 
         // ・地権者振込一覧シート
