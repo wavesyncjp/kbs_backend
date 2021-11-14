@@ -185,6 +185,45 @@ function bindCell($cellName, $sheet, $keywords, $vals) {
 	}
 	$sheet->setCellValue($cellName, $str);
 }
+// 20211115 S_Add
+/**
+ * セルに値設定（指定文字で改行）
+ */
+function bindCellAndNewLine($cellName, $sheet, $keywords, $vals, $prefix, $length) {
+	$str = $sheet->getCell($cellName)->getValue();
+
+	if(is_array($keywords)) {
+		for($i = 0; $i < sizeof($keywords); $i++) {
+			$str = str_replace('$'. $keywords[$i] . '$', isset($vals[$i])? $vals[$i] : '' , $str);
+		}
+	}
+	else {
+		$str = str_replace('$'. $keywords . '$', $vals, $str);
+	}
+	// 接頭辞を除外する
+	$str = str_replace($prefix, '', $str);
+	// 指定文字数で分割する
+	$arrays = array();
+	for($offset = 0; $offset < mb_strlen( $str, 'SJIS' ); $offset += $length) {
+		$arrays[] = mb_substr($str, $offset, $length);
+	}
+	// セルに値を設定する
+	$index = 1;
+	$pos = $sheet->getCell($cellName)->getRow();
+	foreach($arrays as $val) {
+		if($val !== '') {
+			if($index > 1) {
+				$pos += 1;
+				// 行の挿入
+				$sheet->insertNewRowBefore($pos, 1);
+			}
+			// 接頭辞を先頭に連結
+			$sheet->setCellValue('A' . $pos, $prefix . $val);
+			$index++;
+		}
+	}
+}
+// 20211115 E_Add
 
 /**
  * ブロックコピー

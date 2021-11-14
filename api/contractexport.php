@@ -93,7 +93,12 @@ if($nextPos != -1) {
             $index++;
         }
     }
+    // 20211115 S_Update
+    /*
     bindCell('A'.$pos , $sheet, $keyword, $name);
+    */
+    bindCellAndNewLine('A' . $pos, $sheet, $keyword, $name, '    ', 42);
+    // 20211115 E_Update
 }
 
 // 実測精算単価
@@ -164,7 +169,7 @@ if(isset($contract['vacationDay']) && $contract['vacationDay'] !== '') {
     $val = mb_convert_kana(date('Y年m月d日', strtotime($contract['vacationDay'])), 'KVRN');
     // 20200913 E_Update
 } else {
-    $val = '　　　年　　月　　日';
+    $val = '　　　　年　　月　　日';
 }
 
 $keyword = 'vacationDay';
@@ -200,7 +205,7 @@ for($i = 0 ; $i < 3; $i++) {
         if(isset($contract[$keyword]) && $contract[$keyword] !== '') {
             $val = mb_convert_kana(date('Y年m月d日', strtotime($contract[$keyword])), 'KVRN');
         } else {
-            $val = '　　　年　　月　　日';
+            $val = '　　　　年　　月　　日';
         }
         bindCell('A' . $pos, $sheet, $keyword, $val);
     }
@@ -312,7 +317,11 @@ if($nextPos > 0) {
         $sheet->setCellValue('A' . $nextPos, $str);
         */
         bindCell('A' . $nextPos, $sheet, 'specialTerms9_1' , '', false);
+        // 20211115 S_Update
+        /*
         bindCell('A' . $nextPos, $sheet, 'specialTerms9_1_val' , implode('、', $term9), false);
+        */
+        bindCellAndNewLine('A' . $nextPos, $sheet, 'specialTerms9_1_val', implode('、', $term9), '      ', 42);
         // 20210711 E_Update
     } else {
         $sheet->removeRow($nextPos);
