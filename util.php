@@ -194,7 +194,7 @@ function bindCellAndNewLine($cellName, $sheet, $keywords, $vals, $prefix, $lengt
 
 	if(is_array($keywords)) {
 		for($i = 0; $i < sizeof($keywords); $i++) {
-			$str = str_replace('$'. $keywords[$i] . '$', isset($vals[$i])? $vals[$i] : '' , $str);
+			$str = str_replace('$'. $keywords[$i] . '$', isset($vals[$i])? $vals[$i] : '', $str);
 		}
 	}
 	else {
@@ -204,7 +204,7 @@ function bindCellAndNewLine($cellName, $sheet, $keywords, $vals, $prefix, $lengt
 	$str = str_replace($prefix, '', $str);
 	// 指定文字数で分割する
 	$arrays = array();
-	for($offset = 0; $offset < mb_strlen( $str, 'SJIS' ); $offset += $length) {
+	for($offset = 0; $offset < mb_strlen($str, 'SJIS'); $offset += $length) {
 		$arrays[] = mb_substr($str, $offset, $length);
 	}
 	// セルに値を設定する
@@ -217,7 +217,7 @@ function bindCellAndNewLine($cellName, $sheet, $keywords, $vals, $prefix, $lengt
 				// 行の挿入
 				$sheet->insertNewRowBefore($pos, 1);
 			}
-			// 接頭辞を先頭に連結
+			// 接頭辞を先頭に連結して、値を設定
 			$sheet->setCellValue('A' . $pos, $prefix . $val);
 			$index++;
 		}
