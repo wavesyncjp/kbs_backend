@@ -203,9 +203,46 @@ function bindCellAndNewLine($cellName, $sheet, $keywords, $vals, $prefix, $lengt
 	// 接頭辞を除外する
 	$str = str_replace($prefix, '', $str);
 	// 指定文字数で分割する
+	/*
 	$arrays = array();
 	for($offset = 0; $offset < mb_strlen($str, 'SJIS'); $offset += $length) {
 		$arrays[] = mb_substr($str, $offset, $length);
+	}
+	*/
+	$arrays = array();
+	$strLength = mb_strlen($str, 'SJIS');
+	for($offset = 0; $offset < $strLength; $offset += $length) {
+		// 指定文字数分の文字列を取得
+		$part = mb_substr($str, $offset, $length);
+		$charCount = 0;
+
+		// ２行目以降の場合
+		if(count($arrays) > 0 && $strLength > 0) {
+			// １行前の文字列
+			$abovePath = $arrays[count($arrays) - 1];
+			// 先頭の文字
+			$firstChar = mb_substr($part, 0, 1);
+
+			while($firstChar === '）' || $firstChar === '、' || $firstChar === '。' || $firstChar === '」') {
+				// １行前の文字列の末尾に先頭の文字を連結
+				$abovePath .= $firstChar;
+				// 先頭の文字を除外
+				$part = mb_substr($part, 1);
+				// 除外後の文字列の先頭の文字を設定
+				$firstChar = mb_substr($part, 0, 1);
+				$charCount++;
+			}
+			// １行前の文字列を更新
+			$arrays[count($arrays) - 1] = $abovePath;
+		}
+		// １行前の文字列への移動があった場合
+		if($charCount > 0) {
+			// 移動した文字数分位置を加算
+			$offset += $charCount;
+			// 移動した文字を除外した位置から、指定文字数分の文字列を取得
+			$part = mb_substr($str, $offset, $length);
+		}
+		$arrays[] = $part;
 	}
 	// セルに値を設定する
 	$index = 1;
