@@ -211,6 +211,10 @@ foreach($contracts as $contract) {
     $cell = setCell($cell, $sheet, 'retainage', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['retainage'], false));
     // 固都税清算金
     $cell = setCell($cell, $sheet, 'fixedTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['fixedTax'], false));
+    // 20211128 S_Add
+    // （内消費税相当額<-建物分消費税
+    $cell = setCell($cell, $sheet, 'fixedBuildingTaxOnlyTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['fixedBuildingTaxOnlyTax'], false));
+    // 20211128 E_Add
     // 仲介会社
     for ($i = 1; $i <= 2; $i++) {
         $cell = setCell(null, $sheet, 'intermediaryName', $tradingColumn, $endColumn, $tradingRow, $endRow, $contract['intermediaryName']);
