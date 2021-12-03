@@ -112,7 +112,7 @@ foreach($contracts as $contract) {
         // シートをコピー
 //        $sheet = $spreadsheet->getSheet($i);
         $sheet = clone $spreadsheet->getSheet($i);
-        $title = $sheet->getTitle(); 
+        $title = $sheet->getTitle();
         $sheet->setTitle($title . '_' . $contract['contractNumber']);
         $spreadsheet->addSheet($sheet);
 
@@ -203,10 +203,16 @@ foreach($contracts as $contract) {
     }
 }
 
+// R-A　PK精算シートを保持
+$sheet = clone $spreadsheet->getSheet(4);
+
 // コピー元シート削除
-for($i = 0 ; $i < 4; $i++) {
+for($i = 0 ; $i < 5; $i++) {
     $spreadsheet->removeSheetByIndex(0);
 }
+
+// R-A　PK精算シートを一番右へ追加
+$spreadsheet->addSheet($sheet);
 
 // 保存
 $filename = '買取決済_' . date('YmdHis') . '.xlsx';
