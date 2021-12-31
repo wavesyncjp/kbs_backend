@@ -24,6 +24,17 @@ if(isset($param->today) && $param->today != ''){
 	$query = $query->where_lte('infoDate', now());
 }
 
+// 20211227 S_Add
+// 掲示板タイプ
+if(isset($param->infoType) && $param->infoType !== ''){
+	$query = $query->where('infoType', $param->infoType);
+}
+// 承認フラグ
+if(isset($param->approvalFlg) && $param->approvalFlg != ''){
+	$query = $query->where('approvalFlg', $param->approvalFlg);
+}
+// 20211227 E_Add
+
 $query = $query->order_by_desc('infoDate')->order_by_desc('updateDate');
 
 if(isset($param->count) && $param->count > 0){

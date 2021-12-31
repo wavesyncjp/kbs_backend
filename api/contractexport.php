@@ -402,11 +402,17 @@ if($template['reportFormType'] == '04') {
 $locs = [];
 if($template['reportFormType'] == '01' || $template['reportFormType'] == '03') {
     if(sizeof($detailIds) > 0) {
-        $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '01')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+        // 20211228 S_Update
+        // $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '01')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+        $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '01')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')->findArray();
+        // 20211228 E_Update
     }
 } else if($template['reportFormType'] == '04' || $template['reportFormType'] == '05' || $template['reportFormType'] == '06') {
     if(sizeof($teichiIds) > 0) {
-        $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $teichiIds)->where('locationType', '01')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+        // 20211228 S_Update
+        // $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $teichiIds)->where('locationType', '01')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+        $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $teichiIds)->where('locationType', '01')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')->findArray();
+        // 20211228 E_Update
     }
 }
 //土地荷主あり
@@ -524,11 +530,17 @@ else {
 $locs = [];
 if($template['reportFormType'] == '05') {
     if(sizeof($detailIds) > 0) {
-        $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+        // 20211228 S_Update
+        // $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+        $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')->findArray();
+        // 20211228 E_Update
     }
 } else if($template['reportFormType'] != '01' && $template['reportFormType'] != '06') {
     if(sizeof($detailIds) > 0) {
-        $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '02')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+        // 20211228 S_Update
+        // $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '02')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+        $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '02')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')->findArray();
+        // 20211228 E_Update
     }
 }
 //土地荷主あり
@@ -794,8 +806,14 @@ $blockCount = 10;
 $pos = searchCellPos($sheet, $keyword, $pos);
 $locs = [];
 if(sizeof($detailIds) > 0 && $template['reportFormType'] != '01') {
+    // 20211228 S_Update
+    /*
     $tempLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_not_null('ridgePid')
                 ->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->distinct()->findArray();
+    */
+    $tempLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_not_null('ridgePid')
+                ->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')->distinct()->findArray();
+    // 20211228 E_Update
     $ids = [];
     foreach($tempLocs as $temp) {
         if(!in_array($temp['ridgePid'], $ids)) {
@@ -856,7 +874,10 @@ if(sizeof($locs) > 0) {
         $subLocs = [];
         if(sizeof($detailIds) > 0 && $template['reportFormType'] != '01') {
             //$locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
-            $subLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where('ridgePid', $loc['pid'])->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+            // 20211228 S_Update
+            // $subLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where('ridgePid', $loc['pid'])->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+            $subLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $detailIds)->where('locationType', '04')->where('ridgePid', $loc['pid'])->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')->findArray();
+            // 20211228 E_Update
         }
 
         if(sizeof($subLocs) > 0) {
@@ -1010,7 +1031,10 @@ if(sizeof($belongIds) == 0) {
 //不可分所有地(土地)
 $locs = [];
 if(sizeof($belongIds) > 0) {
-    $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '01')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+    // 20211228 S_Update
+    // $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '01')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+    $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '01')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')->findArray();
+    // 20211228 E_Update
 }
 
 $keyword = 'fl_address';
@@ -1056,7 +1080,10 @@ else {
 //不可分所有地(建物)
 $locs = [];
 if(sizeof($belongIds) > 0) {
-    $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '02')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+    // 20211228 S_Update
+    // $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '02')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+    $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '02')->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')->findArray();
+    // 20211228 E_Update
 }
 
 $keyword = 'fb_address';
@@ -1124,9 +1151,16 @@ $blockCount = 9;
 $pos = searchCellPos($sheet, $keyword, $pos);
 $locs = [];
 if(sizeof($belongIds) > 0) {
+    // 20211228 S_Update
+    /*
     $tempLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '04')->where_not_null('ridgePid')->where_null('deleteDate')
                 ->order_by_asc('locationType')->order_by_asc('pid')
                 ->distinct()->findArray();
+    */
+    $tempLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)->where('locationType', '04')->where_not_null('ridgePid')->where_null('deleteDate')
+                ->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')
+                ->distinct()->findArray();
+    // 20211228 E_Update
     $ids = [];
     foreach($tempLocs as $temp) {
         if(!in_array($temp['ridgePid'], $ids)) {
@@ -1186,9 +1220,16 @@ if(sizeof($locs) > 0) {
         $pos = searchCellPos($sheet, $keyword, $pos);
         $subLocs = [];
         if(sizeof($belongIds) > 0) {
+            // 20211228 S_Update
+            /*
             $subLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)
                     ->where('locationType', '04')->where('ridgePid', $loc['pid'])
                     ->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('pid')->findArray();
+            */
+            $subLocs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $belongIds)
+                    ->where('locationType', '04')->where('ridgePid', $loc['pid'])
+                    ->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')->findArray();
+            // 20211228 E_Update
         }
         if(sizeof($subLocs) > 0) {
             //ブロックコピー

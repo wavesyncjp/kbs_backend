@@ -28,7 +28,8 @@ if(isset($param->authority) && $param->authority !== ''){
 	$query = $query->where('authority', $param->authority);
 }
 
-$deps = $query->where_not_equal('loginId', '0001')->where_not_equal('loginId', '0002')->order_by_asc('userId')->find_array();
+//$deps = $query->where_not_equal('loginId', '0001')->where_not_equal('loginId', '0002')->order_by_asc('userId')->find_array();
+$deps = $query->where_not_in('loginId', ['0001', '0002', '0003', '0004', '0005'])->order_by_asc('userId')->find_array();
 echo json_encode($deps);
 
 ?>

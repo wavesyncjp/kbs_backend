@@ -57,7 +57,10 @@ function getLandInfo($pid){
 		$land['attachFiles'] = $attachFiles;
 	}
 	$locList = [];
-	$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->findArray();
+	// 20211228 S_Update
+	// $locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->findArray();
+	$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')->findArray();
+	// 20211228 E_Update
 	if(isset($locs)){
 
 		foreach($locs as $loc){
