@@ -51,6 +51,7 @@ foreach($contracts as $contract) {
     // 仕入契約者情報を取得
     $sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->select('contractorName')->select('contractorAdress')->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
     $contractorName = '';// 契約者名
+    $_contractorName = ''; // 複数契約者名 // 20220118Add 
     foreach($sellers as $seller) {
         $contractorName = $seller['contractorName'];
         break;
@@ -83,6 +84,9 @@ foreach($contracts as $contract) {
     $b_propertyTax = 0;     // 固定資産税（建物）
     $b_cityPlanningTax = 0; // 都市計画税（建物）
     $cntlocs = 0;
+    $l_address = ''; // 所在地＋地番 // 20220118Add
+    $l_blockOrBuildingNumber = ''; // 複数地番・複数家屋番号 // 20220118Add
+
     foreach($locs as $loc) {
         $cntlocs++;
 
@@ -90,6 +94,7 @@ foreach($contracts as $contract) {
             $address = $loc['address'];
             $blockNumber = $loc['blockNumber'];
             $buildingNumber = $loc['buildingNumber'];
+            $l_address = $loc['address'].$loc['blockNumber'];
         }
         // 区分が01：土地の場合
         if($loc['locationType'] == '01') {
@@ -101,6 +106,13 @@ foreach($contracts as $contract) {
             $b_cityPlanningTax += $loc['cityPlanningTax'];
         }
     }
+    // 20220118 S_Add
+    if($cntlocs > 1) {
+        $l_address = $l_address.'　他'; 
+    }
+    // 20220118 E_Add
+    $_contractorName = getContractorName($sellers); // 20220118Add
+    $_blockOrBuildingNumber = getBuildingNumber($locs); // 20220118Add
     $blockOrBuildingNumber = $blockNumber;
     if($blockOrBuildingNumber == '') $blockOrBuildingNumber = $buildingNumber;
 
@@ -118,7 +130,10 @@ foreach($contracts as $contract) {
 
         // ・地権者振込一覧シート
         // 居住表示
-        $cell = setCell(null, $sheet, 'residence', 1, $endColumn, 1, $endRow, $bukken['residence']);
+        // 20220118 S_update
+        // $cell = setCell(null, $sheet, 'residence', 1, $endColumn, 1, $endRow, $bukken['residence']);
+        $cell = setCell(null, $sheet, 'address', 1, $endColumn, 1, $endRow, $address);
+        // 20220118 E_update
         // 契約物件番号
         $cell = setCell(null, $sheet, 'contractBukkenNo', 1, $endColumn, 1, $endRow, $bukken['contractBukkenNo']);
         // 支払確定日
@@ -142,6 +157,12 @@ foreach($contracts as $contract) {
         $cell = setCell(null, $sheet, 'blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $blockOrBuildingNumber);
         // 地権者（売主）<-契約者名
         $cell = setCell(null, $sheet, 'contractorName', 1, $endColumn, 1, $endRow, $contractorName);
+        // 20220118 S_add
+        // 複数地番/複数家屋番号
+        $cell = setCell(null, $sheet, '_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $_blockOrBuildingNumber);
+        // 複数地権者（売主）<-契約者名
+        $cell = setCell(null, $sheet, '_contractorName', 1, $endColumn, 1, $endRow, $_contractorName);
+        // 20220118 E_Add
         // 振込口座名義<-名義
         $cell = setCell(null, $sheet, 'bankName', 1, $endColumn, 1, $endRow, $contract['bankName']);
         // 銀行・信用金庫等<-銀行名
@@ -200,6 +221,10 @@ foreach($contracts as $contract) {
         $cell = setCell(null, $sheet, 'fixedBuildingTax', 1, $endColumn, 1, $endRow, $contract['fixedBuildingTax']);
         // 建物分消費税
         $cell = setCell(null, $sheet, 'fixedBuildingTaxOnlyTax', 1, $endColumn, 1, $endRow, $contract['fixedBuildingTaxOnlyTax']);
+        // 20220118 S_Add
+        // 受領証 物件所在地
+        $cell = setCell(null, $sheet, 'l_address', 1, $endColumn, 1, $endRow, $l_address);
+        // 20220118 E_Add
     }
 }
 
@@ -287,5 +312,31 @@ function getLocation($contractPid) {
     ->order_by_asc('p1.pid')->findArray();
     return $lst;
 }
-
+// 20220118 S_add
+/**
+ * 地番or家屋番号取得（改行区切り）
+ */
+function getBuildingNumber($lst) {
+    $ret = [];
+    if(isset($lst)) {
+        foreach($lst as $data) {
+            if($data['blockNumber'] !== '') $ret[] = mb_convert_kana($data['blockNumber'], 'kvrn');
+            else if($data['buildingNumber'] !== '') $ret[] = mb_convert_kana($data['buildingNumber'], 'kvrn');
+        }
+    }
+    return implode(chr(10), $ret);
+}
+/**
+ * 契約者取得（改行区切り）
+ */
+function getContractorName($lst) {
+    $ret = [];
+    if(isset($lst)) {
+        foreach($lst as $data) {
+            if($data['contractorName'] !== '') $ret[] = mb_convert_kana($data['contractorName'], 'kvrn');
+        }
+    }
+    return implode(chr(10), $ret);
+}
+// 20220118 E_Add
 ?>
