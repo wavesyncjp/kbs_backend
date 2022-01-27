@@ -147,8 +147,8 @@ foreach($contracts as $contract) {
         $cell = setCell(null, $sheet, 'contractStaffName', 1, $endColumn, 1, $endRow, $contractStaffName);
         // 日時
         $contractFixDateTime = convert_dt($contractFixDay, 'Y/m/d');
-        if($contractFixDateTime != '') $contractFixDateTime .= '  ';
-        if($contractFixTime != '') $contractFixDateTime .= $contractFixTime. '～';
+        if(!empty($contractFixDateTime)) $contractFixDateTime .= '  ';
+        if(!empty($contractFixTime)) $contractFixDateTime .= $contractFixTime . '～';
         $cell = setCell(null, $sheet, 'contractFixDateTime', 1, $endColumn, 1, $endRow, $contractFixDateTime);
         // 契約書番号
         $cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contract['contractFormNumber']);
@@ -201,14 +201,14 @@ foreach($contracts as $contract) {
         $cell = setCell(null, $sheet, 'sharingEndDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contract['sharingEndDay']));
         // 分担期間開始日（買主）
         $sharingStartDayBuyer = $contract['sharingEndDay'];
-        if($sharingStartDayBuyer != '')
+        if(!empty($sharingStartDayBuyer))
         {
             $sharingStartDayBuyer = date('Ymd', strtotime('+1 day', strtotime($sharingStartDayBuyer)));
         }
         $cell = setCell(null, $sheet, 'sharingStartDayBuyer_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($sharingStartDayBuyer));
         // 分担期間終了日（買主）
         $sharingEndDayBuyer = $contract['sharingStartDay'];
-        if($sharingEndDayBuyer != '')
+        if(!empty($sharingEndDayBuyer))
         {
             $sharingEndDayBuyer = date('Ymd', strtotime('+1 year', strtotime($sharingEndDayBuyer)));
             $sharingEndDayBuyer = date('Ymd', strtotime('-1 day', strtotime($sharingEndDayBuyer)));
@@ -242,7 +242,7 @@ $spreadsheet->addSheet($sheet);
 // 保存
 $filename = '買取決済_' . date('YmdHis') . '.xlsx';
 $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-$savePath = $fullPath.'/'.$filename;
+$savePath = $fullPath . '/' . $filename;
 $writer->save($savePath);
 
 // ダウンロード
@@ -333,7 +333,7 @@ function getContractorName($lst) {
     $ret = [];
     if(isset($lst)) {
         foreach($lst as $data) {
-            if($data['contractorName'] !== '') $ret[] = mb_convert_kana($data['contractorName'], 'kvrn');
+            if(!empty($data['contractorName'])) $ret[] = mb_convert_kana($data['contractorName'], 'kvrn');
         }
     }
     return implode(chr(10), $ret);
