@@ -106,7 +106,7 @@ foreach($contracts as $contract) {
         }
     }
     $blockOrBuildingNumber = $blockNumber;
-    if($blockOrBuildingNumber == '') $blockOrBuildingNumber = $buildingNumber;
+    if(empty($blockOrBuildingNumber)) $blockOrBuildingNumber = $buildingNumber;
     // 20220118 S_Add
     $list_blockOrBuildingNumber = getBuildingNumber($locs);                 // 複数地番・複数家屋番号
     $addressAndBlockOrBuildingNumber = $address . $blockOrBuildingNumber;   // 所在地+地番/家屋番号
