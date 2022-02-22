@@ -64,6 +64,7 @@ foreach($contracts as $contract) {
     // 支払契約詳細情報を取得
     $contractFixDay = '';   // 支払確定日
     $contractFixTime = '';  // 支払時間
+    $payPriceTax = '';      // 支払金額（税込） 20220223 Add
     foreach($payContracts as $pay) {
         $details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $pay['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
         if(sizeof($details) > 0) {
@@ -71,6 +72,7 @@ foreach($contracts as $contract) {
                 if($detail['paymentCode'] == $paymentCodeByDecisionPrice) {
                     $contractFixDay = $detail['contractFixDay'];
                     $contractFixTime = $detail['contractFixTime'];
+                    $payPriceTax = $detail['payPriceTax'];// 20220223 Add
                 }
             }
         }
@@ -180,7 +182,10 @@ foreach($contracts as $contract) {
         // 支払時間
         $cell = setCell(null, $sheet, 'contractFixTime', 1, $endColumn, 1, $endRow, $contractFixTime);
         // 売買代金
-        $cell = setCell(null, $sheet, 'tradingPrice', 1, $endColumn, 1, $endRow, $contract['tradingPrice']);
+        // 20220223 S_Update
+        // $cell = setCell(null, $sheet, 'tradingPrice', 1, $endColumn, 1, $endRow, $contract['tradingPrice']);
+        $cell = setCell(null, $sheet, 'payPriceTax', 1, $endColumn, 1, $endRow, $payPriceTax);
+        // 20220223 E_Update
 
         // ・固都税精算シート
         // 物件所在地<-所在地
