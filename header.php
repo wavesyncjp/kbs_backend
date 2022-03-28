@@ -43,6 +43,7 @@ ORM::configure('id_column_overrides', array(
 		, 'tblmapattach'=>'pid'
 		, 'tblcontractfile'=>'pid'
 		, 'tbllocationattach'=>'pid'
+		, 'tblinfoattach'=>'pid'// 20220329 Add
 		, 'tblinformation'=>'pid'
 		, 'tblsharerinfo'=>'pid'
 		, 'tblcode'=>array('code', 'codeDetail')
@@ -91,6 +92,7 @@ define('TBLFILEATTACH','tblfileattach');
 define('TBLMAPATTACH','tblmapattach');
 define('TBLCONTRACTFILE','tblcontractfile');
 define('TBLLOCATIONATTACH','tbllocationattach');
+define('TBLINFOATTACH','tblinfoattach');// 20220329 Add
 define('TBLINFORMATION','tblinformation');
 define('TBLSHARERINFO', 'tblsharerinfo');
 define('TBLCODE', 'tblcode');
