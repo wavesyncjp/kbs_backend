@@ -41,7 +41,20 @@ if(isset($param->count) && $param->count > 0){
 	$query = $query->limit($param->count);
 }
 
-$lands = $query->find_array();
-echo json_encode($lands);
+$infos = $query->find_array();
+// 20220329 S_Add
+if(sizeof($infos) > 0) {
+	$infoList = [];
+	foreach($infos as $info) {
+		$attachFiles = ORM::for_table(TBLINFOATTACH)->where('infoPid', $info['pid'])->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
+		if(sizeof($attachFiles) > 0) {
+			$info['attachFiles'] = $attachFiles;
+		}
+		$infoList[] = $info;
+	}
+	$infos = $infoList;
+}
+// 20220329 E_Add
+echo json_encode($infos);
 
 ?>
