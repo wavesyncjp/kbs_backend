@@ -20,7 +20,10 @@ if(isset($param->clctLocationType) && $param->clctLocationType != ''){
 }
 // 20201221 E_Add
 
-$locs = $query->find_array();
+// 20220329 S_Update
+// $locs = $query->find_array();
+$locs = $query->order_by_asc('displayOrder')->order_by_asc('pid')->find_array();
+// 20220329 E_Update
 echo json_encode($locs);
 
 ?>
