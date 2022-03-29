@@ -112,10 +112,18 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
     // 地積
     /*$selectContent = str_replace('tbllocationinfo.area', '(SELECT SUM(area) FROM tbllocationinfo WHERE FIND_IN_SET(pid, tblbukkensalesinfo.salesLocation) > 0) as area', $selectContent);*/ // 20210107 Delete
     
+    // 20220329 S_Update
+    /*
     $query = 'SELECT ' . $selectContent . ' FROM tblbukkensalesinfo
             INNER JOIN tbltemplandinfo ON tblbukkensalesinfo.tempLandInfoPid = tbltemplandinfo.pid
             WHERE tblbukkensalesinfo.tempLandInfoPid IN (' . $param->ids . ')
             ORDER BY tbltemplandinfo.pid, tblbukkensalesinfo.pid';
+    */
+    $query = 'SELECT ' . $selectContent . ' FROM tblbukkensalesinfo
+            INNER JOIN tbltemplandinfo ON tblbukkensalesinfo.tempLandInfoPid = tbltemplandinfo.pid
+            WHERE tblbukkensalesinfo.tempLandInfoPid IN (' . $param->ids . ')
+            ORDER BY tbltemplandinfo.pid, tblbukkensalesinfo.displayOrder, tblbukkensalesinfo.pid';
+    // 20220329 S_Update
 }
 // 対象テーブルが07:支払調書情報の場合
 else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '07') {

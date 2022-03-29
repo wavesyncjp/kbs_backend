@@ -16,7 +16,10 @@ $param = json_decode($postparam);
 $codeRightsFormList = ORM::for_table(TBLCODE)->where('code', '011')->where_null('deleteDate')->findArray();
 // 20210411 E_Add
 $bukken = ORM::for_table(TBLTEMPLANDINFO)->findOne($param->pid)->asArray();
-$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
+// 20220329 S_Update
+// $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
+$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
+// 20220329 E_Update
 // 20201020 S_Update
 //$contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')>order_by_asc('pid')->findArray();
 $contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_not_null('contractNow')->where_not_equal('contractNow', '')->where_null('deleteDate')->order_by_asc('pid')->findArray();

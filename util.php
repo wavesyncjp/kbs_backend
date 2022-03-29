@@ -57,10 +57,11 @@ function getLandInfo($pid){
 		$land['attachFiles'] = $attachFiles;
 	}
 	$locList = [];
-	// 20220303 S_Update
-	$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->findArray();
+	// 20220329 S_Update
+	// $locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->findArray();
 	// $locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->order_by_asc('locationType')->order_by_asc('blockNumber')->order_by_asc('buildingNumber')->order_by_asc('address')->findArray();
-	// 20220303 E_Update
+	$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
+	// 20220329 E_Update
 	if(isset($locs)){
 
 		foreach($locs as $loc){
@@ -807,7 +808,10 @@ function getLandPlan($pid) {
 		$data->plans = $plans;
 	}
 
-	$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $pid)->order_by_asc('pid')->findArray();
+	// 20220329 S_Update
+	// $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $pid)->order_by_asc('pid')->findArray();
+	$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $pid)->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
+	// 20220329 E_Update
 	if(isset($sales)){
 		$data->sales = $sales;
 	}

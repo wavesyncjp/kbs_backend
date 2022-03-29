@@ -241,7 +241,10 @@ $sheet = $spreadsheet->getSheet(0);
 $cntSales = 0;
 
 // 物件売契約情報を取得
-$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
+// 20220329 S_Update
+// $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
+$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
+// 20220329 E_Update
 foreach($sales as $sale) {
     $cntSales++;
 
