@@ -47,7 +47,7 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
             INNER JOIN tbltemplandinfo ON tblsharerinfo.tempLandInfoPid = tbltemplandinfo.pid
                     AND tbllocationinfo.tempLandInfoPid = tbltemplandinfo.pid
             WHERE tblsharerinfo.tempLandInfoPid IN (' . $param->ids . ')
-            ORDER BY tblsharerinfo.tempLandInfoPid, tblsharerinfo.locationInfoPid';
+            ORDER BY tblsharerinfo.tempLandInfoPid, tbllocationinfo.displayOrder, tblsharerinfo.locationInfoPid, tblsharerinfo.pid';
 }
 // 対象テーブルが03:仕入契約情報の場合
 else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '03') {
