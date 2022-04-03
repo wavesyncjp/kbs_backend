@@ -75,6 +75,7 @@ ORM::configure('id_column_overrides', array(
 		, 'tblbottomlandinfo'=>'pid'
 		, 'tblsorting'=>'pid'
 		, 'tblbank'=>'pid'
+		, 'tblmailtemplate'=>'templateId'// 20220403 Add
 ) );
 
 $FILE_PATH = 'uploads';
@@ -124,4 +125,5 @@ define('TBLPLANRENTROLLDETAILHISTORY', 'tblplanrentrolldetailhistory');
 define('TBLBOTTOMLANDINFO', 'tblbottomlandinfo');
 define('TBLSORTING', 'tblsorting');
 define('TBLBANK', 'tblbank');
+define('TBLMAILTEMPLATE', 'tblmailtemplate');// 20220403 Add
 ?>
