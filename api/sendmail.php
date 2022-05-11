@@ -75,10 +75,11 @@ function sendMail($code, $templateId, $targets) {
         // 複数指定の場合
         if(is_array($toMailAddress)) {
             foreach($toMailAddress as $address) {
+                if($address['mailAddress'] == '') continue;
                 $mail->addAddress($address['mailAddress'], $address['userName']);
             }
         }
-        else $mail->addAddress($target['mailAddress'], $target['userName']);
+        else $mail->addAddress($toMailAddress, $target['userName']);
         // $mail->addCC($target['mailAddress'], $target['userName']);// CC宛先
         // $mail->addReplyTo($target['mailAddress'], $target['userName']);// 返信先（返信時の初期値）
         $mail->Sender = 'maruyama@wavesync.co.jp';// Return-path（送信失敗時、通知）
