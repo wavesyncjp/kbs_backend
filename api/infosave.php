@@ -47,8 +47,8 @@ if($info['infoType'] == '1') {
 		$target['convBody_1'] = $info['infoDetail'] != '' ? $info['infoDetail'] . '(改行)(改行)' : '';
 		$targets[] = $target;
 
-		// メール送信// リリースまでコメント
-//		sendMail('SYS302', 'noticeEntry', $targets);
+		// メール送信
+		sendMail('SYS302', 'noticeEntry', $targets);
 	}
 	// 承認フラグが1:承認済の場合
 	else if($info['approvalFlg'] == '1') {
@@ -58,8 +58,8 @@ if($info['infoType'] == '1') {
 		$target['convBody_1'] = $info['answer'] != '' ? $info['answer'] . '(改行)(改行)' : '';
 		$targets[] = $target;
 
-		// メール送信// リリースまでコメント
-//		sendMail('SYS302', 'noticeApproved', $targets);
+		// メール送信
+		sendMail('SYS302', 'noticeApproved', $targets);
 	}
 }
 // 20220330 E_Add
