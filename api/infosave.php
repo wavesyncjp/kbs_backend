@@ -12,6 +12,14 @@ $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 $isRegist = false;// 20220330 Add
 
+// 20220517 S_Add
+// 承認フラグが1:承認済の場合
+if($param->approvalFlg == '1') {
+	// 承認日時<-システム日時
+	$param->approvalDateTime = date('Y-m-d H:i:s');
+}
+// 20220517 E_Add
+
 //更新
 if($param->pid > 0){
 	$info = ORM::for_table(TBLINFORMATION)->find_one($param->pid);
