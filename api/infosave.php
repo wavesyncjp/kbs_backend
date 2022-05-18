@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 $isRegist = false;// 20220330 Add
+$addedFileSendFlg = $param->addedFileSendFlg;// 20220519 Add
 
 // 20220517 S_Add
 // 承認フラグが1:承認済の場合
@@ -31,7 +32,7 @@ else {
 	setInsert($info, $param->createUserId);
 	$isRegist = true;// 20220330 Add
 }
-copyData($param, $info, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'attachFiles'));
+copyData($param, $info, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'attachFiles', 'addedFileSendFlg'));
 $info->save();
 
 // 20220330 S_Add
@@ -58,8 +59,30 @@ if($info['infoType'] == '1') {
 		// メール送信
 		sendMail('SYS302', 'noticeEntry', $targets);
 	}
-	// 承認フラグが1:承認済の場合
-	else if($info['approvalFlg'] == '1') {
+	// 20220519 S_Add
+	// 追加ファイル送付にチェックがある場合
+	else if($addedFileSendFlg == '1')
+	{
+		$users = ORM::for_table(TBLUSER)->table_alias('p1')->select('p1.*')
+		->inner_join(TBLCODE, array('p1.userId', '=', 'p2.codeDetail'), 'p2')
+		->where_not_null('p1.mailAddress')->where_null('p1.deleteDate')
+		->where('p2.code', 'SYS301')->where_null('p2.deleteDate')
+		->order_by_asc('displayOrder')->find_array();
+		$addresses = [];
+		foreach($users as $user) {
+			$addresses[] = $user;
+		}
+		$target['mailAddress'] = $addresses;
+		$target['userName'] = '関係各位';
+		$target['convSubject_1'] = $info['infoSubject'];
+		$targets[] = $target;
+
+		// メール送信
+		sendMail('SYS302', 'noticeAddedFileSend', $targets);
+	}
+	// 20220519 E_Add
+	// 承認フラグが1:承認済もしくは、5:承認済（追加書類有）の場合
+	else if($info['approvalFlg'] == '1' || $info['approvalFlg'] == '5') {
 		$target = ORM::for_table(TBLUSER)->find_one($info['createUserId']);
 		$target['userName'] .= '様';
 		$target['convSubject_1'] = $info['infoSubject'];
@@ -69,6 +92,28 @@ if($info['infoType'] == '1') {
 		// メール送信
 		sendMail('SYS302', 'noticeApproved', $targets);
 	}
+	// 20220519 S_Add
+	// 確認フラグが1:修正ありの場合
+	else if($info['confirmFlg'] == '1') {
+		$target = ORM::for_table(TBLUSER)->find_one($info['createUserId']);
+		$target['userName'] .= '様';
+		$target['convSubject_1'] = $info['infoSubject'];
+		$targets[] = $target;
+
+		// メール送信
+		sendMail('SYS302', 'noticeModifyRequest', $targets);
+	}
+	// 確認フラグが2:確認済の場合
+	else if($info['confirmFlg'] == '2') {
+		$target = ORM::for_table(TBLUSER)->find_one($info['createUserId']);
+		$target['userName'] .= '様';
+		$target['convSubject_1'] = $info['infoSubject'];
+		$targets[] = $target;
+
+		// メール送信
+		sendMail('SYS302', 'noticeConfirmed', $targets);
+	}
+	// 20220519 E_Add
 }
 // 20220330 E_Add
 

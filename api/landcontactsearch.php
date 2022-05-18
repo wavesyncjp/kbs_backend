@@ -65,6 +65,12 @@ if(isset($param->decisionDay_To) && $param->decisionDay_To != ''){
 	$query = $query->where_lte('p2.decisionDay', $param->decisionDay_To);
 }
 // 20201222 E_Add
+// 20220519 S_Add
+// 物件担当部署
+if(isset($param->department) && sizeof($param->department) > 0){
+	$query = $query->where_in('p1.department', $param->department);
+}
+// 20220519 E_Add
 
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();
@@ -143,6 +149,12 @@ foreach($lands as $land){
 		$contracts = $contracts->where_lte('p2.decisionDay', $param->decisionDay_To);
 	}
 	// 20201222 E_Add
+	// 20220519 S_Add
+	// 物件担当部署
+	if(isset($param->department) && sizeof($param->department) > 0){
+		$query = $query->where_in('p1.department', $param->department);
+	}
+	// 20220519 E_Add
 	$contracts = $contracts->select('p2.pid')->find_array();
 	// 20200906 E_Update
 	if(isset($contracts) && sizeof($contracts) > 0){
