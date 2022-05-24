@@ -3,7 +3,7 @@ require '../header.php';
 require '../util.php';
 
 $locationInfoId = $_POST['locationInfoId'];
-$fullPath  = __DIR__ . '/../uploads/location';
+$fullPath = __DIR__ . '/../uploads/location';
 if(!file_exists($fullPath)){	
 	if (!mkdir($fullPath)) {
 		die('NG');
@@ -14,17 +14,21 @@ if(!file_exists($fullPath)){
 $fileName = $_FILES['file']['name'];
 
 $uniq = getGUID();
-$dirPath = $fullPath.'/'.$uniq;
+$dirPath = $fullPath . '/' . $locationInfoId;
+if (!file_exists($dirPath)) {
+	mkdir($dirPath);
+}
+$dirPath = $dirPath . '/' . $uniq;
 mkdir($dirPath);
 
-$filePath = $dirPath.'/'.$fileName;
+$filePath = $dirPath . '/' . $fileName;
 
 move_uploaded_file($_FILES['file']['tmp_name'], $filePath);
 
 $map = ORM::for_table(TBLLOCATIONATTACH)->create();
 $map->locationInfoPid = $locationInfoId;
 $map->attachFileName = $fileName;
-$map->attachFilePath = 'backend/uploads/location/'.$uniq.'/';	
+$map->attachFilePath = 'backend/uploads/location/' . $locationInfoId . '/' . $uniq . '/';	
 $map->save();
 
 echo json_encode($map->asArray());

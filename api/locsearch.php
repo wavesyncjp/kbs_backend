@@ -19,6 +19,12 @@ if(isset($param->clctLocationType) && $param->clctLocationType != ''){
 	$query = $query->where_in('locationType', $param->clctLocationType);
 }
 // 20201221 E_Add
+// 20220522 S_Add
+// clctPID
+if(isset($param->clctPid) && $param->clctPid != ''){
+	$query = $query->where_in('pid', $param->clctPid);
+}
+// 20220522 E_Add
 
 // 20220329 S_Update
 // $locs = $query->find_array();

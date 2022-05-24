@@ -3,7 +3,7 @@ require '../header.php';
 require '../util.php';
 
 $contractInfoId = $_POST['contractInfoId'];
-$fullPath  = __DIR__ . '/../uploads';
+$fullPath = __DIR__ . '/../uploads/contract';
 if(!file_exists($fullPath)){	
 	if (!mkdir($fullPath)) {
 		die('NG');
@@ -14,17 +14,21 @@ if(!file_exists($fullPath)){
 $fileName = $_FILES['file']['name'];
 
 $uniq = getGUID();
-$dirPath = $fullPath.'/'.$uniq;
+$dirPath = $fullPath . '/' . $contractInfoId;
+if (!file_exists($dirPath)) {
+	mkdir($dirPath);
+}
+$dirPath = $dirPath . '/' . $uniq;
 mkdir($dirPath);
 
-$filePath = $dirPath.'/'.$fileName;
+$filePath = $dirPath . '/' . $fileName;
 
 move_uploaded_file($_FILES['file']['tmp_name'], $filePath);
 
 $map = ORM::for_table(TBLCONTRACTFILE)->create();
 $map->contractInfoPid = $contractInfoId;
 $map->attachFileName = $fileName;
-$map->attachFilePath = 'backend/uploads/'.$uniq.'/';	
+$map->attachFilePath = 'backend/uploads/contract/' . $contractInfoId . '/' . $uniq . '/';	
 $map->save();
 
 echo json_encode($map->asArray());

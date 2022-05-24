@@ -9,8 +9,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $fullPath = __DIR__ . '/../uploads';
 $fullPathLoc = $fullPath . '/location';
-if(!file_exists($fullPath) || !file_exists($fullPathLoc)) {
-	if(!mkdir($fullPath) || !mkdir($fullPathLoc)) {
+$fullPathContract = $fullPath . '/contract';// 20220521 Add
+if(!file_exists($fullPath) || !file_exists($fullPathLoc) || !file_exists($fullPathContract)) {
+	if(!mkdir($fullPath) || !mkdir($fullPathLoc) || !mkdir($fullPathContract)) {
 		die('NG');
 	}
 }
@@ -64,6 +65,11 @@ if(isset($param->mapFiles)) {
 	}
 }
 
+// 20220521 S_Add
+$pidList = [];
+$sharerPidList = [];
+// 20220521 E_Add
+
 // 所在地情報
 if(isset($param->locations)) {
 	$locations = $param->locations;
@@ -75,7 +81,7 @@ if(isset($param->locations)) {
 	array_multisort($sort, SORT_ASC, $locations);
 	
 
-	$pidList = [];
+	// $pidList = [];// 20220521 Delete
 	$newLocations = [];
 	$newBottomLands = [];// 20210616 Add
 	foreach($locations as $location) {
@@ -100,7 +106,11 @@ if(isset($param->locations)) {
 
 				// 新フォルダ作成
 				$uniq = getGUID();
-				$dirPath = $fullPathLoc . '/' . $uniq;
+				$dirPath = $fullPathLoc . '/' . $loc->pid;
+				if(!file_exists($dirPath) && !mkdir($dirPath)) {
+					die('mkdir NG : ' + $dirPath);
+				}
+				$dirPath = $dirPath . '/' . $uniq;
 				if(!mkdir($dirPath)) {
 					die('mkdir NG : ' + $dirPath);
 				}
@@ -121,7 +131,7 @@ if(isset($param->locations)) {
 				$newLocFile = ORM::for_table(TBLLOCATIONATTACH)->create();
 				setInsert($newLocFile, $param->createUserId);
 				$newLocFile->locationInfoPid = $loc->pid;
-				$newLocFile->attachFilePath = 'backend/uploads/location/' . $uniq . '/';
+				$newLocFile->attachFilePath = 'backend/uploads/location/' . $loc->pid . '/' . $uniq . '/';
 				$newLocFile->attachFileName = $locFile->attachFileName;
 				$newLocFile->save();
 			}
@@ -137,6 +147,11 @@ if(isset($param->locations)) {
 				$newSharer->tempLandInfoPid = $land->pid;
 				$newSharer->locationInfoPid = $loc->pid;
 				$newSharer->save();
+
+				// 20220521 S_Add
+				// key:oldPid,value:newPid
+				$sharerPidList[$sharer->pid] = $newSharer->pid;
+				// 20220521 E_Add
 			}
 		}
 		// 底地情報
@@ -180,6 +195,129 @@ if(isset($param->locations)) {
 	}
 	// 20210616 E_Add
 }
+
+// 20220521 S_Add
+// 仕入契約情報
+$contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
+if(sizeof($contracts) > 0) {
+	foreach($contracts as $contract) {
+		$newContract = ORM::for_table(TBLCONTRACTINFO)->create();
+		// カラムをコピー
+		$notCopy = array('pid', 'contractInfoPid', 'locationInfoPid', 'createUserId', 'createDate', 'updateUserId', 'updateDate');
+		foreach($contract as $key => $value) {
+			if(in_array($key, $notCopy)) continue;
+			$newContract[$key] = $value;
+		}
+		setInsert($newContract, $param->createUserId);
+		$newContract->tempLandInfoPid = $land->pid;
+		$newContract->save();
+
+		// 仕入契約詳細情報
+		$details = ORM::for_table(TBLCONTRACTDETAILINFO)->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
+		if(sizeof($details) > 0) {
+			foreach($details as $detail) {
+				$newDetail = ORM::for_table(TBLCONTRACTDETAILINFO)->create();
+				// カラムをコピー
+				$notCopy = array('pid', 'contractInfoPid', 'locationInfoPid', 'createUserId', 'createDate', 'updateUserId', 'updateDate');
+				foreach($detail as $key => $value) {
+					if(in_array($key, $notCopy)) continue;
+					$newDetail[$key] = $value;
+				}
+				setInsert($newDetail, $param->createUserId);
+				$newDetail->contractInfoPid = $newContract->pid;
+				// 所在地情報PID（locationInfoPid）を更新
+				if(isset($pidList[$detail['locationInfoPid']])) {
+					$newDetail->locationInfoPid = $pidList[$detail['locationInfoPid']];
+				}
+				$newDetail->save();
+
+				// 仕入契約登記人情報
+				$registrants = ORM::for_table(TBLCONTRACTREGISTRANT)->where('contractInfoPid', $contract['pid'])->where('contractDetailInfoPid', $detail['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
+				if(isset($registrants)) {
+					foreach($registrants as $registrant) {
+						$newRegistrant = ORM::for_table(TBLCONTRACTREGISTRANT)->create();
+						// カラムをコピー
+						$notCopy = array('pid', 'contractInfoPid', 'contractDetailInfoPid', 'sharerInfoPid', 'createUserId', 'createDate', 'updateUserId', 'updateDate');
+						foreach($registrant as $key => $value) {
+							if(in_array($key, $notCopy)) continue;
+							$newRegistrant[$key] = $value;
+						}
+						setInsert($newRegistrant, $param->createUserId);
+						$newRegistrant->contractInfoPid = $newContract['pid'];
+						$newRegistrant->contractDetailInfoPid = $newDetail['pid'];
+						// 共有者情報PID（sharerInfoPid）を更新
+						if(isset($sharerPidList[$registrant['sharerInfoPid']])) {
+							$newRegistrant->sharerInfoPid = $sharerPidList[$registrant['sharerInfoPid']];
+						}
+						$newRegistrant->save();
+					}
+				}
+			}
+		}
+
+		// 仕入契約者情報
+		$sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
+		if(sizeof($sellers) > 0) {
+			foreach($sellers as $seller) {
+				$newSeller = ORM::for_table(TBLCONTRACTSELLERINFO)->create();
+				// カラムをコピー
+				$notCopy = array('pid', 'contractInfoPid', 'createUserId', 'createDate', 'updateUserId', 'updateDate');
+				foreach($seller as $key => $value) {
+					if(in_array($key, $notCopy)) continue;
+					$newSeller[$key] = $value;
+				}
+				setInsert($newSeller, $param->createUserId);
+				$newSeller->contractInfoPid = $newContract['pid'];
+				$newSeller->save();
+			}
+		}
+
+		// 計画地の公図
+		$contractFiles = ORM::for_table(TBLCONTRACTFILE)->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
+		if(sizeof($contractFiles) > 0) {
+			foreach($contractFiles as $contractFile) {
+				$newContractFile = ORM::for_table(TBLCONTRACTFILE)->create();
+				// カラムをコピー
+				$notCopy = array('pid', 'contractInfoPid', 'createUserId', 'createDate', 'updateUserId', 'updateDate');
+				foreach($contractFile as $key => $value) {
+					if(in_array($key, $notCopy)) continue;
+					$newContractFile[$key] = $value;
+				}
+				setInsert($newContractFile, $param->createUserId);
+				$newContractFile->contractInfoPid = $newContract['pid'];
+
+				// 新フォルダ作成
+				$uniq = getGUID();
+				$dirPath = $fullPathContract . '/' . $newContract['pid'];
+				if(!file_exists($dirPath) && !mkdir($dirPath)) {
+					die('mkdir NG : ' + $dirPath);
+				}
+				$dirPath = $dirPath . '/' . $uniq;
+				if(!mkdir($dirPath)) {
+					die('mkdir NG : ' + $dirPath);
+				}
+
+				// コピー元
+				$file = __DIR__ . '/../../' . $contractFile['attachFilePath'] . $contractFile['attachFileName'];
+				if(!file_exists($file)) {
+					die('file_exists NG : ' . $file);
+				}
+				// コピー先
+				$newfile = $dirPath . '/' . $contractFile['attachFileName'];
+
+				// ファイルコピー
+				if(!copy($file, $newfile)) {
+					die('copy NG : ' . $newfile);
+				}
+
+				$newContractFile->attachFilePath = 'backend/uploads/contract/' . $newContract['pid'] . '/' . $uniq . '/';
+				$newContractFile->attachFileName = $contractFile['attachFileName'];
+				$newContractFile->save();
+			}
+		}
+	}
+}
+// 20220521 E_Add
 
 echo json_encode(getLandInfo($land->pid));
 
