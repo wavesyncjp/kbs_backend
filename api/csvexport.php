@@ -75,6 +75,13 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
 }
 // 対象テーブルが04:支払契約詳細情報の場合
 else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '04') {
+    // 20220526 S_Add
+    // 支払予定日（支払契約情報）
+    $selectContent = str_replace('tblpaycontract.contractDayHeader', 'tblpaycontract.contractDay as contractDayHeader', $selectContent);
+    // 支払確定日（支払契約情報）
+    $selectContent = str_replace('tblpaycontract.contractFixDayHeader', 'tblpaycontract.contractFixDay as contractFixDayHeader', $selectContent);
+    // 20220526 E_Add
+
     $query = 'SELECT ' . $selectContent . ' FROM tblpaycontractdetail
             INNER JOIN tblpaycontract ON tblpaycontractdetail.payContractPid = tblpaycontract.pid
             INNER JOIN tbltemplandinfo ON tblpaycontractdetail.tempLandInfoPid = tbltemplandinfo.pid
