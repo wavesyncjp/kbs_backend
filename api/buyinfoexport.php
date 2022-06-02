@@ -217,7 +217,7 @@ foreach($contracts as $contract) {
 	$contractStaffName = getUserName($contract['contractStaff']);
 	$cell = setCell(null, $sheet, 'contractStaffName', 1, $endColumn, 1, $endRow, $contractStaffName);
 	// 日時
-	$contractFixDateTime = convert_dt($contractFixDay, 'Y/m/d');
+	$contractFixDateTime = convert_dt($contractFixDay, 'Y/n/j');
 	if(!empty($contractFixDateTime)) $contractFixDateTime .= '  ';
 	if(!empty($contractFixTime)) $contractFixDateTime .= $contractFixTime . '～';
 	$cell = setCell(null, $sheet, 'contractFixDateTime', 1, $endColumn, 1, $endRow, $contractFixDateTime);
@@ -276,7 +276,7 @@ foreach($contracts as $contract) {
 
 			// 仲介料
 			// 日時
-			$contractFixDateTime = convert_dt($payDetail_intermediary['contractFixDay'], 'Y/m/d');
+			$contractFixDateTime = convert_dt($payDetail_intermediary['contractFixDay'], 'Y/n/j');
 			if(!empty($contractFixDateTime)) $contractFixDateTime .= '  ';
 			if(!empty($payDetail_intermediary['contractFixTime'])) $contractFixDateTime .= $payDetail_intermediary['contractFixTime'] . '～';
 			$cell = setCell(null, $sheet, 'contractFixDateTime_intermediary', 1, $endColumn, 1, $endRow, $contractFixDateTime);
@@ -350,8 +350,8 @@ foreach($contracts as $contract) {
 			// 居住表示
 			$cell = setCell(null, $sheet, 'address', 1, $endColumn, 1, $endRow, $address);
 			// 支払確定日
-			$cell = setCell(null, $sheet, 'contractFixDay_jpdt_kanji_MM', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contractFixDay, 'm月'));
-			$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji_MMdd', 1, $endColumn, 1, $endRow, convert_dt($contractFixDay, 'm月d日'));
+			$cell = setCell(null, $sheet, 'contractFixDay_jpdt_kanji_MM', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contractFixDay, 'n月'));
+			$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji_MMdd', 1, $endColumn, 1, $endRow, convert_dt($contractFixDay, 'n月j日'));
 			// 支払時間
 			$cell = setCell(null, $sheet, 'contractFixTime', 1, $endColumn, 1, $endRow, $contractFixTime);
 			// 売買代金
@@ -378,7 +378,7 @@ foreach($contracts as $contract) {
 			// 物件所在地<-所在地
 			$cell = setCell(null, $sheet, 'address', 1, $endColumn, 1, $endRow, $address);
 			// 支払確定日
-			$cell = setCell(null, $sheet, 'contractFixDay_jpdt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contractFixDay));
+			$cell = setCell(null, $sheet, 'contractFixDay_jpdt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contractFixDay, 'n月j日'));
 			// 契約者名
 //			$cell = setCell(null, $sheet, 'contractorName', 1, $endColumn, 1, $endRow, $contractorName);
 			// 複数契約者名
@@ -394,16 +394,16 @@ foreach($contracts as $contract) {
 			// 都市計画税（建物）
 			$cell = setCell(null, $sheet, 'b_cityPlanningTax', 1, $endColumn, 1, $endRow, $b_cityPlanningTax);
 			// 分担期間開始日
-			$cell = setCell(null, $sheet, 'sharingStartDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contract['sharingStartDay']));
+			$cell = setCell(null, $sheet, 'sharingStartDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contract['sharingStartDay'], 'n月j日'));
 			// 分担期間終了日
-			$cell = setCell(null, $sheet, 'sharingEndDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contract['sharingEndDay']));
+			$cell = setCell(null, $sheet, 'sharingEndDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contract['sharingEndDay'], 'n月j日'));
 			// 分担期間開始日（買主）
 			$sharingStartDayBuyer = $contract['sharingEndDay'];
 			if(!empty($sharingStartDayBuyer))
 			{
 				$sharingStartDayBuyer = date('Ymd', strtotime('+1 day', strtotime($sharingStartDayBuyer)));
 			}
-			$cell = setCell(null, $sheet, 'sharingStartDayBuyer_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($sharingStartDayBuyer));
+			$cell = setCell(null, $sheet, 'sharingStartDayBuyer_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($sharingStartDayBuyer, 'n月j日'));
 			// 分担期間終了日（買主）
 			$sharingEndDayBuyer = $contract['sharingStartDay'];
 			if(!empty($sharingEndDayBuyer))
@@ -411,7 +411,7 @@ foreach($contracts as $contract) {
 				$sharingEndDayBuyer = date('Ymd', strtotime('+1 year', strtotime($sharingEndDayBuyer)));
 				$sharingEndDayBuyer = date('Ymd', strtotime('-1 day', strtotime($sharingEndDayBuyer)));
 			}
-			$cell = setCell(null, $sheet, 'sharingEndDayBuyer_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($sharingEndDayBuyer));
+			$cell = setCell(null, $sheet, 'sharingEndDayBuyer_dt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($sharingEndDayBuyer, 'n月j日'));
 			// 固都税清算金（土地）
 			$cell = setCell(null, $sheet, 'fixedLandTax', 1, $endColumn, 1, $endRow, $contract['fixedLandTax']);
 			// 固都税清算金（建物）
@@ -430,7 +430,7 @@ foreach($contracts as $contract) {
 			// 売買代金
 			$cell = setCell(null, $sheet, 'payPriceTax', 1, $endColumn, 1, $endRow, $payPriceTax);
 			// 支払確定日
-			$cell = setCell(null, $sheet, 'contractFixDay_jpdt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contractFixDay));
+			$cell = setCell(null, $sheet, 'contractFixDay_jpdt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contractFixDay, 'n月j日'));
 			// 20220118 E_Add
 			// 固都税清算金（合計）
 			$cell = setCell(null, $sheet, 'fixedTax', 1, $endColumn, 1, $endRow, $fixedTax);
