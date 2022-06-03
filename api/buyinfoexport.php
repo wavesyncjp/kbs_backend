@@ -99,9 +99,9 @@ foreach($contracts as $contract) {
 	// 支払契約情報を取得
 	$payContracts = ORM::for_table(TBLPAYCONTRACT)->where('tempLandInfoPid', $contract['tempLandInfoPid'])->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
 	// 支払契約詳細情報を取得
-	$contractFixDay = '';   // 支払確定日
-	$contractFixTime = '';  // 支払時間
-	$payPriceTax = 0;	   // 支払金額（税込） 20220223 Add
+	$contractFixDay = ''; // 支払確定日
+	$contractFixTime = '';// 支払時間
+	$payPriceTax = 0;     // 支払金額（税込） 20220223 Add
 	// 20220331 S_Add
 	$payDetail_intermediary = null;// 支払契約詳細情報（仲介料）
 	$payDetail_outsourcing = null; // 支払契約詳細情報（業務委託料）
@@ -184,11 +184,13 @@ foreach($contracts as $contract) {
 	}
 	// 20220118 E_Add
 	// 20220529 S_Add
+	$payPriceTaxTitle = '売買代金';// 20220603 Add
 	$description = '上記所在物件の不動産売買契約書第3条に基づく売買代金として';
 	// 内金・手付金の日付チェックのいずれかにチェックがある場合
 	if($contract['deposit1DayChk'] == '1' || $contract['deposit2DayChk'] == '1' || $contract['deposit3DayChk'] == '1'
 		|| $contract['deposit4DayChk'] == '1' || $contract['earnestPriceDayChk'] == '1') {
-			$payPriceTax = intval($contract['tradingBalance']);// 売買代金<-売買残代金
+			// $payPriceTax = intval($contract['tradingBalance']);// 売買代金<-売買残代金 20220603 Delete
+			$payPriceTaxTitle = '売買残代金';// 20220603 Add
 			$description = '上記所在物件の令和　年　月　日締結覚書に基づく売買代金（残代金）として';
 	}
 	$fixedTax = intval($contract['fixedLandTax']) + intval($contract['fixedBuildingTax']) + intval($contract['fixedBuildingTaxOnlyTax']);
@@ -354,6 +356,10 @@ foreach($contracts as $contract) {
 			$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji_MMdd', 1, $endColumn, 1, $endRow, convert_dt($contractFixDay, 'n月j日'));
 			// 支払時間
 			$cell = setCell(null, $sheet, 'contractFixTime', 1, $endColumn, 1, $endRow, $contractFixTime);
+			// 20220603 S_Add
+			// 売買代金タイトル
+			$cell = setCell(null, $sheet, 'payPriceTaxTitle', 1, $endColumn, 1, $endRow, $payPriceTaxTitle);
+			// 20220603 E_Add
 			// 売買代金
 			// 20220223 S_Update
 			// $cell = setCell(null, $sheet, 'tradingPrice', 1, $endColumn, 1, $endRow, $contract['tradingPrice']);
