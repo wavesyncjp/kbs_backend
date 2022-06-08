@@ -223,7 +223,8 @@ foreach($contracts as $contract) {
 		foreach($bottomLands as $loc) {
 			$bottomLand = ORM::for_table(TBLLOCATIONINFO)->find_one($loc['bottomLandPid']);
 			$addressAndBlockOrBuildingNumber = $bottomLand['address'] . $bottomLand['blockNumber'];
-			if(!empty($buildingNumber)) $addressAndBlockOrBuildingNumber .= '（家屋番号：' . $buildingNumber . '）';
+			if(!empty($loc['buildingNumber'])) $addressAndBlockOrBuildingNumber .= '（家屋番号：' . $loc['buildingNumber'] . '）';
+			break;
 		}
 	}
 	// 20220609 E_Add
