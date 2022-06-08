@@ -231,6 +231,8 @@ foreach($contracts as $contract) {
     $cell = setCell($cell, $sheet, 'intermediaryAddress', $tradingColumn, $endColumn, $tradingRow, $endRow, $contract['intermediaryAddress']);
     // 業務委託先住所
     $cell = setCell($cell, $sheet, 'outsourcingAddress', $tradingColumn, $endColumn, $tradingRow, $endRow, $contract['outsourcingAddress']);
+
+    $sheet->setSelectedCell('A1');// 初期選択セル設定 20220608 Add
 }
 // コピー元買主シート削除
 $spreadsheet->removeSheetByIndex(0);
@@ -329,7 +331,10 @@ foreach($sales as $sale) {
     // 固都税清算金
     $cell = setCell($cell, $sheet, 'salesFixedTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesFixedTax'], false));
     // （内消費税相当額<-固都税清算金（消費税）
-    $cell = setCell($cell, $sheet, 'salesFixedConsumptionTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesFixedConsumptionTax'], false));
+    // 20220608 S_Update
+    // $cell = setCell($cell, $sheet, 'salesFixedConsumptionTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesFixedConsumptionTax'], false));
+    $cell = setCell($cell, $sheet, 'salesFixedBuildingTaxOnlyTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesFixedBuildingTaxOnlyTax'], false));// 建物分消費税
+    // 20220608 E_Update
     // 仲介会社
     for ($i = 1; $i <= 2; $i++) {
         $cell = setCell(null, $sheet, 'salesIntermediary', $tradingColumn, $endColumn, $tradingRow, $endRow, $sale['salesIntermediary']);
@@ -346,9 +351,13 @@ foreach($sales as $sale) {
     $cell = setCell($cell, $sheet, 'salesIntermediaryAddress', $tradingColumn, $endColumn, $tradingRow, $endRow, $sale['salesIntermediaryAddress']);
     // 業務委託先住所
     $cell = setCell($cell, $sheet, 'salesOutsourcingAddress', $tradingColumn, $endColumn, $tradingRow, $endRow, $sale['salesOutsourcingAddress']);
+
+    $sheet->setSelectedCell('A1');// 初期選択セル設定 20220608 Add
 }
 // コピー元売主シート削除
 $spreadsheet->removeSheetByIndex(0);
+
+$spreadsheet->setActiveSheetIndex(0);// 初期選択シート設定 20220608 Add
 
 // 保存
 $filename = '取引成立台帳_' . date('YmdHis') . '.xlsx';

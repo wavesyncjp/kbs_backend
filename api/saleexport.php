@@ -76,7 +76,10 @@ foreach($sales as $sale) {
     // 固都税清算金（建物）
     $sheet->setCellValue('N'.($pos + 1), formatYenNumber($sale['salesFixedBuildingTax']));
     // 固都税清算金（消費税）
-    $sheet->setCellValue('N'.($pos + 2), formatYenNumber($sale['salesFixedConsumptionTax']));
+    // 20220608 S_Update
+    // $sheet->setCellValue('N'.($pos + 2), formatYenNumber($sale['salesFixedConsumptionTax']));
+    $sheet->setCellValue('N'.($pos + 2), formatYenNumber($sale['salesFixedBuildingTaxOnlyTax']));// 建物分消費税
+    // 20220608 S_Update
     // その他清算金１
     $sheet->setCellValue('P'.($pos + 0), formatYenNumber($sale['salesLiquidation1']));
     // その他清算金２
@@ -433,6 +436,8 @@ if(sizeof($payList2) == 0) {
 // 合計の計算式
 $sheet->setCellValue('H'.$payPos, '=SUM(H' . $firstPayPos . ':H' . ($payPos - 1) .')');
 
+$sheet->setSelectedCell('A1');// 初期選択セル設定 20220608 Add
+
 // ﾒﾄﾛｽ買取シート
 $hasBaikai = false;
 foreach($contracts as $contract) {
@@ -584,11 +589,15 @@ foreach($contracts as $contract) {
             $clonedWorksheet->setCellValue('O'.$payPos, '');// 備考
             $payPos++;
         }
+
+        $clonedWorksheet->setSelectedCell('A1');// 初期選択セル設定 20220608 Add
     }
 }
 
 // コピー元ﾒﾄﾛｽ買取シート削除
 $spreadsheet->removeSheetByIndex(1);
+
+$spreadsheet->setActiveSheetIndex(0);// 初期選択シート設定 20220608 Add
 
 // 保存
 $filename = '売買取引管理表_' . date('YmdHis') . '.xlsx';
