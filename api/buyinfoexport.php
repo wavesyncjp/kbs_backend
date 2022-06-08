@@ -155,34 +155,78 @@ foreach($contracts as $contract) {
 	$b_propertyTax = 0;     // 固定資産税（建物）
 	$b_cityPlanningTax = 0; // 都市計画税（建物）
 	$cntlocs = 0;
+	// 20220609 S_Add
+	$cntLandlocs = 0;
+	$cntNotLandlocs = 0;
+	$bottomLands = [];
+	// 20220609 E_Add
 
 	foreach($locs as $loc) {
 		$cntlocs++;
 
+		// 20220609 S_Delete
+		/*
 		if($cntlocs == 1) {
 			$address = $loc['address'];
 			$blockNumber = $loc['blockNumber'];
 			$buildingNumber = $loc['buildingNumber'];
 		}
+		*/
+		// 20220609 E_Delete
 		// 区分が01：土地の場合
 		if($loc['locationType'] == '01') {
 			$l_propertyTax += $loc['propertyTax'];
 			$l_cityPlanningTax += $loc['cityPlanningTax'];
+			$cntLandlocs++;// 20220609 Add
 		}
 		else {
 			$b_propertyTax += $loc['propertyTax'];
 			$b_cityPlanningTax += $loc['cityPlanningTax'];
+			// 20220609 S_Add
+			if(!empty($loc['bottomLandPid'])) $bottomLands[] = $loc;
+			$cntNotLandlocs++;
+			// 20220609 E_Add
 		}
+		// 20220609 S_Add
+		if($cntLandlocs == 1) {
+			$address = $loc['address'];                 // 所在地
+			$blockNumber = $loc['blockNumber'];         // 地番
+		}
+		if($cntLandlocs == 0 && $cntNotLandlocs == 1) {
+			$address = $loc['address'];                 // 所在地
+			$buildingNumber = $loc['buildingNumber'];   // 家屋番号
+		}
+		// 20220609 E_Add
 	}
 	$blockOrBuildingNumber = $blockNumber;
-	if(empty($blockOrBuildingNumber)) $blockOrBuildingNumber = $buildingNumber;
+	// 20220609 S_Update
+	// if(empty($blockOrBuildingNumber)) $blockOrBuildingNumber = $buildingNumber;
+	if(empty($blockOrBuildingNumber) && !empty($buildingNumber)) $blockOrBuildingNumber = '（' . $buildingNumber . '）';
+	// 20220609 E_Update
 	// 20220118 S_Add
 	$list_blockOrBuildingNumber = getBuildingNumber($locs, chr(10));        // 複数地番・複数家屋番号
 	$addressAndBlockOrBuildingNumber = $address . $blockOrBuildingNumber;   // 所在地+地番/家屋番号
+	// 20220609 S_Update
+	/*
 	if($cntlocs > 1) {
 		$addressAndBlockOrBuildingNumber .= '　他';
 	}
+	*/
+	if($cntLandlocs > 1) {
+		$addressAndBlockOrBuildingNumber .= '　外';
+	}
+	// 20220609 E_Update
 	// 20220118 E_Add
+	// 20220609 S_Add
+	// 土地に指定がないかつ、底地に指定がある場合
+	else if($cntLandlocs == 0 && sizeof($bottomLands) > 0) {
+		foreach($bottomLands as $loc) {
+			$bottomLand = ORM::for_table(TBLLOCATIONINFO)->find_one($loc['bottomLandPid']);
+			$addressAndBlockOrBuildingNumber = $bottomLand['address'] . $bottomLand['blockNumber'];
+			if(!empty($buildingNumber)) $addressAndBlockOrBuildingNumber .= '（家屋番号：' . $buildingNumber . '）';
+		}
+	}
+	// 20220609 E_Add
 	// 20220529 S_Add
 	$payPriceTaxTitle = '売買代金';// 20220603 Add
 	$description = '上記所在物件の不動産売買契約書第3条に基づく売買代金として';
@@ -567,6 +611,7 @@ function getLocation($contractPid) {
 	->select('p2.buildingNumber', 'buildingNumber')
 	->select('p2.propertyTax', 'propertyTax')
 	->select('p2.cityPlanningTax', 'cityPlanningTax')
+	->select('p2.bottomLandPid', 'bottomLandPid')// 20220609 Add
 	->inner_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p2.pid'), 'p2')
 	->where('p1.contractDataType', '01')
 	->where('p1.contractInfoPid', $contractPid)
