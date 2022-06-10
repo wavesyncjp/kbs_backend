@@ -425,6 +425,8 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                 $locsBuilding[] = $loc;
                 // 権利形態が01：借地権の場合
                 if($loc['rightsForm'] === '01' && $loc['bottomLandPid'] !== '') {
+                    // 20220611 S_Update
+                    /*
                     // 底地を土地に追加
                     $bottomLand = ORM::for_table(TBLLOCATIONINFO)
                         ->select('address')
@@ -463,6 +465,26 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                         }
                         // 20210614 E_Add
                     }
+                    */
+                    $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)
+                        ->table_alias('p1')
+                        ->inner_join(TBLLOCATIONINFO, array('p1.bottomLandPid', '=', 'p2.pid'), 'p2')
+                        ->select('p2.address', 'address')
+                        ->select('p2.blockNumber', 'blockNumber')
+                        ->select('p2.landCategory', 'landCategory')
+                        ->select('p1.leasedArea', 'leasedArea')
+                        ->select('p2.area', 'area')
+                        ->where('p1.locationInfoPid', $loc['pid'])
+                        ->where_null('p1.deleteDate')
+                        ->order_by_asc('p1.registPosition')
+                        ->findArray();
+                    if(sizeof($bottomLandInfos) > 0) {
+                        foreach($bottomLandInfos as $bottomLandInfo) {
+                            $bottomLandInfo['rightsForm'] = '01';// 01：借地権
+                            $locsLand[] = $bottomLandInfo;
+                        }
+                    }
+                    // 20220611 E_Update
                 }
             }
             // 区分が04：区分所有（専有）の場合
