@@ -445,6 +445,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                         if(sizeof($bottomLandInfos) > 0) {
                             foreach($bottomLandInfos as $bottomLandInfo) {
                                 $leasedArea += $bottomLandInfo['leasedArea'];
+                                $bottomLandInfo['bottomLandPid'] = $building['pid'];    // 底地PID<-建物PID
                                 $bottomLandInfo['lenderBorrower'] = '借主名';           // 貸主名/借主名
                                 $bottomLandInfo['leasedAreaTitle'] = '借地契約面積：';  // 借地対象面積タイトル
                                 $bottomLandInfo['leasedArea'] = $bottomLandInfo['leasedArea'] . '㎡';
