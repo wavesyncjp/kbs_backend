@@ -73,6 +73,7 @@ ORM::configure('id_column_overrides', array(
 		, 'tblplanrentrollhistory' => 'pid'
 		, 'tblplanrentrolldetailhistory' => 'pid'
 		, 'tblbottomlandinfo'=>'pid'
+		, 'tblresidentinfo'=>'pid'// 20220614 Add
 		, 'tblsorting'=>'pid'
 		, 'tblbank'=>'pid'
 		, 'tblmailtemplate'=>'templateId'// 20220403 Add
@@ -123,6 +124,7 @@ define('TBLPLANDETAILHISTORY', 'tblplandetailhistory');
 define('TBLPLANRENTROLLHISTORY', 'tblplanrentrollhistory');
 define('TBLPLANRENTROLLDETAILHISTORY', 'tblplanrentrolldetailhistory');
 define('TBLBOTTOMLANDINFO', 'tblbottomlandinfo');
+define('TBLRESIDENTINFO', 'tblresidentinfo');// 20220614 Add
 define('TBLSORTING', 'tblsorting');
 define('TBLBANK', 'tblbank');
 define('TBLMAILTEMPLATE', 'tblmailtemplate');// 20220403 Add

@@ -75,6 +75,10 @@ function getLandInfo($pid){
 			$bottomLands = ORM::for_table(TBLBOTTOMLANDINFO)->where('locationInfoPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
 			$loc['bottomLands'] = $bottomLands;
 			// 20210614 E_Add
+			// 20220614 S_Add
+			$residents = ORM::for_table(TBLRESIDENTINFO)->where('locationInfoPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
+			$loc['residents'] = $residents;
+			// 20220614 E_Add
 			$locList[] = $loc;
 		}
 
@@ -825,11 +829,12 @@ function convert_dt($date, $format) {
 }
 // 20211021 E_Add
 
-// 20211021 S_Update
+// 20220615 S_Update
 //function convert_jpdt($date) {
-function convert_jpdt($date, $format = 'm.d') {
-// 20211021 E_Update
-	if(!isset($date) || $date == '') return '';
+function convert_jpdt($date, $format = 'm.d', $delimiter = '.') {
+// 20220615 E_Update
+	$ret = '';// 20220615 Add
+	if(!isset($date) || $date == '') return $ret;
 	$year = substr($date, 0, 4);
 	if ($date >= 20190501) {        //令和元年（2019年5月1日以降）
 		$name = "R";
@@ -850,10 +855,13 @@ function convert_jpdt($date, $format = 'm.d') {
 		$name = 'AD';
 	}
 	$day = new DateTime($date);
-	// 20211021 S_Update
+	// 20220615 S_Update
 //	return $name.$year.'.'.date_format($day, 'm.d');
-	return $name.$year.'.'.date_format($day, $format);
-	// 20211021 E_Update
+	if($format == 'name') $ret = $name;
+	else if($format == 'year') $ret = $year;
+	else $ret = $name . $year . $delimiter . date_format($day, $format);
+	return $ret;
+	// 20220615 E_Update
 }
 // 20210525 S_Add
 // 20211021 S_Update

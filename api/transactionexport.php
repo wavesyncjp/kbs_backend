@@ -122,7 +122,10 @@ foreach($contracts as $contract) {
     }
 
     // 謄本情報を設定する
-    setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $detailIds, $codeLists);
+    // 20220615 S_Update
+    // setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $detailIds, $codeLists);
+    setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $detailIds, $codeLists, true);
+    // 20220615 E_Update
 
     // 【ノート】
     // 売買代金以降は、毎回初期位置以降のセルを確認する
@@ -231,6 +234,10 @@ foreach($contracts as $contract) {
     $cell = setCell($cell, $sheet, 'intermediaryAddress', $tradingColumn, $endColumn, $tradingRow, $endRow, $contract['intermediaryAddress']);
     // 業務委託先住所
     $cell = setCell($cell, $sheet, 'outsourcingAddress', $tradingColumn, $endColumn, $tradingRow, $endRow, $contract['outsourcingAddress']);
+    // 20220615 S_Add
+    // 摘要<-備考
+    $cell = setCell($cell, $sheet, 'remarks', $tradingColumn, $endColumn, $tradingRow, $endRow, $contract['remarks']);
+    // 20220615 E_Add
 
     $sheet->setSelectedCell('A1');// 初期選択セル設定 20220608 Add
 }
@@ -351,6 +358,10 @@ foreach($sales as $sale) {
     $cell = setCell($cell, $sheet, 'salesIntermediaryAddress', $tradingColumn, $endColumn, $tradingRow, $endRow, $sale['salesIntermediaryAddress']);
     // 業務委託先住所
     $cell = setCell($cell, $sheet, 'salesOutsourcingAddress', $tradingColumn, $endColumn, $tradingRow, $endRow, $sale['salesOutsourcingAddress']);
+    // 20220615 S_Add
+    // 摘要<-備考
+    $cell = setCell($cell, $sheet, 'salesRemark', $tradingColumn, $endColumn, $tradingRow, $endRow, $sale['salesRemark']);
+    // 20220615 E_Add
 
     $sheet->setSelectedCell('A1');// 初期選択セル設定 20220608 Add
 }
@@ -408,9 +419,13 @@ function setCell($cell, $sheet, $keyWord, $startColumn, $endColumn, $startRow, $
 /**
  * 謄本情報を設定する
  */
-function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists) {
+// 20220615 S_Update
+// function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists) {
+function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists, $getBottom = false) {
+// 20220615 E_Update
     $locsLand = [];     // 土地
     $locsBuilding = []; // 建物
+    $locsBottom = [];   // 底地 20220615 Add
 
     if(sizeof($pids) > 0) {
         // 所在地情報を取得
@@ -418,13 +433,38 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         foreach($locs as $loc) {
             // 区分が01：土地の場合
             if($loc['locationType'] === '01') {
+                // 20220620 S_Add
+                $leasedArea = 0;// 借地対象面積
+
+                // 対象の土地を底地選択している建物を取得
+                $buildings = ORM::for_table(TBLLOCATIONINFO)->where('bottomLandPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
+                if(sizeof($buildings) > 0) {
+                    foreach($buildings as $building) {
+                        // 底地情報を取得
+                        $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)->where('locationInfoPid', $building['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
+                        if(sizeof($bottomLandInfos) > 0) {
+                            foreach($bottomLandInfos as $bottomLandInfo) {
+                                $leasedArea += $bottomLandInfo['leasedArea'];
+                                $bottomLandInfo['lenderBorrower'] = '借主名';           // 貸主名/借主名
+                                $bottomLandInfo['leasedAreaTitle'] = '借地契約面積：';  // 借地対象面積タイトル
+                                $bottomLandInfo['leasedArea'] = $bottomLandInfo['leasedArea'] . '㎡';
+                                $locsBottom[] = $bottomLandInfo;
+                            }
+                        }
+                    }
+                }
+                $loc['leasedArea'] = $leasedArea;
+                // 20220620 E_Add
                 $locsLand[] = $loc;
             }
             // 区分が02：建物の場合
             else if($loc['locationType'] === '02') {
                 $locsBuilding[] = $loc;
                 // 権利形態が01：借地権の場合
-                if($loc['rightsForm'] === '01' && $loc['bottomLandPid'] !== '') {
+                // 20220615 S_Update
+                // if($loc['rightsForm'] === '01' && $loc['bottomLandPid'] !== '') {
+                if($getBottom && $loc['rightsForm'] === '01' && $loc['bottomLandPid'] !== '') {
+                // 20220615 E_Update
                     // 20220611 S_Update
                     /*
                     // 底地を土地に追加
@@ -474,6 +514,12 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                         ->select('p2.landCategory', 'landCategory')
                         ->select('p1.leasedArea', 'leasedArea')
                         ->select('p2.area', 'area')
+                        // 20220615 S_Add
+                        ->select('p1.tempLandInfoPid', 'tempLandInfoPid')
+                        ->select('p1.locationInfoPid', 'locationInfoPid')
+                        ->select('p1.bottomLandPid', 'bottomLandPid')
+                        ->select('p1.landRent', 'landRent')
+                        // 20220615 S_Add
                         ->where('p1.locationInfoPid', $loc['pid'])
                         ->where_null('p1.deleteDate')
                         ->order_by_asc('p1.registPosition')
@@ -482,6 +528,12 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                         foreach($bottomLandInfos as $bottomLandInfo) {
                             $bottomLandInfo['rightsForm'] = '01';// 01：借地権
                             $locsLand[] = $bottomLandInfo;
+                            // 20220615 S_Add
+                            $bottomLandInfo['lenderBorrower'] = '貸主名';   // 貸主名/借主名
+                            $bottomLandInfo['leasedAreaTitle'] = '';        // 借地対象面積タイトル
+                            $bottomLandInfo['leasedArea'] = '';             // 借地対象面積
+                            $locsBottom[] = $bottomLandInfo;
+                            // 20220615 E_Add
                         }
                     }
                     // 20220611 E_Update
@@ -505,18 +557,29 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
         $currentRow = $cell->getRow();
     }
+    // 20220615 S_Add
+    $mergeFrom = $currentRow;
+    $mergeTo = $currentRow + 6;
+    // セル結合を解除
+    $sheet->unmergeCells('A' . $mergeFrom . ':A' . $mergeTo);
+    // 20220615 E_Add
 
     // 所在地情報（土地）が複数存在する場合
     if(sizeof($locsLand) > 1) {
+        // 20220615 S_Delete
         // セル結合を解除
-        $sheet->unmergeCells('A' . $currentRow . ':A' . ($currentRow + 6));
+        /*$sheet->unmergeCells('A' . $currentRow . ':A' . ($currentRow + 6));*/
+        // 20220615 S_Delete
 
         // 土地の行をコピー
         copyBlockWithVal($sheet, $currentRow, 3, sizeof($locsLand) - 1, $endColumn);
+        $mergeTo += (sizeof($locsLand) - 1) * 3;// 20220615 Add
 
+        // 20220615 S_Delete
         // セルを再結合
-        $mergeTo = $currentRow + (sizeof($locsLand) - 1) * 3 + 6;
-        $sheet->mergeCells('A' . $currentRow . ':A' . $mergeTo);
+        /*$mergeTo = $currentRow + (sizeof($locsLand) - 1) * 3 + 6;
+        $sheet->mergeCells('A' . $currentRow . ':A' . $mergeTo);*/
+        // 20220615 S_Delete
     }
     foreach($locsLand as $loc) {
         // 所 在（地番）
@@ -546,6 +609,51 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $cell = setCell($cell, $sheet, 'l_rightsForm', $currentColumn, $endColumn, $currentRow, $endRow, '');
     }
 
+    // 20220615 S_Add
+    // 底地
+    $cell = searchCell($sheet, 'l2_lenderBorrower', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+    }
+
+    // 底地が複数存在する場合
+    if(sizeof($locsBottom) > 1) {
+        // 底地の行をコピー
+        copyBlockWithVal($sheet, $currentRow, 2, sizeof($locsBottom) - 1, $endColumn);
+        $mergeTo += (sizeof($locsBottom) - 1) * 2;
+    }
+
+    // セルを再結合
+    $sheet->mergeCells('A' . $mergeFrom . ':A' . $mergeTo);
+
+    foreach($locsBottom as $loc) {
+        // 貸主名/借主名
+        $cell = setCell(null, $sheet, 'l2_lenderBorrower', $currentColumn, $endColumn, $currentRow, $endRow, $loc['lenderBorrower']);
+        // 借地対象面積タイトル
+        $cell = setCell($cell, $sheet, 'l2_leasedAreaTitle', $currentColumn, $endColumn, $currentRow, $endRow, $loc['leasedAreaTitle']);
+        // 借地対象面積
+        $cell = setCell($cell, $sheet, 'l2_leasedArea', $currentColumn, $endColumn, $currentRow, $endRow, $loc['leasedArea']);
+        // 所有者
+        $cell = setCell($cell, $sheet, 'l2_sharers', $currentColumn, $endColumn, $currentRow, $endRow, getSharerName($loc, '、'));
+        // 地代
+        $cell = setCell($cell, $sheet, 'l2_landRent', $currentColumn, $endColumn, $currentRow, $endRow, $loc['landRent']);
+    }
+    // 底地が存在しない場合、Emptyを設定
+    for ($i = 1; $i <= 1 - sizeof($locsBottom); $i++) {
+        // 貸主名/借主名<-Empty
+        $cell = setCell(null, $sheet, 'l2_lenderBorrower', $currentColumn, $endColumn, $currentRow, $endRow, '貸主名 ・ 借主名');
+        // 借地対象面積タイトル<-Empty
+        $cell = setCell($cell, $sheet, 'l2_leasedAreaTitle', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 借地対象面積<-Empty
+        $cell = setCell($cell, $sheet, 'l2_leasedArea', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 所有者<-Empty
+        $cell = setCell($cell, $sheet, 'l2_sharers', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 地代<-Empty
+        $cell = setCell($cell, $sheet, 'l2_landRent', $currentColumn, $endColumn, $currentRow, $endRow, '');
+    }
+    // 20220615 E_Add
+
     // 建物
     $cell = searchCell($sheet, 'b_address', $currentColumn, $endColumn, $currentRow, $endRow);
     if($cell != null) {
@@ -553,17 +661,31 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $currentRow = $cell->getRow();
     }
 
+    // 20220615 S_Add
+    $locsResident = [];// 入居者
+
+    $mergeFrom = $currentRow;
+    $mergeTo = $currentRow + 9;
+    // セル結合を解除
+    $sheet->unmergeCells('A' . $mergeFrom . ':A' . $mergeTo);
+    // 20220615 E_Add
+
     // 所在地情報（建物）が複数存在する場合
     if(sizeof($locsBuilding) > 1) {
+        // 20220615 S_Delete
         // セル結合を解除
-        $sheet->unmergeCells('A' . $currentRow . ':A' . ($currentRow + 9));
+        /*$sheet->unmergeCells('A' . $currentRow . ':A' . ($currentRow + 9));*/
+        // 20220615 E_Delete
 
         // 建物の行をコピー
         copyBlockWithVal($sheet, $currentRow, 6, sizeof($locsBuilding) - 1, $endColumn);
+        $mergeTo += (sizeof($locsBuilding) - 1) * 6;// 20220615 Add
 
+        // 20220615 S_Delete
         // セルを再結合
-        $mergeTo = $currentRow + (sizeof($locsBuilding) - 1) * 6 + 9;
-        $sheet->mergeCells('A' . $currentRow . ':A' . $mergeTo);
+        /*$mergeTo = $currentRow + (sizeof($locsBuilding) - 1) * 6 + 9;
+        $sheet->mergeCells('A' . $currentRow . ':A' . $mergeTo);*/
+        // 20220615 E_Delete
     }
     foreach($locsBuilding as $loc) {
         // 所在
@@ -584,6 +706,16 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $cell = setCell($cell, $sheet, 'b_completionDay_MM', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($loc['completionDay'], 'm'));
         $cell = setCell($cell, $sheet, 'b_completionDay_DD', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($loc['completionDay'], 'd'));
         // 20211025 E_Add
+
+        // 20220615 S_Add
+        // 入居者情報を取得
+        $residents = ORM::for_table(TBLRESIDENTINFO)->where('tempLandInfoPid', $loc['tempLandInfoPid'])->where('locationInfoPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
+        if(sizeof($residents) > 0) {
+            foreach($residents as $resident) {
+                $locsResident[] = $resident;
+            }
+        }
+        // 20220615 E_Add
     }
     // 所在地情報（建物）が存在しない場合、Emptyを設定
     for ($i = 1; $i <= 1 - sizeof($locsBuilding); $i++) {
@@ -606,6 +738,71 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $cell = setCell($cell, $sheet, 'b_completionDay_DD', $currentColumn, $endColumn, $currentRow, $endRow, '');
         // 20211025 E_Add
     }
+
+    // 20220615 S_Add
+    // 入居者
+    $cell = searchCell($sheet, 'b2_roomNo', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+    }
+
+    // 入居者が複数存在する場合
+    if(sizeof($locsResident) > 1) {
+        // 入居者の行をコピー
+        copyBlockWithVal($sheet, $currentRow, 2, sizeof($locsResident) - 1, $endColumn);
+        $mergeTo += (sizeof($locsResident) - 1) * 2;
+    }
+
+    // セルを再結合
+    $sheet->mergeCells('A' . $mergeFrom . ':A' . $mergeTo);
+
+    foreach($locsResident as $loc) {
+        // 部屋番号
+        $cell = setCell(null, $sheet, 'b2_roomNo', $currentColumn, $endColumn, $currentRow, $endRow, $loc['roomNo']);
+        // 借主氏名
+        $cell = setCell($cell, $sheet, 'b2_borrowerName', $currentColumn, $endColumn, $currentRow, $endRow, $loc['borrowerName']);
+        // 賃料
+        $cell = setCell($cell, $sheet, 'b2_rentPrice', $currentColumn, $endColumn, $currentRow, $endRow, $loc['rentPrice']);
+        // 契約期間満了日
+        $cell = setCell($cell, $sheet, 'b2_expirationDate_wareki', $currentColumn, $endColumn, $currentRow, $endRow, convert_jpdt($loc['expirationDate'], 'name'));
+        $cell = setCell($cell, $sheet, 'b2_expirationDate_YY', $currentColumn, $endColumn, $currentRow, $endRow, convert_jpdt($loc['expirationDate'], 'year'));
+        $cell = setCell($cell, $sheet, 'b2_expirationDate_MM', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($loc['expirationDate'], 'm'));
+        $cell = setCell($cell, $sheet, 'b2_expirationDate_DD', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($loc['expirationDate'], 'd'));
+    }
+    // 入居者が存在しない場合、Emptyを設定
+    for ($i = 1; $i <= 1 - sizeof($locsResident); $i++) {
+        // 部屋番号<-Empty
+        $cell = setCell(null, $sheet, 'b2_roomNo', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 借主氏名<-Empty
+        $cell = setCell($cell, $sheet, 'b2_borrowerName', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 賃料<-Empty
+        $cell = setCell($cell, $sheet, 'b2_rentPrice', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 契約期間満了日<-Empty
+        $cell = setCell($cell, $sheet, 'b2_expirationDate_wareki', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        $cell = setCell($cell, $sheet, 'b2_expirationDate_YY', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        $cell = setCell($cell, $sheet, 'b2_expirationDate_MM', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        $cell = setCell($cell, $sheet, 'b2_expirationDate_DD', $currentColumn, $endColumn, $currentRow, $endRow, '');
+    }
+    // 20220615 E_Add
 }
+// 20220615 S_Add
+/**
+ * 所有者名取得（指定文字区切り）
+ */
+function getSharerName($loc, $split) {
+    $ret = [];
+
+    // 共有者情報を取得
+    $shares = ORM::for_table(TBLSHARERINFO)->where('tempLandInfoPid', $loc['tempLandInfoPid'])->where('locationInfoPid', $loc['bottomLandPid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
+
+    if(isset($shares)) {
+        foreach($shares as $share) {
+            if(!empty($share['sharer'])) $ret[] = mb_convert_kana($share['sharer'], 'kvrn');
+        }
+    }
+    return implode($split, $ret);
+}
+// 20220615 E_Add
 
 ?>

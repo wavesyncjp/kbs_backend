@@ -89,10 +89,10 @@ if(isset($param->locations)) {
 		setInsert($loc, $param->createUserId);
 		$loc->tempLandInfoPid = $land->pid;
 
-		// 20210616 S_Update
+		// 20220614 S_Update
 //		copyData($location, $loc, array('pid', 'tempLandInfoPid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'attachFiles'));
-		copyData($location, $loc, array('pid', 'tempLandInfoPid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'attachFiles', 'bottomLands', 'delBottomLands'));
-		// 20210616 E_Update
+		copyData($location, $loc, array('pid', 'tempLandInfoPid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'attachFiles', 'bottomLands', 'delBottomLands', 'residents', 'delResidents'));
+		// 20220614 E_Update
 		$loc->save();
 
 		// key:oldPid,value:newPid
@@ -159,7 +159,7 @@ if(isset($param->locations)) {
 			foreach($location->bottomLands as $bottomLand) {
 				$newBottomLand = ORM::for_table(TBLBOTTOMLANDINFO)->create();
 				setInsert($newBottomLand, $param->createUserId);
-				copyData($bottomLand, $newBottomLand, array('pid', 'tempLandInfoPid','locationInfoPid', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'leasedAreaMap'));
+				copyData($bottomLand, $newBottomLand, array('pid', 'tempLandInfoPid','locationInfoPid', 'createUserId', 'createDate', 'updateUserId', 'updateDate'));
 				$newBottomLand->tempLandInfoPid = $land->pid;
 				$newBottomLand->locationInfoPid = $loc->pid;
 				$newBottomLand->save();
@@ -169,6 +169,19 @@ if(isset($param->locations)) {
 			}
 		}
 		// 20210616 E_Add
+		// 20220614 S_Add
+		// 入居者情報
+		if(isset($location->residents)) {
+			foreach($location->residents as $resident) {
+				$newResident = ORM::for_table(TBLRESIDENTINFO)->create();
+				setInsert($newResident, $param->createUserId);
+				copyData($resident, $newResident, array('pid', 'tempLandInfoPid','locationInfoPid', 'createUserId', 'createDate', 'updateUserId', 'updateDate'));
+				$newResident->tempLandInfoPid = $land->pid;
+				$newResident->locationInfoPid = $loc->pid;
+				$newResident->save();
+			}
+		}
+		// 20220614 E_Add
 	}
 
 	foreach($newLocations as $newLocation) {

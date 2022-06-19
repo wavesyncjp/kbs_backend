@@ -22,10 +22,10 @@ else {
 	$loc = ORM::for_table(TBLLOCATIONINFO)->create();	
 	setInsert($loc, $param->createUserId);
 }
-// 20210311 S_Update
+// 20220614 S_Update
 //copyData($param, $loc, array('pid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate'));
-copyData($param, $loc, array('pid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'attachFiles', 'bottomLands', 'delBottomLands', 'contractDetail02'));
-// 20210311 E_Update
+copyData($param, $loc, array('pid', 'contractDetail', 'bukkenName', 'floorAreaRatio', 'dependTypeMap', 'sharers', 'delSharers', 'createUserId', 'createDate', 'updateUserId', 'updateDate', 'attachFiles', 'bottomLands', 'delBottomLands', 'contractDetail02', 'residents', 'delResidents'));
+// 20220614 E_Update
 $loc->save();
 
 //所有者
@@ -86,6 +86,34 @@ if(isset($param->delBottomLands)) {
     ORM::for_table(TBLBOTTOMLANDINFO)->where_in('pid', $param->delBottomLands)->delete_many();
 }
 // 20210614 E_Add
+// 20220614 S_Add
+// 入居者情報
+if(isset($param->residents)) {
+
+    // 入居者情報ループ
+    $residentPos = 1;
+    foreach($param->residents as $resident){
+        if(isset($resident->pid) && $resident->pid > 0) {
+            $residentSave = ORM::for_table(TBLRESIDENTINFO)->find_one($resident->pid);
+            setUpdate($residentSave, $param->updateUserId);
+        }
+        else {
+            $residentSave = ORM::for_table(TBLRESIDENTINFO)->create();
+            setInsert($residentSave, $param->createUserId > 0 ? $param->createUserId : $param->updateUserId );
+        }
+        copyData($resident, $residentSave, array());	
+        $residentSave->registPosition = $residentPos;
+        $residentSave->tempLandInfoPid = $loc->tempLandInfoPid;
+        $residentSave->locationInfoPid = $loc->pid;
+        $residentSave->save();
+        $residentPos++;
+    }
+}
+// 削除
+if(isset($param->delResidents)) {
+    ORM::for_table(TBLRESIDENTINFO)->where_in('pid', $param->delResidents)->delete_many();
+}
+// 20220614 E_Add
 ORM::get_db()->commit();
 
 $locationPid = $loc->pid;
@@ -100,6 +128,10 @@ $loc['attachFiles'] = $attachFiles;
 $bottomLands = ORM::for_table(TBLBOTTOMLANDINFO)->where('locationInfoPid', $locationPid)->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
 $loc['bottomLands'] = $bottomLands;
 // 20210614 E_Add
+// 20220614 S_Add
+$residents = ORM::for_table(TBLRESIDENTINFO)->where('locationInfoPid', $locationPid)->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
+$loc['residents'] = $residents;
+// 20220614 E_Add
 echo json_encode($loc);
 
 ?>
