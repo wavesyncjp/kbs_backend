@@ -434,27 +434,29 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
             // 区分が01：土地の場合
             if($loc['locationType'] === '01') {
                 // 20220620 S_Add
-                $leasedArea = 0;// 借地対象面積
+                if($getBottom) {
+                    $leasedArea = 0;// 借地対象面積
 
-                // 対象の土地を底地選択している建物を取得
-                $buildings = ORM::for_table(TBLLOCATIONINFO)->where('bottomLandPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
-                if(sizeof($buildings) > 0) {
-                    foreach($buildings as $building) {
-                        // 底地情報を取得
-                        $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)->where('locationInfoPid', $building['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
-                        if(sizeof($bottomLandInfos) > 0) {
-                            foreach($bottomLandInfos as $bottomLandInfo) {
-                                $leasedArea += $bottomLandInfo['leasedArea'];
-                                $bottomLandInfo['bottomLandPid'] = $building['pid'];    // 底地PID<-建物PID
-                                $bottomLandInfo['lenderBorrower'] = '借主名';           // 貸主名/借主名
-                                $bottomLandInfo['leasedAreaTitle'] = '借地契約面積：';  // 借地対象面積タイトル
-                                $bottomLandInfo['leasedArea'] = $bottomLandInfo['leasedArea'] . '㎡';
-                                $locsBottom[] = $bottomLandInfo;
+                    // 対象の土地を底地選択している建物を取得
+                    $buildings = ORM::for_table(TBLLOCATIONINFO)->where('bottomLandPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
+                    if(sizeof($buildings) > 0) {
+                        foreach($buildings as $building) {
+                            // 底地情報を取得
+                            $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)->where('locationInfoPid', $building['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
+                            if(sizeof($bottomLandInfos) > 0) {
+                                foreach($bottomLandInfos as $bottomLandInfo) {
+                                    $leasedArea += $bottomLandInfo['leasedArea'];
+                                    $bottomLandInfo['bottomLandPid'] = $building['pid'];    // 底地PID<-建物PID
+                                    $bottomLandInfo['lenderBorrower'] = '借主名';           // 貸主名/借主名
+                                    $bottomLandInfo['leasedAreaTitle'] = '借地契約面積：';  // 借地対象面積タイトル
+                                    $bottomLandInfo['leasedArea'] = $bottomLandInfo['leasedArea'] . '㎡';
+                                    $locsBottom[] = $bottomLandInfo;
+                                }
                             }
                         }
                     }
+                    $loc['leasedArea'] = $leasedArea;
                 }
-                $loc['leasedArea'] = $leasedArea;
                 // 20220620 E_Add
                 $locsLand[] = $loc;
             }
@@ -643,7 +645,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
     // 底地が存在しない場合、Emptyを設定
     for ($i = 1; $i <= 1 - sizeof($locsBottom); $i++) {
         // 貸主名/借主名<-Empty
-        $cell = setCell(null, $sheet, 'l2_lenderBorrower', $currentColumn, $endColumn, $currentRow, $endRow, '貸主名 ・ 借主名');
+        $cell = setCell(null, $sheet, 'l2_lenderBorrower', $currentColumn, $endColumn, $currentRow, $endRow, ' 貸主名 ・ 借主名');
         // 借地対象面積タイトル<-Empty
         $cell = setCell($cell, $sheet, 'l2_leasedAreaTitle', $currentColumn, $endColumn, $currentRow, $endRow, '');
         // 借地対象面積<-Empty
