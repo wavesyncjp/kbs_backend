@@ -38,7 +38,7 @@ foreach($payDetails as $payDetail) {
 	// 土地情報を取得
 	$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('bukkenNo')->findOne($payDetail['tempLandInfoPid'])->asArray();
 	// 支払契約情報を取得
-	$pay = ORM::for_table(TBLPAYCONTRACT)->findOne($payDetail['payContractPid'])->asArray();
+	$pay = ORM::for_table(TBLPAYCONTRACT)->select('contractInfoPid')->findOne($payDetail['payContractPid'])->asArray();
 	// 仕入契約情報を取得
 	$contract = ORM::for_table(TBLCONTRACTINFO)->select('contractNumber')->findOne($pay['contractInfoPid'])->asArray();
 	// key=物件番号+支払確定日+契約番号
