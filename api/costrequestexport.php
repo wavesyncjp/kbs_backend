@@ -37,12 +37,14 @@ $payDetails = ORM::for_table(TBLPAYCONTRACTDETAIL)->where_in('pid', $param->ids)
 foreach($payDetails as $payDetail) {
 	// 土地情報を取得
 	$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('bukkenNo')->findOne($payDetail['tempLandInfoPid'])->asArray();
+	/*
 	// 支払契約情報を取得
 	$pay = ORM::for_table(TBLPAYCONTRACT)->select('contractInfoPid')->findOne($payDetail['payContractPid'])->asArray();
 	// 仕入契約情報を取得
 	$contract = ORM::for_table(TBLCONTRACTINFO)->select('contractNumber')->findOne($pay['contractInfoPid'])->asArray();
-	// key=物件番号+支払確定日+契約番号
-	$key = $bukken['bukkenNo'] . '-' . $payDetail['contractFixDay'] . '-' . $contract['contractNumber'];
+	*/
+	// key=物件番号+支払確定日
+	$key = $bukken['bukkenNo'] . '-' . $payDetail['contractFixDay'];
 	// グルーピングを行う
 	if(!isset($targets[$key])) {
 		$groups = [];
@@ -81,6 +83,8 @@ foreach ($targets as $key => $groups) {
 		$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->findOne($payDetail['tempLandInfoPid'])->asArray();
 		// 支払契約情報を取得
 		$pay = ORM::for_table(TBLPAYCONTRACT)->findOne($payDetail['payContractPid'])->asArray();
+		// 20220627 S_Update
+		/*
 		// 仕入契約情報を取得
 		$contract = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
 		$contractFormNumber = '';// 契約書番号
@@ -90,12 +94,78 @@ foreach ($targets as $key => $groups) {
 			// 所在地情報を取得
 			$locs = getLocation($contract['pid']);
 		}
+		*/
+		$contracts = [];
+		if(!empty($pay['contractInfoPid'])) {
+			// 仕入契約情報を取得
+			$contracts[] = $contract = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
+		}
+		else if(!empty($payDetail['contractor'])) {
+			$contractor = $payDetail['contractor'];
+			$contractSellerInfoPids = [];
+			// |で分割されている場合
+			if(strpos($contractor, '|') !== false) {
+				$explode1st = explode('|', $contractor);
+			}
+			else $explode1st[] = $contractor;
+			foreach($explode1st as $explode1) {
+				// ,で分割されている場合
+				if(strpos($explode1, ',') !== false) {
+					$explode2nd = explode(',', $explode1);
+				}
+				else $explode2nd[] = $explode1;
+			}
+			foreach($explode2nd as $explode2) {
+				$contractSellerInfoPids[] = $explode2;
+			}
+			// 仕入契約者情報を取得
+			$sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where_in('pid', $contractSellerInfoPids)->where_null('deleteDate')->findArray();
+			if(sizeof($sellers) > 0) {
+				$contractInfoPids = [];
+				foreach($sellers as $seller) {
+					$contractInfoPids[] = $seller['contractInfoPid'];
+				}
+				// 仕入契約情報を取得
+				$contracts = ORM::for_table(TBLCONTRACTINFO)->where_in('pid', $contractInfoPids)->where_null('deleteDate')->findArray();
+			}
+		}
+		// 複数契約書番号
+		$list_contractFormNumber = '';
+		$locs = [];
+		if(sizeof($contracts) > 0) {
+			$list_contractFormNumber = getContractFormNumber($contracts, chr(10));
+			$contractInfoPids = [];
+			foreach($contracts as $contract) {
+				$contractInfoPids[] = $contract['pid'];
+			}
+			// 所在地情報を取得
+			$locs = getLocations($contractInfoPids);
+		}
+		else if(!empty($payDetail['tempLandInfoPid'])) {
+			// 所在地情報を取得
+			$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $payDetail['tempLandInfoPid'])->where_null('deleteDate')->findArray();
+		}
+		// 20220627 E_Update
+		// 所在地
+		$address = '';
 		// 複数地番・複数家屋番号
 		$list_blockOrBuildingNumber = '';
-		if(sizeof($locs) > 0) $list_blockOrBuildingNumber = getBuildingNumber($locs, chr(10));
+		if(sizeof($locs) > 0) {
+			if(sizeof($contracts) > 0) $list_blockOrBuildingNumber = getBuildingNumber($locs, chr(10));
+			$cntLandlocs = 0;
+			$cntNotLandlocs = 0;
+			foreach($locs as $loc) {
+				// 区分が01：土地の場合
+				if($loc['locationType'] == '01') $cntLandlocs++;
+				else $cntNotLandlocs++;
 
+				if($cntLandlocs == 1) $address = $loc['address'];
+				if($cntLandlocs == 0 && $cntNotLandlocs == 1) $address = $loc['address'];
+			}
+		}
 		// 居住表示
-		$cell = setCell(null, $sheet, 'supplierAddress', 1, $endColumn, 1, $endRow, $pay['supplierAddress']);
+		// $cell = setCell(null, $sheet, 'supplierAddress', 1, $endColumn, 1, $endRow, $pay['supplierAddress']);
+		$cell = setCell(null, $sheet, 'address', 1, $endColumn, 1, $endRow, $address);
 		// 契約物件番号
 		$cell = setCell(null, $sheet, 'contractBukkenNo', 1, $endColumn, 1, $endRow, $bukken['contractBukkenNo']);
 		// 支払確定日
@@ -109,7 +179,8 @@ foreach ($targets as $key => $groups) {
 		if(!empty($payDetail['contractFixTime'])) $contractFixDateTime .= $payDetail['contractFixTime'] . '～';
 		$cell = setCell(null, $sheet, 'contractFixDateTime', 1, $endColumn, 1, $endRow, $contractFixDateTime);
 		// 契約書番号
-		$cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contractFormNumber);
+		// $cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contractFormNumber);
+		$cell = setCell(null, $sheet, 'list_contractFormNumber', 1, $endColumn, 1, $endRow, $list_contractFormNumber);
 		// 複数地番/複数家屋番号
 		$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
 		// 支払先<-取引先名称
@@ -215,7 +286,7 @@ function getUserName($val) {
 /**
  * 所在地情報取得
  */
-function getLocation($contractPid) {
+function getLocations($contractInfoPids) {
 	$lst = ORM::for_table(TBLCONTRACTDETAILINFO)
 	->table_alias('p1')
 	->select('p2.locationType', 'locationType')
@@ -226,9 +297,22 @@ function getLocation($contractPid) {
 	->select('p2.cityPlanningTax', 'cityPlanningTax')
 	->inner_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p2.pid'), 'p2')
 	->where('p1.contractDataType', '01')
-	->where('p1.contractInfoPid', $contractPid)
+	->where_in('p1.contractInfoPid', $contractInfoPids)
 	->order_by_asc('p1.pid')->findArray();
 	return $lst;
+}
+
+/**
+ * 契約書番号取得（指定文字区切り）
+ */
+function getContractFormNumber($lst, $split) {
+	$ret = [];
+	if(isset($lst)) {
+		foreach($lst as $data) {
+			if(!empty($data['contractFormNumber'])) $ret[] = mb_convert_kana($data['contractFormNumber'], 'kvrn');
+		}
+	}
+	return implode($split, $ret);
 }
 
 /**

@@ -24,7 +24,7 @@ else {
 	$userId = $param->createUserId;// 20210728 Add
 }
 
-copyData($param, $paycontract, array('pid', 'details', 'land', 'contractDayMap','contractFixDayMap','taxEffectiveDayMap', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+copyData($param, $paycontract, array('pid', 'details', 'land', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 $paycontract->save();
 
 //支払管理詳細
@@ -33,18 +33,18 @@ if(isset($param->details)){
 		//削除
 		if(isset($detail->deleteUserId) && $detail->deleteUserId > 0) {
 			$detailSave = ORM::for_table(TBLPAYCONTRACTDETAIL)->find_one($detail->pid);
-			$detailSave->delete();			
+			$detailSave->delete();
 		}
 		else {
 			if(isset($detail->pid) && $detail->pid > 0){
 				$detailSave = ORM::for_table(TBLPAYCONTRACTDETAIL)->find_one($detail->pid);
-				setUpdate($detailSave, $param->updateUserId);			
+				setUpdate($detailSave, $param->updateUserId);
 			}
 			else {
 				$detailSave = ORM::for_table(TBLPAYCONTRACTDETAIL)->create();
-				setInsert($detailSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);			
-			}		
-			copyData($detail, $detailSave, array('pid', 'deleteUserId', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));		
+				setInsert($detailSave, isset($param->updateUserId) && $param->updateUserId ? $param->updateUserId : $param->createUserId);
+			}
+			copyData($detail, $detailSave, array('pid', 'deleteUserId', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 			$detailSave->payContractPid = $paycontract->pid;
 			if($paycontract->tempLandInfoPid > 0){
 				$detailSave->tempLandInfoPid = $paycontract->tempLandInfoPid;

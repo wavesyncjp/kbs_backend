@@ -1260,12 +1260,12 @@ function setContractByPay($paycontract, $userId) {
 
 	// 仕入契約情報を取得
 	$contract = ORM::for_table(TBLCONTRACTINFO)->findOne($paycontract['contractInfoPid']);
-	if(sizeof($contract) > 0) {
+	if(!empty($contract)) {
 		// コード<-SYS1+契約カテゴリの値
 		$code = 'SYS1' . $paycontract['contractCategory'];
 		// コード名称マスタを取得
 		$codename = ORM::for_table(TBLCODENAMEMST)->findOne($code);
-		if(sizeof($codename) > 0) {
+		if(!empty($codename)) {
 			// コードマスタを取得
 			$codes = ORM::for_table(TBLCODE)->where('code', $codename['code'])->order_by_asc('displayOrder')->findArray();
 			if(sizeof($codes) > 0) {
@@ -1308,12 +1308,12 @@ function setSaleByPay($paycontract, $userId) {
 
 	// 物件売契約情報を取得
 	$sale = ORM::for_table(TBLBUKKENSALESINFO)->findOne($paycontract['bukkenSalesInfoPid']);
-	if(sizeof($sale) > 0) {
+	if(!empty($sale)) {
 		// コード<-SYS2+契約カテゴリの値
 		$code = 'SYS2' . $paycontract['contractCategory'];
 		// コード名称マスタを取得
 		$codename = ORM::for_table(TBLCODENAMEMST)->findOne($code);
-		if(sizeof($codename) > 0) {
+		if(!empty($codename)) {
 			// コードマスタを取得
 			$codes = ORM::for_table(TBLCODE)->where('code', $codename['code'])->order_by_asc('displayOrder')->findArray();
 			if(sizeof($codes) > 0) {
