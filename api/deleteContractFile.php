@@ -2,7 +2,7 @@
 require '../header.php';
 require '../util.php';
 
-$fullPath  = __DIR__ . '/../uploads';
+$fullPath = __DIR__ . '/../uploads';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 	echo 'NOT SUPPORT';
@@ -15,12 +15,19 @@ $param = json_decode($postparam);
 $file = ORM::for_table(TBLCONTRACTFILE)->find_one($param->pid);	
 
 $split = explode('/', $file->attachFilePath);
-$dir = $fullPath.'/'.$split[sizeof($split) - 2];
+// 20220701 S_Update
+// $dir = $fullPath.'/'.$split[sizeof($split) - 2];
+$dir = $fullPath . '/' . $split[sizeof($split) - 4] . '/' . $split[sizeof($split) - 3] . '/' . $split[sizeof($split) - 2];// contract/pid/uniq/
+/*
 deleteDirectory($dir);
 $file->delete();
+*/
+setDelete($file, $param->deleteUserId);
+$file->save();
+// 20220701 E_Update
 
 $result = [
-		"status" => $dir,
+	"status" => $dir,
 ];
 
 echo json_encode($result);

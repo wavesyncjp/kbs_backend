@@ -3,6 +3,7 @@ require '../header.php';
 require '../util.php';
 
 $infoId = $_POST['infoId'];
+$createUserId = $_POST['createUserId'];// 20220701 Add
 $fullPath  = __DIR__ . '/../uploads/approval';
 if(!file_exists($fullPath)){	
 	if (!mkdir($fullPath)) {
@@ -13,20 +14,25 @@ if(!file_exists($fullPath)){
 $fileName = $_FILES['file']['name'];
 
 $uniq = getGUID();
-$dirPath = $fullPath.'/'.$infoId;
+$dirPath = $fullPath . '/' . $infoId;
 if (!file_exists($dirPath)) {
-	mkdir($dirPath);
+	if (!mkdir($dirPath)) {
+		die('NG');
+	}
 }
-$dirPath = $fullPath.'/'.$infoId.'/'.$uniq;
-mkdir($dirPath);
+$dirPath = $dirPath . '/' . $uniq;
+if (!mkdir($dirPath)) {
+	die('NG');
+}
 
-$filePath = $dirPath.'/'.$fileName;
+$filePath = $dirPath . '/' . $fileName;
 
 move_uploaded_file($_FILES['file']['tmp_name'], $filePath);
 
 $map = ORM::for_table(TBLINFORMATION)->find_one($infoId);
 $map->approvalAttachFileName = $fileName;
-$map->approvalAttachFilePath = 'backend/uploads/approval/'.$infoId.'/'.$uniq.'/';
+$map->approvalAttachFilePath = 'backend/uploads/approval/' . $infoId . '/' . $uniq . '/';
+setInsert($map, $createUserId);// 20220701 Add
 $map->save();
 
 echo json_encode($map->asArray());

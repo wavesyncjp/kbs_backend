@@ -4,6 +4,7 @@ require '../util.php';
 
 $isAttach = $_POST['isAttach'];
 $bukkenId = $_POST['bukkenId'];
+$createUserId = $_POST['createUserId'];// 20220701 Add
 $fullPath  = __DIR__ . '/../uploads';
 if(!file_exists($fullPath)){	
 	if (!mkdir($fullPath)) {
@@ -15,33 +16,76 @@ if(!file_exists($fullPath)){
 $fileName = $_FILES['file']['name'];
 
 $uniq = getGUID();
+
+// 20220701 S_Update
+/*
 $dirPath = $fullPath.'/'.$uniq;
 mkdir($dirPath);
+*/
 
-$filePath = $dirPath.'/'.$fileName;
+if($isAttach == '1') {
+	$dirPath = $fullPath . '/bukken';
+	if (!file_exists($dirPath)) {
+		if (!mkdir($dirPath)) {
+			die('NG');
+		}
+	}
+}
+else {
+	$dirPath = $fullPath . '/map';
+	if (!file_exists($dirPath)) {
+		if (!mkdir($dirPath)) {
+			die('NG');
+		}
+	}
+}
+
+$dirPath = $dirPath . '/' . $bukkenId;
+if (!file_exists($dirPath)) {
+	if (!mkdir($dirPath)) {
+		die('NG');
+	}
+}
+
+$dirPath = $dirPath . '/' . $uniq;
+if (!mkdir($dirPath)) {
+	die('NG');
+}
+// 20220701 E_Update
+
+$filePath = $dirPath . '/' . $fileName;
 
 move_uploaded_file($_FILES['file']['tmp_name'], $filePath);
 
-if($isAttach == '1'){
-	$map = ORM::for_table('tblfileattach')->create();
+if($isAttach == '1') {
+	// $map = ORM::for_table('tblfileattach')->create();
+	$map = ORM::for_table(TBLFILEATTACH)->create();
 	$map->tempLandInfoPid = $bukkenId;
 	$map->attachFileName = $fileName;
-	$map->attachFilePath = 'backend/uploads/'.$uniq.'/';
+	// 20220701 S_Update
+	// $map->attachFilePath = 'backend/uploads/'.$uniq.'/';
+	$map->attachFilePath = 'backend/uploads/bukken/' . $bukkenId . '/' . $uniq . '/';
+	setInsert($map, $createUserId);
+	// 20220701 E_Update
 	$map->attachFileRemark = $_POST['comment'];
 	$map->save();
 	
 }
 else {
-	$map = ORM::for_table('tblmapattach')->create();
+	// $map = ORM::for_table('tblmapattach')->create();
+	$map = ORM::for_table(TBLMAPATTACH)->create();
 	$map->tempLandInfoPid = $bukkenId;
 	$map->mapFileName = $fileName;
-	$map->mapFilePath = 'backend/uploads/'.$uniq.'/';
+	// 20220701 S_Update
+	// $map->mapFilePath = 'backend/uploads/'.$uniq.'/';
+	$map->mapFilePath = 'backend/uploads/map/' . $bukkenId . '/' . $uniq . '/';
+	setInsert($map, $createUserId);
+	// 20220701 E_Update
 	$map->save();
-	
 }
+
 echo json_encode($map->asArray());
 
 #echo $_FILES['file']['name'];
-
 
 ?>

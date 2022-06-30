@@ -34,10 +34,15 @@ $attachFiles = ORM::for_table(TBLLOCATIONATTACH)->where('locationInfoPid', $pid)
 if(isset($attachFiles)) {
 	foreach($attachFiles as $attachFile) {
 		$split = explode('/', $attachFile->attachFilePath);
+		// 20220701 S_Delete
+		/*
 		$dir = $fullPath.'/'.$split[sizeof($split) - 2];
+		$dir = $fullPath . '/' . $split[sizeof($split) - 4] . '/' . $split[sizeof($split) - 3] . '/' . $split[sizeof($split) - 2];// location/pid/uniq/
 		deleteDirectory($dir);
+		*/
+		// 20220701 E_Delete
 		setDelete($attachFile, $userId);
-		$attachFile->delete();
+		$attachFile->save();
 	}
 }
 // 20210312 E_Add

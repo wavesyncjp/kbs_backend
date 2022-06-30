@@ -3,14 +3,15 @@ require '../header.php';
 require '../util.php';
 
 $infoId = $_POST['infoId'];
+$createUserId = $_POST['createUserId'];// 20220701 Add
 // 20211227 S_Update
 // $fullPath  = __DIR__ . '/../uploads';
 $fullPath  = __DIR__ . '/../uploads/information';
 // 20211227 E_Update
-if(!file_exists($fullPath)){	
+if (!file_exists($fullPath)) {
 	if (!mkdir($fullPath)) {
 		die('NG');
-	}	
+	}
 }
 
 #$fileName = mb_convert_encoding($_FILES['file']['name'],'cp932','utf8');
@@ -19,11 +20,16 @@ $fileName = $_FILES['file']['name'];
 $uniq = getGUID();
 // 20211227 S_Update
 // $dirPath = $fullPath.'/'.$uniq;
-$dirPath = $fullPath.'/'.$infoId;
+$dirPath = $fullPath . '/' . $infoId;
 if (!file_exists($dirPath)) {
-	mkdir($dirPath);
+	if (!mkdir($dirPath)) {
+		die('NG');
+	}
 }
-$dirPath = $fullPath.'/'.$infoId.'/'.$uniq;
+$dirPath = $dirPath . '/' . $uniq;
+if (!mkdir($dirPath)) {
+	die('NG');
+}
 // 20211227 E_Update
 mkdir($dirPath);
 
@@ -35,8 +41,9 @@ $map = ORM::for_table(TBLINFORMATION)->find_one($infoId);
 $map->attachFileName = $fileName;
 // 20211227 S_Update
 // $map->attachFilePath = 'backend/uploads/'.$uniq.'/';
-$map->attachFilePath = 'backend/uploads/information/'.$infoId.'/'.$uniq.'/';
+$map->attachFilePath = 'backend/uploads/information/' . $infoId . '/' . $uniq . '/';
 // 20211227 E_Update
+setInsert($map, $createUserId);// 20220701 Add
 $map->save();
 
 echo json_encode($map->asArray());
