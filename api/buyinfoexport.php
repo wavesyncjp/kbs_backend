@@ -106,6 +106,7 @@ foreach($contracts as $contract) {
 	$payDetail_intermediary = null;// 支払契約詳細情報（仲介料）
 	$payDetail_outsourcing = null; // 支払契約詳細情報（業務委託料）
 	// 20220331 E_Add
+	$cntIntermediaryOrOutsourcing = 0;// 20220703 Add
 	foreach($payContracts as $pay) {
 		$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $pay['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
 		if(sizeof($details) > 0) {
@@ -121,12 +122,14 @@ foreach($contracts as $contract) {
 					$payDetail_intermediary = $detail;
 					$pay = ORM::for_table(TBLPAYCONTRACT)->findOne($payDetail_intermediary['payContractPid'])->asArray();
 					$payDetail_intermediary = array_merge($pay, $payDetail_intermediary);
+					$cntIntermediaryOrOutsourcing++;// 20220703 Add
 				}
 				// 支払コードが業務委託料の場合
 				else if($detail['paymentCode'] == $paymentCodeByOutsourcingPrice) {
 					$payDetail_outsourcing = $detail;
 					$pay = ORM::for_table(TBLPAYCONTRACT)->findOne($payDetail_outsourcing['payContractPid'])->asArray();
 					$payDetail_outsourcing = array_merge($pay, $payDetail_outsourcing);
+					$cntIntermediaryOrOutsourcing++;// 20220703 Add
 				}
 				// 20220331 E_Add
 			}
@@ -242,7 +245,10 @@ foreach($contracts as $contract) {
 	$payPriceTaxPlusFixedTax = $payPriceTax + $fixedTax;
 	// 20220529 E_Add
 
-	$endColumn = 13;// 最終列数
+	// 20220703 S_Update
+	// $endColumn = 13;// 最終列数
+	$endColumn = 16;// 最終列数
+	// 20220703 E_Update
 	$endRow = 43;   // 最終行数
 
 	// 20220529 S_Add
@@ -302,6 +308,11 @@ foreach($contracts as $contract) {
 	// for($i = 0 ; $i < 4; $i++) {
 	for($i = 1 ; $i < 6; $i++) {
 	// 20220529 E_Update
+
+		// 20220703 S_Add
+		// 仲介料と業務委託料が未登録の場合、支払依頼書帳票シートは作成しない
+		if($i == 1 && $cntIntermediaryOrOutsourcing == 0) continue;
+		// 20220703 E_Add
 
 		// シートをコピー
 		// $sheet = $spreadsheet->getSheet($i);
@@ -495,9 +506,13 @@ foreach($contracts as $contract) {
 			if($cnt_contractorName > 1) {
 				copyBlockWithVal($sheet, $pos, $copyEndRow, $cnt_contractorName - 1, 11);
 			}
+			// 20220703 S_Delete
+			/*
 			// 収入印紙を設定
 			$setRow = $pos + (($cnt_contractorName - 1) * $copyEndRow);// 設定位置
 			copyMergeCellStyleWithVal($sheet, 3, $setRow, 3, $setRow + 1, 12, 5);
+			*/
+			// 20220703 E_Delete
 			// 20220529 E_Add
 		}
 

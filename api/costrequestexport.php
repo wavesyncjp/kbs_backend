@@ -75,7 +75,10 @@ foreach ($targets as $key => $groups) {
 	$sheet->setCellValue('K' . ($pos + sizeof($groups)), '=SUM(K' . $pos . ':K' . ($pos + sizeof($groups) - 1) . ')');
 	$sheet->setCellValue('L' . ($pos + sizeof($groups)), '=SUM(L' . $pos . ':L' . ($pos + sizeof($groups) - 1) . ')');
 
-	$endColumn = 13;// 最終列数
+	// 20220703 S_Update
+	// $endColumn = 13;// 最終列数
+	$endColumn = 16;// 最終列数
+	// 20220703 E_Update
 	$endRow = 43;   // 最終行数
 
 	foreach($groups as $payDetail) {
@@ -170,8 +173,11 @@ foreach ($targets as $key => $groups) {
 		$cell = setCell(null, $sheet, 'contractBukkenNo', 1, $endColumn, 1, $endRow, $bukken['contractBukkenNo']);
 		// 支払確定日
 		$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_dt($payDetail['contractFixDay'], 'Y年n月j日'));
-		// 契約担当者
-		$cell = setCell(null, $sheet, 'payContractStaffName', 1, $endColumn, 1, $endRow, getUserName($pay['userId']));
+		// 担当<-物件担当者
+		// 20220703 S_Update
+		// $cell = setCell(null, $sheet, 'payContractStaffName', 1, $endColumn, 1, $endRow, getUserName($pay['userId']));
+		$cell = setCell(null, $sheet, 'infoStaffName', 1, $endColumn, 1, $endRow, getInfoStaff($bukken['infoStaff']));
+		// 20220703 E_Update
 
 		// 日時
 		$contractFixDateTime = convert_dt($payDetail['contractFixDay'], 'Y/m/d');
@@ -197,6 +203,8 @@ foreach ($targets as $key => $groups) {
 		$cell = setCell(null, $sheet, 'accountName', 1, $endColumn, 1, $endRow, $pay['accountName']);
 		// 代金
 		$cell = setCell(null, $sheet, 'payPriceTax', 1, $endColumn, 1, $endRow, $payDetail['payPriceTax']);
+		// 送金金額
+		$cell = setCell(null, $sheet, 'payPriceTaxPlusFixedTax', 1, $endColumn, 1, $endRow, $payDetail['payPriceTax']);
 		// 支払名称
 		$cell = setCell(null, $sheet, 'paymentName', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail['paymentCode']));
 		// 備考
@@ -267,6 +275,7 @@ function setCell($cell, $sheet, $keyWord, $startColumn, $endColumn, $startRow, $
 /**
  * ユーザー名称取得
  */
+/*
 function getUserName($val) {
 	$ret = '';
 
@@ -281,6 +290,21 @@ function getUserName($val) {
 		}
 	}
 	return $ret;
+}
+*/
+
+/**
+ * 物件担当者取得
+ */
+function getInfoStaff($staff) {
+	if(!isset($staff) || $staff == '') return '';
+	$ids = explode(',', $staff);
+	$users = ORM::for_table(TBLUSER)->where_in('userId', $ids)->where_null('deleteDate')->select('userName')->findArray();
+	$names = [];
+	foreach($users as $user) {
+		$names[] = $user['userName'];
+	}
+	return implode('、', $names);
 }
 
 /**

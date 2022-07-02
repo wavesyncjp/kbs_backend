@@ -206,9 +206,11 @@ foreach($sales as $sale) {
 			// 決済日
 			$cell = setCell(null, $sheet, 'salesDecisionDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_dt($sale['salesDecisionDay'], 'Y年n月j日'));
 
+			/*
 			// 収入印紙を設定
 			$setRow = 19;// 設定位置
 			copyMergeCellStyleWithVal($sheet, 3, $setRow, 3, $setRow + 1, 12, 5);
+			*/
 		}
 		$sheet->setSelectedCell('A1');// 初期選択セル設定
 	}
