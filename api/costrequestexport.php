@@ -83,7 +83,7 @@ foreach ($targets as $key => $groups) {
 
 	foreach($groups as $payDetail) {
 		// 土地情報を取得
-		$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->findOne($payDetail['tempLandInfoPid'])->asArray();
+		$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->select('infoStaff')->findOne($payDetail['tempLandInfoPid'])->asArray();
 		// 支払契約情報を取得
 		$pay = ORM::for_table(TBLPAYCONTRACT)->findOne($payDetail['payContractPid'])->asArray();
 		// 20220627 S_Update
