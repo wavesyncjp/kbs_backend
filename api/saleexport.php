@@ -177,6 +177,12 @@ foreach($contracts as $contract) {
     $sheet->setCellValue('D'.$contractPos, $blockNumber);
     // 家屋番号
     $sheet->setCellValue('E'.$contractPos, $buildingNumber);
+    // 20220705 S_Add
+    if(strpos($buildingNumber, '未登記建物あり') !== false) {
+        // 文字色：赤
+        $sheet->getStyle('E'.$contractPos)->getFont()->getColor()->applyFromArray(['rgb' => 'FF0000']);
+    }
+    // 20220705 E_Add
     // 20210320 E_Add
     // 地権者
     $sheet->setCellValue('F'.$contractPos, $contractors[0]);
@@ -383,6 +389,39 @@ if(sizeof($payList1) == 0) {
 
 // 合計の計算式
 $sheet->setCellValue('I'.$payPos, '=SUM(I' . $firstPayPos . ':I' . ($payPos - 1) .')');
+
+// 20220705 S_Add
+// 【ノート】
+// 水道光熱費等経費一覧を集約する
+
+if(sizeof($payList2) > 0) {
+    $payList2Temp = $payList2;
+    $payList2 = [];
+    foreach($payList2Temp as $payDetail) {
+        // key=支払先+摘要+支払方法
+        $key = $payDetail['supplierName'] . '-' . $payDetail['paymentName'] . '-' . $payDetail['paymentMethod'];
+        // グルーピングを行う
+        if(!isset($payList2[$key])) {
+            // 最小支払日・最大支払日を設定
+            $payDetail['minContractFixDay'] = $payDetail['contractFixDay'];
+            $payDetail['maxContractFixDay'] = $payDetail['contractFixDay'];
+            $payList2[$key] = $payDetail;
+        } else {
+            $group = $payList2[$key];
+            // 金額を加算
+            $group['payPriceTax'] = intval($group['payPriceTax']) + intval($payDetail['payPriceTax']);
+            // 最小支払日・最大支払日を設定
+            if($group['minContractFixDay'] == '' || strcmp($group['minContractFixDay'], $payDetail['contractFixDay']) > 0) $group['minContractFixDay'] = $payDetail['contractFixDay'];
+            if($group['maxContractFixDay'] == '' || strcmp($group['maxContractFixDay'], $payDetail['contractFixDay']) < 0) $group['maxContractFixDay'] = $payDetail['contractFixDay'];
+            $group['contractFixDay'] = '';
+            // 備考<-最小支払日～最大支払日
+            if(strcmp($group['minContractFixDay'], $group['maxContractFixDay']) == 0) $group['detailRemarks'] = convert_jpdt($group['minContractFixDay']);
+            else $group['detailRemarks'] = convert_jpdt($group['minContractFixDay']) . '～' . convert_jpdt($group['maxContractFixDay']);
+            $payList2[$key] = $group;
+        }
+    }
+}
+// 20220705 E_Add
 
 // 水道光熱費等経費一覧
 $payPos += 4;
@@ -671,6 +710,7 @@ function getLocation($contractPid) {
     ->select('p2.area', 'area')
     ->select('p2.rightsForm', 'rightsForm')// 20210411 Add
     ->select('p1.contractHave', 'contractHave')// 20201014 Add
+    ->select('p2.buildingNotyet', 'buildingNotyet')// 20220705 Add
     ->inner_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p2.pid'), 'p2')
     ->where('p1.contractDataType', '01')
     ->where('p1.contractInfoPid', $contractPid)
@@ -741,6 +781,10 @@ function getBuildingNumber($lst) {
     if(isset($lst)) {
         foreach($lst as $data) {
             if($data['locationType'] !== '01' && $data['buildingNumber'] !== '') $ret[] = mb_convert_kana($data['buildingNumber'], 'kvrn');
+            // 20220705 S_Add
+            // 区分が01:土地かつ、建物未登記ありにチェックがある場合、家屋番号を設定する
+            else if($data['locationType'] === '01' && $data['buildingNotyet'] === '1') $ret[] = mb_convert_kana($data['buildingNumber'], 'kvrn');
+            // 20220705 E_Add
         }
     }
     return implode(chr(10), $ret);
