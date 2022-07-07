@@ -73,7 +73,10 @@ foreach ($targets as $key => $groups) {
 	// 合計の計算式
 	$sheet->setCellValue('J' . ($pos + sizeof($groups)), '=SUM(J' . $pos . ':J' . ($pos + sizeof($groups) - 1) . ')');
 	$sheet->setCellValue('K' . ($pos + sizeof($groups)), '=SUM(K' . $pos . ':K' . ($pos + sizeof($groups) - 1) . ')');
-	$sheet->setCellValue('L' . ($pos + sizeof($groups)), '=SUM(L' . $pos . ':L' . ($pos + sizeof($groups) - 1) . ')');
+	// 20220707 S_Update
+	// $sheet->setCellValue('L' . ($pos + sizeof($groups)), '=SUM(L' . $pos . ':L' . ($pos + sizeof($groups) - 1) . ')');
+	$sheet->setCellValue('M' . ($pos + sizeof($groups)), '=SUM(M' . $pos . ':M' . ($pos + sizeof($groups) - 1) . ')');
+	// 20220707 E_Update
 
 	// 20220703 S_Update
 	// $endColumn = 13;// 最終列数
@@ -101,7 +104,7 @@ foreach ($targets as $key => $groups) {
 		$contracts = [];
 		if(!empty($pay['contractInfoPid'])) {
 			// 仕入契約情報を取得
-			$contracts[] = $contract = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
+			$contracts = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
 		}
 		else if(!empty($payDetail['contractor'])) {
 			$contractor = $payDetail['contractor'];
@@ -114,7 +117,13 @@ foreach ($targets as $key => $groups) {
 			foreach($explode1st as $explode1) {
 				// ,で分割されている場合
 				if(strpos($explode1, ',') !== false) {
-					$explode2nd = explode(',', $explode1);
+					// 20220708 S_Update
+//					$explode2nd = explode(',', $explode1);
+					$temps = explode(',', $explode1);
+					foreach($temps as $temp) {
+						$explode2nd[] = $temp;
+					}
+					// 20220708 S_Update
 				}
 				else $explode2nd[] = $explode1;
 			}
@@ -146,7 +155,7 @@ foreach ($targets as $key => $groups) {
 		}
 		else if(!empty($payDetail['tempLandInfoPid'])) {
 			// 所在地情報を取得
-			$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $payDetail['tempLandInfoPid'])->where_null('deleteDate')->findArray();
+			$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $payDetail['tempLandInfoPid'])->where_null('deleteDate')->order_by_asc('displayOrder')->findArray();
 		}
 		// 20220627 E_Update
 		// 所在地
@@ -157,14 +166,37 @@ foreach ($targets as $key => $groups) {
 			if(sizeof($contracts) > 0) $list_blockOrBuildingNumber = getBuildingNumber($locs, chr(10));
 			$cntLandlocs = 0;
 			$cntNotLandlocs = 0;
+			// 20220707 S_Add
+			$addressLand = '';
+			$addressNotLand = '';
+			// 20220707 E_Add
 			foreach($locs as $loc) {
 				// 区分が01：土地の場合
+				// 20220708 S_Update
+				/*
 				if($loc['locationType'] == '01') $cntLandlocs++;
 				else $cntNotLandlocs++;
-
+				*/
+				if($loc['locationType'] == '01') {
+					$cntLandlocs++;
+					if($cntLandlocs == 1) $addressLand = $loc['address'];
+				}
+				else {
+					$cntNotLandlocs++;
+					if($cntNotLandlocs == 1) $addressNotLand = $loc['address'];
+				}
+				// 20220708 E_Update
+				// 20220707 S_Delete
+				/*
 				if($cntLandlocs == 1) $address = $loc['address'];
 				if($cntLandlocs == 0 && $cntNotLandlocs == 1) $address = $loc['address'];
+				*/
+				// 20220707 E_Delete
 			}
+			// 20220707 S_Add
+			if($addressLand != '') $address = $addressLand;
+			else $address = $addressNotLand;
+			// 20220707 E_Add
 		}
 		// 居住表示
 		// $cell = setCell(null, $sheet, 'supplierAddress', 1, $endColumn, 1, $endRow, $pay['supplierAddress']);

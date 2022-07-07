@@ -89,13 +89,46 @@ foreach($sales as $sale) {
 	$endColumn = 12;// 最終列数
 	$endRow = 34;   // 最終行数
 
-	for($i = 0 ; $i < 4; $i++) {
+	// 20220707 S_Add
+	// ・支払明細書シート
+	$sheet = $spreadsheet->getSheet(0);
+	$title = $sheet->getTitle();
+	$sheet->setTitle($title . '_' . $sale['pid']);
+
+	// 買主<-売却先
+	$cell = setCell(null, $sheet, 'salesName', 1, $endColumn, 1, $endRow, $sale['salesName']);
+	// 物件名<-所在地
+	$cell = setCell(null, $sheet, 'address', 1, $endColumn, 1, $endRow, $address);
+	// 契約物件番号
+	$cell = setCell(null, $sheet, 'contractBukkenNo', 1, $endColumn, 1, $endRow, $bukken['contractBukkenNo']);
+	// 支払日<-決済日
+	$cell = setCell(null, $sheet, 'salesDecisionDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_dt($sale['salesDecisionDay'], 'Y年n月j日'));
+	// 売買代金
+	$cell = setCell(null, $sheet, 'salesTradingPrice', 1, $endColumn, 1, $endRow, $sale['salesTradingPrice']);
+	// 固定資産税清算金<-固都税清算金
+	$cell = setCell(null, $sheet, 'salesFixedTax', 1, $endColumn, 1, $endRow, $salesFixedTax);
+	// 銀行名
+	$cell = setCell(null, $sheet, 'bankName', 1, $endColumn, 1, $endRow, $bank['bankName']);
+	// 支店名
+	$cell = setCell(null, $sheet, 'branchName', 1, $endColumn, 1, $endRow, $bank['branchName']);
+	// 預金種目
+	$cell = setCell(null, $sheet, 'depositTypeName', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['depositType'], $bank['depositType']));
+	// 口座番号
+	$cell = setCell(null, $sheet, 'accountNumber', 1, $endColumn, 1, $endRow, $bank['accountNumber']);
+	// 口座名義
+	$cell = setCell(null, $sheet, 'accountHolder', 1, $endColumn, 1, $endRow, $bank['accountHolder']);
+
+	$sheet->setSelectedCell('A1');// 初期選択セル設定
+	// 20220707 E_Add
+
+	for($i = 1 ; $i < 4; $i++) {
 		// シートをコピー
 		$sheet = clone $spreadsheet->getSheet($i);
 		$title = $sheet->getTitle();
 		$sheet->setTitle($title . '_' . $sale['pid']);
 		$spreadsheet->addSheet($sheet);
 
+		/*
 		// ・支払明細書シート
 		if($i == 0) {
 			// 買主<-売却先
@@ -121,6 +154,7 @@ foreach($sales as $sale) {
 			// 口座名義
 			$cell = setCell(null, $sheet, 'accountHolder', 1, $endColumn, 1, $endRow, $bank['accountHolder']);
 		}
+		*/
 
 		// ・決済案内シート
 		if($i == 1) {
@@ -217,8 +251,8 @@ foreach($sales as $sale) {
 }
 
 // コピー元シート削除
-for($i = 0 ; $i < 4; $i++) {
-	$spreadsheet->removeSheetByIndex(0);
+for($i = 1 ; $i < 4; $i++) {
+	$spreadsheet->removeSheetByIndex(1);
 }
 
 $spreadsheet->setActiveSheetIndex(0);// 初期選択シート設定

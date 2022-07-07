@@ -74,7 +74,10 @@ if(sizeof($contracts) > 1) {
 // 合計の計算式
 $sheet->setCellValue('J' . ($pos + sizeof($contracts)), '=SUM(J' . $pos . ':J' . ($pos + sizeof($contracts) - 1) . ')');
 $sheet->setCellValue('K' . ($pos + sizeof($contracts)), '=SUM(K' . $pos . ':K' . ($pos + sizeof($contracts) - 1) . ')');
-$sheet->setCellValue('L' . ($pos + sizeof($contracts)), '=SUM(L' . $pos . ':L' . ($pos + sizeof($contracts) - 1) . ')');
+// 20220707 S_Update
+// $sheet->setCellValue('L' . ($pos + sizeof($contracts)), '=SUM(L' . $pos . ':L' . ($pos + sizeof($contracts) - 1) . ')');
+$sheet->setCellValue('M' . ($pos + sizeof($contracts)), '=SUM(M' . $pos . ':M' . ($pos + sizeof($contracts) - 1) . ')');
+// 20220707 E_Update
 // 20220529 E_Add
 
 foreach($contracts as $contract) {
@@ -438,7 +441,10 @@ foreach($contracts as $contract) {
 		// ・固都税精算シート
 		if($i == 3) {
 			// 物件所在地<-所在地
-			$cell = setCell(null, $sheet, 'address', 1, $endColumn, 1, $endRow, $address);
+			// 20220707 S_Update
+//			$cell = setCell(null, $sheet, 'address', 1, $endColumn, 1, $endRow, $address);
+			$cell = setCell(null, $sheet, 'addressAndBlockOrBuildingNumber', 1, $endColumn, 1, $endRow, $addressAndBlockOrBuildingNumber);
+			// 20220707 E_Update
 			// 支払確定日
 			$cell = setCell(null, $sheet, 'contractFixDay_jpdt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contractFixDay, 'n月j日'));
 			// 契約者名
@@ -678,7 +684,13 @@ function getPayContractorName($sellers, $payDetail) {
 		foreach($explode1st as $explode1) {
 			// ,で分割されている場合
 			if(strpos($explode1, ',') !== false) {
-				$explode2nd = explode(',', $explode1);
+				// 20220708 S_Update
+//				$explode2nd = explode(',', $explode1);
+				$temps = explode(',', $explode1);
+				foreach($temps as $temp) {
+					$explode2nd[] = $temp;
+				}
+				// 20220708 E_Update
 			}
 			else $explode2nd[] = $explode1;
 		}
