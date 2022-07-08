@@ -104,7 +104,7 @@ foreach ($targets as $key => $groups) {
 		$contracts = [];
 		if(!empty($pay['contractInfoPid'])) {
 			// 仕入契約情報を取得
-			$contracts = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
+			$contracts[] = $contract = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
 		}
 		else if(!empty($payDetail['contractor'])) {
 			$contractor = $payDetail['contractor'];
