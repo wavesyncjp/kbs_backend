@@ -43,7 +43,7 @@ $map->attachFileName = $fileName;
 // $map->attachFilePath = 'backend/uploads/'.$uniq.'/';
 $map->attachFilePath = 'backend/uploads/information/' . $infoId . '/' . $uniq . '/';
 // 20211227 E_Update
-setInsert($map, $createUserId);// 20220701 Add
+setUpdate($map, $createUserId);// 20220708 Add
 $map->save();
 
 echo json_encode($map->asArray());
