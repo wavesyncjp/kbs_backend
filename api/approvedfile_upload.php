@@ -32,7 +32,7 @@ move_uploaded_file($_FILES['file']['tmp_name'], $filePath);
 $map = ORM::for_table(TBLINFORMATION)->find_one($infoId);
 $map->approvalAttachFileName = $fileName;
 $map->approvalAttachFilePath = 'backend/uploads/approval/' . $infoId . '/' . $uniq . '/';
-setInsert($map, $createUserId);// 20220701 Add
+setUpdate($map, $createUserId);// 20220709 Add
 $map->save();
 
 echo json_encode($map->asArray());
