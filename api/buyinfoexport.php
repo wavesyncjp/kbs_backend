@@ -69,7 +69,10 @@ $pos = 4;
 $sheet = $spreadsheet->getSheet(0);
 // データが複数ある場合、ブロックをコピー
 if(sizeof($contracts) > 1) {
-	copyBlockWithVal($sheet, $pos, 1, sizeof($contracts) - 1, 14);
+	// 20220712 S_Update
+//	copyBlockWithVal($sheet, $pos, 1, sizeof($contracts) - 1, 14);
+	copyBlockWithVal($sheet, $pos, 1, sizeof($contracts) - 1, 17);
+	// 20220712 E_Update
 }
 // 合計の計算式
 $sheet->setCellValue('J' . ($pos + sizeof($contracts)), '=SUM(J' . $pos . ':J' . ($pos + sizeof($contracts) - 1) . ')');

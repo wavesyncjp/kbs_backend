@@ -68,7 +68,10 @@ foreach ($targets as $key => $groups) {
 	$pos = 4;
 	// データが複数ある場合、ブロックをコピー
 	if(sizeof($groups) > 1) {
-		copyBlockWithVal($sheet, $pos, 1, sizeof($groups) - 1, 14);
+		// 20220712 S_Update
+//		copyBlockWithVal($sheet, $pos, 1, sizeof($groups) - 1, 14);
+		copyBlockWithVal($sheet, $pos, 1, sizeof($groups) - 1, 17);
+		// 20220712 E_Update
 	}
 	// 合計の計算式
 	$sheet->setCellValue('J' . ($pos + sizeof($groups)), '=SUM(J' . $pos . ':J' . ($pos + sizeof($groups) - 1) . ')');
