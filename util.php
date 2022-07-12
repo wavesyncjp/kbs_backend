@@ -52,7 +52,7 @@ function getLandInfo($pid){
 	}
 	
 	//ファイル添付
-	$attachFiles = ORM::for_table(TBLFILEATTACH)->where('tempLandInfoPid', $pid)->order_by_desc('updateDate')->findArray();
+	$attachFiles = ORM::for_table(TBLFILEATTACH)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
 	if(isset($attachFiles)){
 		$land['attachFiles'] = $attachFiles;
 	}
