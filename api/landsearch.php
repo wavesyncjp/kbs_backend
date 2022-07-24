@@ -24,7 +24,8 @@ $query = ORM::for_table(TBLTEMPLANDINFO)
 			->select('p1.surveyRequestedDay')
 			->select('p1.latitude')
 			->select('p1.longitude')
-			->select('p1.department');// 20210208 Add
+			->select('p1.department')// 20210208 Add
+			->select('p1.finishDate');// 20220725 Add
 			//->select("GROUP_CONCAT(address SEPARATOR ', ') as locationAddress");
 			//->left_outer_join(TBLLOCATIONINFO, array('p1.pid', '=', 'p2.tempLandInfoPid'), 'p2')->where_null('p1.deleteDate');
 
