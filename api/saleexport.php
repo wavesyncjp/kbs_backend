@@ -345,7 +345,10 @@ foreach($payList1 as $payDetail) {
     // 20200921 E_Update
     // 支払金額
 //    $sheet->setCellValue('H'.$payPos, formatYenNumber($payDetail['payPrice']));
-    $sheet->setCellValue('I'.$payPos, $payDetail['payPriceTax']);
+    // 20220725 S_Update
+//    $sheet->setCellValue('I'.$payPos, $payDetail['payPriceTax']);
+    $sheet->setCellValue('I'.$payPos, intval($payDetail['payPriceTax']) + intval($payDetail['withholdingTax']));
+    // 20220725 E_Update
     // 支払時期
     $sheet->setCellValue('J'.$payPos, $payDetail['paymentSeason']);
     // 支払予定日
@@ -410,6 +413,7 @@ if(sizeof($payList2) > 0) {
             $group = $payList2[$key];
             // 金額を加算
             $group['payPriceTax'] = intval($group['payPriceTax']) + intval($payDetail['payPriceTax']);
+            $group['withholdingTax'] = intval($group['withholdingTax']) + intval($payDetail['withholdingTax']);// 20220725 Add
             // 最小支払日・最大支払日を設定
             if($group['minContractFixDay'] == '' || strcmp($group['minContractFixDay'], $payDetail['contractFixDay']) > 0) $group['minContractFixDay'] = $payDetail['contractFixDay'];
             if($group['maxContractFixDay'] == '' || strcmp($group['maxContractFixDay'], $payDetail['contractFixDay']) < 0) $group['maxContractFixDay'] = $payDetail['contractFixDay'];
@@ -436,7 +440,10 @@ foreach($payList2 as $payDetail) {
     $sheet->setCellValue('G'.$payPos, $payDetail['paymentName']);
     // 金額
 //    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
-    $sheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
+    // 20220725 S_Update
+//    $sheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
+    $sheet->setCellValue('H'.$payPos, intval($payDetail['payPriceTax']) + intval($payDetail['withholdingTax']));
+    // 20220725 E_Update
     // 支払方法
     $sheet->setCellValue('I'.$payPos, getPayMethodName($payDetail['paymentMethod']));
     // 支払日
@@ -593,7 +600,10 @@ foreach($contracts as $contract) {
             $clonedWorksheet->setCellValue('G'.$payPos, $payDetail['paymentName']);
             // 支払金額
 //            $clonedWorksheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
-            $clonedWorksheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
+            // 20220725 S_Update
+//            $clonedWorksheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
+            $clonedWorksheet->setCellValue('H'.$payPos, intval($payDetail['payPriceTax']) + intval($payDetail['withholdingTax']));
+            // 20220725 E_Update
             // 支払時期
             $clonedWorksheet->setCellValue('I'.$payPos, $payDetail['paymentSeason']);
             // 支払予定日
