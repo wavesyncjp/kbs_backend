@@ -46,7 +46,8 @@ if(isset($param->mapFiles)) {
 		// コピー元
 		$file = __DIR__ . '/../../' . $map->mapFilePath . $map->mapFileName;
 		if(!file_exists($file)) {
-			die('file_exists NG : ' . $file);
+			continue;// 20220805 Add
+//			die('file_exists NG : ' . $file);
 		}
 		// コピー先
 		$newfile = $dirPath . '/' . $map->mapFileName;
@@ -118,7 +119,8 @@ if(isset($param->locations)) {
 				// コピー元
 				$file = __DIR__ . '/../../' . $locFile->attachFilePath . $locFile->attachFileName;
 				if(!file_exists($file)) {
-					die('file_exists NG : ' . $file);
+					continue;// 20220805 Add
+//					die('file_exists NG : ' . $file);
 				}
 				// コピー先
 				$newfile = $dirPath . '/' . $locFile->attachFileName;
@@ -313,7 +315,8 @@ if(sizeof($contracts) > 0) {
 				// コピー元
 				$file = __DIR__ . '/../../' . $contractFile['attachFilePath'] . $contractFile['attachFileName'];
 				if(!file_exists($file)) {
-					die('file_exists NG : ' . $file);
+					continue;// 20220805 Add
+//					die('file_exists NG : ' . $file);
 				}
 				// コピー先
 				$newfile = $dirPath . '/' . $contractFile['attachFileName'];
