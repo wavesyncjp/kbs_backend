@@ -165,6 +165,11 @@ foreach ($targets as $key => $groups) {
 		$address = '';
 		// 複数地番・複数家屋番号
 		$list_blockOrBuildingNumber = '';
+		// 20220824 S_Add
+		$blockNumber = '';      // 地番
+		$buildingNumber = '';   // 家屋番号
+		$bottomLands = [];
+		// 20220824 E_Add
 		if(sizeof($locs) > 0) {
 			if(sizeof($contracts) > 0) $list_blockOrBuildingNumber = getBuildingNumber($locs, chr(10));
 			$cntLandlocs = 0;
@@ -182,11 +187,25 @@ foreach ($targets as $key => $groups) {
 				*/
 				if($loc['locationType'] == '01') {
 					$cntLandlocs++;
-					if($cntLandlocs == 1) $addressLand = $loc['address'];
+					if($cntLandlocs == 1)
+					{
+						$addressLand = $loc['address'];
+						$blockNumber = $loc['blockNumber'];// 地番 20220824 Add
+					}
 				}
 				else {
 					$cntNotLandlocs++;
-					if($cntNotLandlocs == 1) $addressNotLand = $loc['address'];
+					// 20220824 S_Update
+					// if($cntNotLandlocs == 1) $addressNotLand = $loc['address'];
+					if($cntLandlocs == 0 && $cntNotLandlocs == 1)
+					{
+						$addressNotLand = $loc['address'];
+						$buildingNumber = $loc['buildingNumber'];// 家屋番号 20220824 Add
+					}
+					// 20220824 E_Update
+					// 20220824 S_Add
+					if(!empty($loc['bottomLandPid'])) $bottomLands[] = $loc;
+					// 20220824 E_Add
 				}
 				// 20220708 E_Update
 				// 20220707 S_Delete
@@ -200,6 +219,23 @@ foreach ($targets as $key => $groups) {
 			if($addressLand != '') $address = $addressLand;
 			else $address = $addressNotLand;
 			// 20220707 E_Add
+			// 20220824 S_Add
+			$blockOrBuildingNumber = $blockNumber;
+			if(empty($blockOrBuildingNumber) && !empty($buildingNumber)) $blockOrBuildingNumber = '（' . $buildingNumber . '）';
+			$addressAndBlockOrBuildingNumber = $address . $blockOrBuildingNumber;// 所在地+地番/家屋番号
+			if($cntLandlocs > 1) {
+				$addressAndBlockOrBuildingNumber .= '　外';
+			}
+			// 土地に指定がないかつ、底地に指定がある場合
+			else if($cntLandlocs == 0 && sizeof($bottomLands) > 0) {
+				foreach($bottomLands as $loc) {
+					$bottomLand = ORM::for_table(TBLLOCATIONINFO)->find_one($loc['bottomLandPid']);
+					$addressAndBlockOrBuildingNumber = $bottomLand['address'] . $bottomLand['blockNumber'];
+					if(!empty($loc['buildingNumber'])) $addressAndBlockOrBuildingNumber .= '（家屋番号：' . $loc['buildingNumber'] . '）';
+					break;
+				}
+			}
+			// 20220824 E_Add
 		}
 		// 居住表示
 		// $cell = setCell(null, $sheet, 'supplierAddress', 1, $endColumn, 1, $endRow, $pay['supplierAddress']);
@@ -252,7 +288,10 @@ foreach ($targets as $key => $groups) {
 		$spreadsheet->addSheet($subSheet);
 
 		// 物件所在地
-		$cell = setCell(null, $subSheet, 'supplierAddress', 1, $endColumn, 1, $endRow, $pay['supplierAddress']);
+		// 20220824 S_Update
+		// $cell = setCell(null, $subSheet, 'supplierAddress', 1, $endColumn, 1, $endRow, $pay['supplierAddress']);
+		$cell = setCell(null, $subSheet, 'addressAndBlockOrBuildingNumber', 1, $endColumn, 1, $endRow, $addressAndBlockOrBuildingNumber);
+		// 20220824 E_Update
 		// 摘要
 		$cell = setCell(null, $subSheet, 'paymentName', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail['paymentCode']));
 		// 金額
