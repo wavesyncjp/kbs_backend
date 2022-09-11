@@ -695,6 +695,12 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $cell = setCell(null, $sheet, 'b_address', $currentColumn, $endColumn, $currentRow, $endRow, $loc['address']);
         // 家屋番号
         $cell = setCell($cell, $sheet, 'b_buildingNumber', $currentColumn, $endColumn, $currentRow, $endRow, $loc['buildingNumber']);
+        // 20220912 S_Add
+        // 権利の種類
+        $rightsForm = getCodeTitle($codeLists['rightsForm'], $loc['rightsForm']);
+        if($rightsForm === '') $rightsForm = '所有権';
+        $cell = setCell($cell, $sheet, 'b_rightsForm', $currentColumn, $endColumn, $currentRow, $endRow, $rightsForm);
+        // 20220912 E_Add
         // 構造
         $cell = setCell($cell, $sheet, 'b_structure', $currentColumn, $endColumn, $currentRow, $endRow, $loc['structure']);
         // 階建
@@ -726,6 +732,10 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $cell = setCell(null, $sheet, 'b_address', $currentColumn, $endColumn, $currentRow, $endRow, '');
         // 家屋番号<-Empty
         $cell = setCell($cell, $sheet, 'b_buildingNumber', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 20220912 S_Add
+        // 権利の種類<-Empty
+        $cell = setCell($cell, $sheet, 'b_rightsForm', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 20220912 E_Add
         // 構造<-Empty
         $cell = setCell($cell, $sheet, 'b_structure', $currentColumn, $endColumn, $currentRow, $endRow, '');
         // 階建<-Empty
