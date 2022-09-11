@@ -244,6 +244,8 @@ if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '10') {
                 // 部署コード
                 $user = ORM::for_table(TBLUSER)->find_one($contractStaff);
                 $groups['depCode'] = $user['depCode'];
+                // 権限が03:営業ではない場合、対象外
+                if($user['authority'] !== '03') continue;
                 $groups[$month] = $row['qty'];
                 $targets[$key] = $groups;
             } else {
