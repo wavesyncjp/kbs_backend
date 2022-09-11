@@ -179,6 +179,15 @@ else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '0
             ORDER BY tblsorting.tempLandInfoPid';
 }
 // 20210804 E_Add
+// 20220912 S_Add
+// 対象テーブルが10:仕入契約情報（月間契約件数取得）の場合
+else if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '10') {
+    $query = 'SELECT ' . $selectContent . ', substring(tblcontractinfo.contractDay, 1, 6) AS month, count(*) AS qty FROM tblcontractinfo
+            WHERE tblcontractinfo.pid IN (' . $param->ids . ')
+            GROUP BY substring(tblcontractinfo.contractDay, 1, 6), ' . $selectContent . '
+            ORDER BY substring(tblcontractinfo.contractDay, 1, 6), ' . $selectContent;
+}
+// 20220912 E_Add
 
 $res = ORM::raw_execute($query);
 $statement = ORM::get_last_statement();
@@ -189,8 +198,11 @@ $ret = [];// 返却データ
 // ヘッダーを設定
 $header = [];
 foreach($csvDetails as $csvDetail) {
-    $header[] = '"' . $csvDetail['itemName'] . '"';
+    // $header[] = '"' . $csvDetail['itemName'] . '"';
+    $header[$csvDetail['itemColumn']] = '"' . $csvDetail['itemName'] . '"';
 }
+// 20220912 S_Update
+/*
 $ret[] = implode(',', $header);// 配列をカンマ区切りの文字列に変換
 
 // データを設定
@@ -198,6 +210,86 @@ while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
     $line = convertCsv($row, $csvDetails, $csvInfo);
     $ret[] = implode(',', $line);
 }
+*/
+// 対象テーブルが10:仕入契約情報（月間契約件数取得）の場合
+if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '10') {
+    $header['depCode'] = '部署名';// タイトルに部署名追加
+    
+    $targets = [];
+    while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+        if(empty($row['contractStaff']) || empty($row['month'])) continue;
+
+        // ヘッダー追加
+        $month = '"' . $row['month'] . '"';
+        if(!isset($header[$month]))
+        {
+            $header[$month] = '"' . convert_dt($row['month'] . '01', 'n月') . '"';
+        }
+
+        // 契約担当者を分割
+        $staff = $row['contractStaff'];
+        if(strpos($staff, ',') !== false) {
+            $staffs = explode(',', $staff);
+        }
+        else $staffs[] = $staff;
+
+        foreach($staffs as $contractStaff) {
+            // key=契約担当者
+            $key = $contractStaff;
+            // グルーピングを行う
+            if(!isset($targets[$key])) {
+                $groups = [];
+                $groups = $row;
+                $groups['contractStaff'] = $contractStaff;
+                // 部署コード
+                $user = ORM::for_table(TBLUSER)->find_one($contractStaff);
+                $groups['depCode'] = $user['depCode'];
+                $groups[$month] = $row['qty'];
+                $targets[$key] = $groups;
+            } else {
+                $groups = $targets[$key];
+                // 件数を加算する
+                if(!isset($groups[$month])) {
+                    $groups[$month] = $row['qty'];
+                }
+                else {
+                    $qty = $groups[$month];
+                    $groups[$month] = $qty + $row['qty'];
+                }
+                $targets[$key] = $groups;
+            }
+        }
+    }
+    $ret[] = implode(',', $header);
+    foreach ($targets as $groups) {
+        $line = convertCsv($groups, $csvDetails, $csvInfo);
+
+        // 部署名追加
+        $line[] = '"' . convertMaster($groups['depCode'], 'depCode') . '"';
+
+        // 契約月を追加
+        foreach ($header as $key => $value) {
+            $chk = str_replace('"', '', $key);
+            if(!is_numeric($chk)) continue;
+
+            if(isset($groups[$key])) {
+                $line[] = '"' . $groups[$key] . '"';
+            }
+            else $line[] = '"0"';
+        }
+        $ret[] = implode(',', $line);
+    }
+}
+else {
+    $ret[] = implode(',', $header);// 配列をカンマ区切りの文字列に変換
+    
+    // データを設定
+    while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+        $line = convertCsv($row, $csvDetails, $csvInfo);
+        $ret[] = implode(',', $line);
+    }
+}
+// 20220912 E_Update
 
 // 行結合
 $csv = array('data' => implode('\r\n', $ret));
