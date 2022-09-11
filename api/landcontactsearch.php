@@ -26,6 +26,12 @@ if(isset($param->bukkenNo) && $param->bukkenNo !== ''){
 if(isset($param->contractBukkenNo) && $param->contractBukkenNo !== ''){
 	$query = $query->where('p1.contractBukkenNo', $param->contractBukkenNo);
 }
+// 20220912 S_Add
+// 契約物件番号_Like
+if(isset($param->contractBukkenNo_Like) && $param->contractBukkenNo_Like !== ''){
+	$query = $query->where_like('p1.contractBukkenNo', $param->contractBukkenNo_Like . '%');
+}
+// 20220912 E_Add
 // 物件名
 if(isset($param->bukkenName) && $param->bukkenName !== ''){
 	$query = $query->where_like('p1.bukkenName', '%'.$param->bukkenName.'%');
