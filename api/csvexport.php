@@ -213,9 +213,20 @@ while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
 */
 // 対象テーブルが10:仕入契約情報（月間契約件数取得）の場合
 if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '10') {
-    $header['depCode'] = '部署名';// タイトルに部署名追加
+    $header['depCode'] = '"部署名"';// タイトルに部署名追加
     
     $targets = [];
+    // 20220914 S_Add
+    // すべての営業ユーザーを格納する
+    $users = ORM::for_table(TBLUSER)->select('userId')->select('depCode')->where('authority', '03')->where_null('deleteDate')->where_not_in('loginId', ['0001', '0002', '0003', '0004', '0005'])->order_by_asc('depCode')->order_by_asc('userId')->findArray();
+    foreach($users as $user) {
+        $groups = [];
+        $groups = $row;
+        $groups['contractStaff'] = $user['userId']; // 契約担当者<-ユーザーID
+        $groups['depCode'] = $user['depCode'];      // 部署コード
+        $targets[$user['userId']] = $groups;
+    }
+    // 20220914 E_Add
     while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
         if(empty($row['contractStaff']) || empty($row['month'])) continue;
 
