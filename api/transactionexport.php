@@ -546,8 +546,49 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
             else if($loc['locationType'] === '04') {
                 // 一棟の建物の所在地を設定
                 if($loc['ridgePid'] !== '') {
+                    // 20220930 S_Update
+                    /*
                     $ridge = ORM::for_table(TBLLOCATIONINFO)->select('address')->find_one($loc['ridgePid']);
                     if(isset($ridge)) $loc['address'] = $ridge['address'];
+                    */
+                    $ridge = ORM::for_table(TBLLOCATIONINFO)->select('address')->select('rightsForm')->select('bottomLandPid')->find_one($loc['ridgePid']);
+                    if(isset($ridge)) {
+                        $loc['address'] = $ridge['address'];
+
+                        if($getBottom && $loc['rightsForm'] === '01' && $loc['bottomLandPid'] !== '') {
+                            $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)
+                                ->table_alias('p1')
+                                ->inner_join(TBLLOCATIONINFO, array('p1.bottomLandPid', '=', 'p2.pid'), 'p2')
+                                ->select('p2.address', 'address')
+                                ->select('p2.blockNumber', 'blockNumber')
+                                ->select('p2.landCategory', 'landCategory')
+                                ->select('p1.leasedArea', 'leasedArea')
+                                ->select('p2.area', 'area')
+                                // 20220615 S_Add
+                                ->select('p1.tempLandInfoPid', 'tempLandInfoPid')
+                                ->select('p1.locationInfoPid', 'locationInfoPid')
+                                ->select('p1.bottomLandPid', 'bottomLandPid')
+                                ->select('p1.landRent', 'landRent')
+                                // 20220615 S_Add
+                                ->where('p1.locationInfoPid', $loc['pid'])
+                                ->where_null('p1.deleteDate')
+                                ->order_by_asc('p1.registPosition')
+                                ->findArray();
+                            if(sizeof($bottomLandInfos) > 0) {
+                                foreach($bottomLandInfos as $bottomLandInfo) {
+                                    $bottomLandInfo['rightsForm'] = '01';// 01：借地権
+                                    $locsLand[] = $bottomLandInfo;
+                                    // 20220615 S_Add
+                                    $bottomLandInfo['lenderBorrower'] = '貸主名';   // 貸主名/借主名
+                                    $bottomLandInfo['leasedAreaTitle'] = '';        // 借地対象面積タイトル
+                                    $bottomLandInfo['leasedArea'] = '';             // 借地対象面積
+                                    $locsBottom[] = $bottomLandInfo;
+                                    // 20220615 E_Add
+                                }
+                            }
+                        }
+                    }
+                    // 20220930 E_Update
                 }
                 $locsBuilding[] = $loc;
             }
