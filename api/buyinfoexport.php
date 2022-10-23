@@ -169,6 +169,10 @@ foreach($contracts as $contract) {
 	$cntNotLandlocs = 0;
 	$bottomLands = [];
 	// 20220609 E_Add
+	// 20221024 S_Add
+	$addressLand = '';
+	$addressNotLand = '';
+	// 20221024 E_Add
 
 	foreach($locs as $loc) {
 		$cntlocs++;
@@ -187,6 +191,12 @@ foreach($contracts as $contract) {
 			$l_propertyTax += $loc['propertyTax'];
 			$l_cityPlanningTax += $loc['cityPlanningTax'];
 			$cntLandlocs++;// 20220609 Add
+			// 20221024 S_Add
+			if($cntLandlocs == 1) {
+				$addressLand = $loc['address'];    // 所在地
+				$blockNumber = $loc['blockNumber'];// 地番
+			}
+			// 20221024 E_Add
 		}
 		else {
 			$b_propertyTax += $loc['propertyTax'];
@@ -195,7 +205,15 @@ foreach($contracts as $contract) {
 			if(!empty($loc['bottomLandPid'])) $bottomLands[] = $loc;
 			$cntNotLandlocs++;
 			// 20220609 E_Add
+			// 20221024 S_Add
+			if($cntLandlocs == 0 && $cntNotLandlocs == 1) {
+				$addressNotLand = $loc['address'];       // 所在地
+				$buildingNumber = $loc['buildingNumber'];// 家屋番号
+			}
+			// 20221024 E_Add
 		}
+		// 20221024 S_Delete
+		/*
 		// 20220609 S_Add
 		if($cntLandlocs == 1) {
 			$address = $loc['address'];                 // 所在地
@@ -206,7 +224,13 @@ foreach($contracts as $contract) {
 			$buildingNumber = $loc['buildingNumber'];   // 家屋番号
 		}
 		// 20220609 E_Add
+		*/
+		// 20221024 E_Delete
 	}
+	// 20221024 S_Add
+	if($addressLand != '') $address = $addressLand;
+	else $address = $addressNotLand;
+	// 20221024 E_Add
 	$blockOrBuildingNumber = $blockNumber;
 	// 20220609 S_Update
 	// if(empty($blockOrBuildingNumber)) $blockOrBuildingNumber = $buildingNumber;
