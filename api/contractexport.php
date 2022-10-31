@@ -490,10 +490,19 @@ if(isset($locs) && sizeof($locs) > 0) {
             copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);   
 
             $keyword = 'repear_sharer';
-            $pos = searchCellPos($sheet, $keyword, $pos) - 1;
-
+            // 20221101 S_Update
+            /* $pos = searchCellPos($sheet, $keyword, $pos) - 1; */
+            $pos = searchCellPos($sheet, $keyword, $pos);
+            // 20221101 E_Update
+            // 20221101 S_Update
+            /*
             foreach($regists as $regist) {
                 $val = str_replace('$repear_sharer$', $regist, $sharerStr);
+            */
+            // 1件目は不要
+            for($i = 1 ; $i < sizeof($regists); $i++) {
+                $val = str_replace('$repear_sharer$', $regists[$i], $sharerStr);
+            // 20221101 E_Update
                 // 20210204 S_Update
 //                $sheet->setCellValue('A' .  $pos, $val);
                 $sheet->setCellValue('A' . $pos, mb_convert_kana($val, 'KVRN'));
@@ -629,10 +638,19 @@ if(isset($locs) && sizeof($locs) > 0) {
             copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);
 
             $keyword = 'repear_sharer';
-            $pos = searchCellPos($sheet, $keyword, $pos) - 1;
-
+            // 20221101 S_Update
+            /* $pos = searchCellPos($sheet, $keyword, $pos) - 1; */
+            $pos = searchCellPos($sheet, $keyword, $pos);
+            // 20221101 E_Update
+            // 20221101 S_Update
+            /*
             foreach($regists as $regist) {
                 $val = str_replace('$repear_sharer$', $regist, $sharerStr);
+            */
+            // 1件目は不要
+            for($i = 1 ; $i < sizeof($regists); $i++) {
+                $val = str_replace('$repear_sharer$', $regists[$i], $sharerStr);
+            // 20221101 E_Update
                 // 20210204 S_Update
 //                $sheet->setCellValue('A' .  $pos, $val);
                 $sheet->setCellValue('A' . $pos, mb_convert_kana($val, 'KVRN'));
@@ -973,10 +991,19 @@ if(sizeof($locs) > 0) {
                     copyRowsReverse($sheet,$pos + $increase, $pos, $increase, 1, true, false);
 
                     $keyword = 'repear_sharer';
-                    $pos = searchCellPos($sheet, $keyword, $pos) - 1;
-
+                    // 20221101 S_Update
+                    /* $pos = searchCellPos($sheet, $keyword, $pos) - 1; */
+                    $pos = searchCellPos($sheet, $keyword, $pos);
+                    // 20221101 E_Update
+                    // 20221101 S_Update
+                    /*
                     foreach($regists as $regist) {
                         $val = str_replace('$repear_sharer$', $regist, $sharerStr);
+                    */
+                    // 1件目は不要
+                    for($i = 1 ; $i < sizeof($regists); $i++) {
+                        $val = str_replace('$repear_sharer$', $regists[$i], $sharerStr);
+                    // 20221101 E_Update
                         // 20210204 S_Update
 //                        $sheet->setCellValue('A' .  $pos, $val);
                         $sheet->setCellValue('A' . $pos, mb_convert_kana($val, 'KVRN'));
