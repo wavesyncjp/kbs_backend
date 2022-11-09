@@ -107,11 +107,15 @@ foreach ($targets as $key => $groups) {
 		$contracts = [];
 		if(!empty($pay['contractInfoPid'])) {
 			// 仕入契約情報を取得
-			$contracts[] = $contract = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
+			$contracts[] = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
 		}
 		else if(!empty($payDetail['contractor'])) {
 			$contractor = $payDetail['contractor'];
 			$contractSellerInfoPids = [];
+			// 20221110 S_Add
+			$explode1st = [];
+			$explode2nd = [];
+			// 20221110 E_Add
 			// |で分割されている場合
 			if(strpos($contractor, '|') !== false) {
 				$explode1st = explode('|', $contractor);
