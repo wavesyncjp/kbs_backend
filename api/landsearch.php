@@ -141,6 +141,15 @@ if(isset($param->infoOffer) && $param->infoOffer !== ''){
 	$query = $query->where_like('p1.infoOffer', '%'.$param->infoOffer.'%');
 }
 // 20210207 E_Add
+// 20221116 S_Add
+// 着手日(startDate)
+if(isset($param->startDate_From) && $param->startDate_From != ''){
+	$query = $query->where_gte('p1.startDate', $param->startDate_From);
+}
+if(isset($param->startDate_To) && $param->startDate_To != ''){
+	$query = $query->where_lte('p1.startDate', $param->startDate_To);
+}
+// 20221116 E_Add
 
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();

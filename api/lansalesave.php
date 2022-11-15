@@ -30,7 +30,10 @@ else {
 		setInsert($saleSave, isset($sale->updateUserId) && $sale->updateUserId ? $sale->updateUserId : $sale->createUserId);
 		$userId = isset($sale->updateUserId) && $sale->updateUserId ? $sale->updateUserId : $sale->createUserId;// 20210728 Add
 	}
-	copyData($sale, $saleSave, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'salesLocationStr', 'sharingStartDayYYYY', 'sharingStartDayMMDD'));
+	// 20221116 S_Update
+	// copyData($sale, $saleSave, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'salesLocationStr', 'sharingStartDayYYYY', 'sharingStartDayMMDD'));
+	copyData($sale, $saleSave, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'salesLocationStr', 'sharingStartDayYYYY', 'sharingStartDayMMDD', 'csvSelected'));
+	// 20221116 E_Update
 	$saleSave->save();
 
 	setPayBySale($saleSave, $userId);// 20210728 Add

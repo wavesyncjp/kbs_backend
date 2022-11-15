@@ -35,7 +35,13 @@ foreach($sales as $sale) {
 	$salesFixedTax = intval($sale['salesFixedLandTax']) + intval($sale['salesFixedBuildingTax']) + intval($sale['salesFixedBuildingTaxOnlyTax']);
 
 	// 銀行マスタを取得
-	$bank = ORM::for_table(TBLBANK)->findOne($sale['bankPid'])->asArray();
+	// 20221116 S_Update
+	// $bank = ORM::for_table(TBLBANK)->findOne($sale['bankPid'])->asArray();
+	$bank = [];
+	if(!empty($sale['bankPid'])) {
+		$bank = ORM::for_table(TBLBANK)->findOne($sale['bankPid'])->asArray();
+	}
+	// 20221116 E_Update
 	// 土地情報を取得
 	$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->findOne($sale['tempLandInfoPid'])->asArray();
 
