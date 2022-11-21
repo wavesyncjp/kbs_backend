@@ -77,6 +77,20 @@ if(isset($param->department) && sizeof($param->department) > 0){
 	$query = $query->where_in('p1.department', $param->department);
 }
 // 20220519 E_Add
+// 20221122 S_Add
+// 契約状況
+if(isset($param->contractNow) && $param->contractNow != ''){
+	$query = $query->where('p2.contractNow', $param->contractNow);
+}
+// 解約日（開始）
+if(isset($param->canncellDay_From) && $param->canncellDay_From != ''){
+	$query = $query->where_gte('p2.canncellDay', $param->canncellDay_From);
+}
+// 解約日（終了）
+if(isset($param->canncellDay_To) && $param->canncellDay_To != ''){
+	$query = $query->where_lte('p2.canncellDay', $param->canncellDay_To);
+}
+// 20221122 E_Add
 
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();
@@ -158,9 +172,23 @@ foreach($lands as $land){
 	// 20220519 S_Add
 	// 物件担当部署
 	if(isset($param->department) && sizeof($param->department) > 0){
-		$query = $query->where_in('p1.department', $param->department);
+		$contracts = $contracts->where_in('p1.department', $param->department);
 	}
 	// 20220519 E_Add
+	// 20221122 S_Add
+	// 契約状況
+	if(isset($param->contractNow) && $param->contractNow != ''){
+		$contracts = $contracts->where('p2.contractNow', $param->contractNow);
+	}
+	// 解約日（開始）
+	if(isset($param->canncellDay_From) && $param->canncellDay_From != ''){
+		$contracts = $contracts->where_gte('p2.canncellDay', $param->canncellDay_From);
+	}
+	// 解約日（終了）
+	if(isset($param->canncellDay_To) && $param->canncellDay_To != ''){
+		$contracts = $contracts->where_lte('p2.canncellDay', $param->canncellDay_To);
+	}
+	// 20221122 E_Add
 	$contracts = $contracts->select('p2.pid')->find_array();
 	// 20200906 E_Update
 	if(isset($contracts) && sizeof($contracts) > 0){
