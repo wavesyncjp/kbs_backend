@@ -21,6 +21,7 @@ $query = ORM::for_table(TBLTEMPLANDINFO)
 			->select('p1.result')
 			->select('p1.infoStaff')
 			->select('p1.pickDate')
+			->select('p1.startDate')// 20221226 Add
 			->select('p1.surveyRequestedDay')
 			->select('p1.latitude')
 			->select('p1.longitude')
