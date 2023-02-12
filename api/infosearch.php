@@ -29,6 +29,12 @@ if(isset($param->today) && $param->today != ''){
 if(isset($param->infoType) && $param->infoType !== ''){
 	$query = $query->where('infoType', $param->infoType);
 }
+// 20230213 S_Add
+// clct掲示板タイプ
+if(isset($param->clctInfoType) && $param->clctInfoType != ''){
+	$query = $query->where_in('infoType', $param->clctInfoType);
+}
+// 20230213 E_Add
 // 承認フラグ
 if(isset($param->approvalFlg) && $param->approvalFlg != ''){
 	$query = $query->where('approvalFlg', $param->approvalFlg);
