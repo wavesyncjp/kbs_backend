@@ -37,7 +37,11 @@ $info->save();
 
 // 20220330 S_Add
 // 掲示板タイプが1:お知らせの場合
-if($info['infoType'] == '1') {
+// 20230215 S_Update
+// if($info['infoType'] == '1') {
+// 掲示板タイプが1:お知らせ（名古屋支店）もしくは、2:お知らせ（大阪支店）の場合
+if($info['infoType'] == '1' || $info['infoType'] == '2') {
+// 20230215 E_Update
 	$targets = [];
 	// 新規登録の場合
 	if($isRegist) {
