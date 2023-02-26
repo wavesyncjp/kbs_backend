@@ -42,6 +42,7 @@ ORM::configure('id_column_overrides', array(
 		, 'tblfileattach'=>'pid'
 		, 'tblmapattach'=>'pid'
 		, 'tblcontractfile'=>'pid'
+		, 'tblcontractattach'=>'pid'// 20230227 Add
 		, 'tbllocationattach'=>'pid'
 		, 'tblinfoattach'=>'pid'// 20220329 Add
 		, 'tblinformation'=>'pid'
@@ -65,6 +66,7 @@ ORM::configure('id_column_overrides', array(
 		, 'tbltax'=>'pid'
 		, 'tblbukkenplaninfo' =>'pid'
 		, 'tblbukkensalesinfo'=>'pid'
+		, 'tblbukkensalesattach'=>'pid'// 20230227 Add
 		, 'tblcontracttypefix'=>'pid'
 		, 'tblcsvinfo' => 'pid'
 		, 'tblcsvinfodetail' => 'pid'
@@ -93,6 +95,7 @@ define('TBLEMPLOYEE','tblemployee');
 define('TBLFILEATTACH','tblfileattach');
 define('TBLMAPATTACH','tblmapattach');
 define('TBLCONTRACTFILE','tblcontractfile');
+define('TBLCONTRACTATTACH','tblcontractattach');// 20230227 Add
 define('TBLLOCATIONATTACH','tbllocationattach');
 define('TBLINFOATTACH','tblinfoattach');// 20220329 Add
 define('TBLINFORMATION','tblinformation');
@@ -116,6 +119,7 @@ define('TBLPLANRENTROLLDETAIL', 'tblplanrentrolldetail');
 define('TBLTAX', 'tbltax');
 define('TBLBUKKENPLANINFO', 'tblbukkenplaninfo');
 define('TBLBUKKENSALESINFO', 'tblbukkensalesinfo');
+define('TBLBUKKENSALESATTACH','tblbukkensalesattach');// 20230227 Add
 define('TBLCONTRACTTYPEFIX', 'tblcontracttypefix');
 define('TBLCSVINFO', 'tblcsvinfo');
 define('TBLCSVINFODETAIL', 'tblcsvinfodetail');

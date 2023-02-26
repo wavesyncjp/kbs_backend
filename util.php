@@ -125,6 +125,14 @@ function getContractInfo($pid){
 		$contract['contractFiles'] = $contractFiles;
 	}
 
+	// 20230227 S_Add
+	// 仕入契約添付ファイル
+	$contractAttaches = ORM::for_table(TBLCONTRACTATTACH)->where('contractInfoPid', $pid)->where('attachFileType', '0')->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
+	if(isset($contractAttaches)){
+		$contract['contractAttaches'] = $contractAttaches;
+	}
+	// 20230227 E_Add
+
 	return $contract;
 }
 
@@ -817,6 +825,24 @@ function getLandPlan($pid) {
 	$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $pid)->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
 	// 20220329 E_Update
 	if(isset($sales)){
+
+		// 20230227 S_Add
+		$detailList = [];
+		foreach($sales as $sale){
+			// 物件売契約添付ファイル
+			$salesAttaches = ORM::for_table(TBLBUKKENSALESATTACH)->where('bukkenSalesInfoPid', $sale['pid'])->where('attachFileType', '0')->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
+			if(isset($salesAttaches)){
+				$sale['salesAttaches'] = $salesAttaches;
+			}
+			else
+			{
+				$sale['salesAttaches'] = [];
+			}
+			$detailList[] = $sale;
+		}
+		$sales = $detailList;
+		// 20230227 E_Add
+
 		$data->sales = $sales;
 	}
 	return $data;
