@@ -34,12 +34,12 @@ else {
 	$userId = $param->createUserId;// 20210728 Add
 }
 
-// 20210905 S_Update
+// 20230227 S_Update
 /*
 copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'sellers', 'locations', 'contractFiles', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 */
-copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'sellers', 'locations', 'contractFiles', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'sharingStartDayYYYY', 'sharingStartDayMMDD'));
-// 20210905 E_Update
+copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'sellers', 'locations', 'contractFiles', 'contractAttaches', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'sharingStartDayYYYY', 'sharingStartDayMMDD'));
+// 20230227 E_Update
 $contract->save();
 
 setPayByContract($contract, $userId);// 20210728 Add
