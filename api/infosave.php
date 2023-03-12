@@ -35,6 +35,52 @@ else {
 copyData($param, $info, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'attachFiles', 'addedFileSendFlg'));
 $info->save();
 
+// 20230309 S_Add
+$attachFiles = $param->attachFiles;
+
+if($isRegist && count($attachFiles) > 0) {
+	$infoId = $info->pid;
+	$fullPath = __DIR__ . '/../uploads/information';
+	if(!file_exists($fullPath)) {
+		if (!mkdir($fullPath)) {
+			die('NG');
+		}
+	}
+	foreach($attachFiles as $attachFile) {
+		if($attachFile->pid < 1 && strpos($attachFile->attachFilePath, 'backend/uploads/') !== false) {
+			$uniq = getGUID();
+			$dirPath = $fullPath . '/' . $infoId;
+			if (!file_exists($dirPath)) {
+				if (!mkdir($dirPath)) {
+					die('NG');
+				}
+			}
+
+			$dirPath = $dirPath . '/' . $uniq;
+			if (!mkdir($dirPath)) {
+				die('NG');
+			}
+
+			$filePath = $dirPath . '/' . $attachFile->attachFileName;
+
+			$filePathSrc = __DIR__ . '/../../' . $attachFile->attachFilePath . $attachFile->attachFileName;
+
+			// ファイルコピー
+			if(!copy($filePathSrc, $filePath)) {
+				die('copy NG : ' . $filePath);
+			}
+
+			$map = ORM::for_table(TBLINFOATTACH)->create();
+			$map->infoPid = $infoId;
+			$map->attachFileName = $attachFile->attachFileName;
+			$map->attachFilePath = 'backend/uploads/information/' . $infoId . '/' . $uniq . '/';
+			setInsert($map, $param->createUserId);
+			$map->save();
+		}
+	}
+}
+// 20230309 E_Add
+
 // 20220330 S_Add
 // 掲示板タイプが1:お知らせの場合
 // 20230215 S_Update

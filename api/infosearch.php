@@ -5,7 +5,22 @@ require '../header.php';
 $postdata = file_get_contents("php://input");
 $param = json_decode($postdata);
 
-$query = ORM::for_table(TBLINFORMATION)->where_null('deleteDate');
+// 20230308 S_Update
+// $query = ORM::for_table(TBLINFORMATION)->where_null('deleteDate');
+$isSortType = isset($param->sortType) && $param->sortType === '1';
+
+$query = ORM::for_table(TBLINFORMATION)->table_alias('p1');
+
+if($isSortType) {
+	$query = $query->select('p1.*')
+			->select('p2.displayOrder')
+			->left_outer_join(TBLCODE, ' p2.code = 038 and p2.codeDetail = p1.approvalFlg ', 'p2')
+			->where_null('p1.deleteDate');
+}
+else {
+	$query = $query->where_null('deleteDate');
+}
+// 20230308 E_Update
 
 // 件名
 if(isset($param->infoSubject) && $param->infoSubject !== ''){
@@ -41,7 +56,22 @@ if(isset($param->approvalFlg) && $param->approvalFlg != ''){
 }
 // 20211227 E_Add
 
-$query = $query->order_by_desc('infoDate')->order_by_desc('updateDate');
+// 20230306 S_Add
+// 詳細（本文）
+if(isset($param->infoDetail_Like) && $param->infoDetail_Like != ''){
+	$query = $query->where_like('infoDetail', '%'. $param->infoDetail_Like . '%');
+}
+// 20230306 E_Add
+
+// 20230308 S_Update
+// $query = $query->order_by_desc('infoDate')->order_by_desc('updateDate');
+if($isSortType) {
+	$query = $query->order_by_asc('infoSubjectType')->order_by_asc('displayOrder');
+}
+else {
+	$query = $query->order_by_desc('infoDate')->order_by_desc('p1.updateDate');
+}
+// 20230308 E_Update
 
 if(isset($param->count) && $param->count > 0){
 	$query = $query->limit($param->count);
