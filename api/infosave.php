@@ -32,7 +32,10 @@ else {
 	setInsert($info, $param->createUserId);
 	$isRegist = true;// 20220330 Add
 }
-copyData($param, $info, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'attachFiles', 'addedFileSendFlg'));
+// 20230313 S_Update
+// copyData($param, $info, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'attachFiles', 'addedFileSendFlg'));
+copyData($param, $info, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'attachFiles', 'addedFileSendFlg', 'displayOrder'));
+// 20230313 E_Update
 $info->save();
 
 // 20230309 S_Add
