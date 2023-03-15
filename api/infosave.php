@@ -41,7 +41,8 @@ $info->save();
 // 20230309 S_Add
 $attachFiles = $param->attachFiles;
 
-if($isRegist && count($attachFiles) > 0) {
+// if($isRegist && count($attachFiles) > 0) {
+if($isRegist && isset($param->attachFiles) && count($attachFiles) > 0) {
 	$infoId = $info->pid;
 	$fullPath = __DIR__ . '/../uploads/information';
 	if(!file_exists($fullPath)) {
