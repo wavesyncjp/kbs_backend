@@ -81,9 +81,24 @@ if(isset($param->payFixDay_To) && $param->payFixDay_To != ''){
 
 $contracts = $query->order_by_desc('p3.bukkenNo')->find_array();
 
+//20230314 S_Add
+// 支払種別
+$paymentCodeFilter = '';
+if(isset($param->paymentCodeFilter) && $param->paymentCodeFilter !== ''){
+	$paymentCodeFilter = $param->paymentCodeFilter;
+}
+//20230314 E_Add
+
 $ret = [];
 foreach($contracts as $contract) {
-	$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $contract['pid'])->where_null('deleteDate')->find_array();
+	//20230314 S_Update
+	// $details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $contract['pid'])->where_null('deleteDate')->find_array();
+	$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $contract['pid'])->where_null('deleteDate');
+	if($paymentCodeFilter !== '') {
+		$details = $details->where('paymentCode', $paymentCodeFilter);
+	}
+	$details = $details->find_array();
+	//20230314 E_Update
 	$contract['details'] = $details;
 	$ret[] = $contract;
 }
