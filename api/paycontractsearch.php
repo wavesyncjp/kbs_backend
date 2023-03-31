@@ -81,24 +81,58 @@ if(isset($param->payFixDay_To) && $param->payFixDay_To != ''){
 
 $contracts = $query->order_by_desc('p3.bukkenNo')->find_array();
 
-//20230314 S_Add
-// 支払種別
+// 20230314 S_Add
+// 支払種別（明細単位指定）
 $paymentCodeFilter = '';
 if(isset($param->paymentCodeFilter) && $param->paymentCodeFilter !== ''){
 	$paymentCodeFilter = $param->paymentCodeFilter;
 }
-//20230314 E_Add
+// 20230314 E_Add
+// 20230331 S_Add
+// 支払予定日（明細単位指定）
+$payDay_FromFilter = '';
+if(isset($param->payDay_FromFilter) && $param->payDay_FromFilter !== ''){
+	$payDay_FromFilter = $param->payDay_FromFilter;
+}
+$payDay_ToFilter = '';
+if(isset($param->payDay_ToFilter) && $param->payDay_ToFilter !== ''){
+	$payDay_ToFilter = $param->payDay_ToFilter;
+}
+// 支払確定日（明細単位指定）
+$payFixDay_FromFilter = '';
+if(isset($param->payFixDay_FromFilter) && $param->payFixDay_FromFilter !== ''){
+	$payFixDay_FromFilter = $param->payFixDay_FromFilter;
+}
+$payFixDay_ToFilter = '';
+if(isset($param->payFixDay_ToFilter) && $param->payFixDay_ToFilter !== ''){
+	$payFixDay_ToFilter = $param->payFixDay_ToFilter;
+}
+// 20230331 E_Add
 
 $ret = [];
 foreach($contracts as $contract) {
-	//20230314 S_Update
+	// 20230314 S_Update
 	// $details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $contract['pid'])->where_null('deleteDate')->find_array();
 	$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $contract['pid'])->where_null('deleteDate');
 	if($paymentCodeFilter !== '') {
 		$details = $details->where('paymentCode', $paymentCodeFilter);
 	}
+	// 20230331 S_Add
+	if($payDay_FromFilter !== '') {
+		$details = $details->where_gte('contractDay', $payDay_FromFilter);
+	}
+	if($payDay_ToFilter !== '') {
+		$details = $details->where_lte('contractDay', $payDay_ToFilter);
+	}
+	if($payFixDay_FromFilter !== '') {
+		$details = $details->where_gte('contractFixDay', $payFixDay_FromFilter);
+	}
+	if($payFixDay_ToFilter !== '') {
+		$details = $details->where_lte('contractFixDay', $payFixDay_ToFilter);
+	}
+	// 20230331 E_Add
 	$details = $details->find_array();
-	//20230314 E_Update
+	// 20230314 E_Update
 	$contract['details'] = $details;
 	$ret[] = $contract;
 }
