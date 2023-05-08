@@ -148,76 +148,149 @@ foreach($contracts as $contract) {
     $cell = setCell($cell, $sheet, 'tradingTaxPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['tradingTaxPrice'], false));
     // 売買代金
     $cell = setCell($cell, $sheet, 'tradingPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['tradingPrice'], false));
+    
+    $arrayDayChk = array();// 20230508 Add
+
     // 手付金日付
     // 手付金
     $earnestPriceDay = '';
     $earnestPrice = '';
+    // 20230508 S_Update
+    // if($contract['earnestPriceDayChk'] === '1') {
+    //     $earnestPriceDay = $contract['earnestPriceDay'];
+    //     $earnestPrice = $contract['earnestPrice'];
+    // }
+    $earnestPriceDay = $contract['earnestPriceDay'];
+    $earnestPrice = $contract['earnestPrice'];
     if($contract['earnestPriceDayChk'] === '1') {
-        $earnestPriceDay = $contract['earnestPriceDay'];
-        $earnestPrice = $contract['earnestPrice'];
+        if(($earnestPriceDay != null && $earnestPriceDay != '') || ($earnestPrice != null && $earnestPrice != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($earnestPriceDay), '手付金', $earnestPrice));
+        }
     }
+    // 20230508 E_Update
+
     $cell = setCell(null, $sheet, 'earnestPriceDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($earnestPriceDay));
     $cell = setCell(null, $sheet, 'earnestPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($earnestPrice, false));
     // 内金①日付
     // 内金①
     $deposit1Day = '';
     $deposit1 = '';
+    // 20230508 S_Update    
+    // if($contract['deposit1DayChk'] === '1') {
+    //     $deposit1Day = $contract['deposit1Day'];
+    //     $deposit1 = $contract['deposit1'];
+    // }
+    $deposit1Day = $contract['deposit1Day'];
+    $deposit1 = $contract['deposit1'];
     if($contract['deposit1DayChk'] === '1') {
-        $deposit1Day = $contract['deposit1Day'];
-        $deposit1 = $contract['deposit1'];
-    }
+        if(($deposit1Day != null && $deposit1Day != '') || ($deposit1 != null && $deposit1 != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($deposit1Day), '中間金', $deposit1));
+        }
+    }    
+    // 20230508 E_Update    
     $cell = setCell($cell, $sheet, 'deposit1Day', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($deposit1Day));
     $cell = setCell($cell, $sheet, 'deposit1', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($deposit1, false));
     // 内金②日付
     // 内金②
     $deposit2Day = '';
     $deposit2 = '';
+    // 20230508 S_Update 
+    // if($contract['deposit2DayChk'] === '1') {
+    //     $deposit2Day = $contract['deposit2Day'];
+    //     $deposit2 = $contract['deposit2'];
+    // }
+    $deposit2Day = $contract['deposit2Day'];
+    $deposit2 = $contract['deposit2'];
     if($contract['deposit2DayChk'] === '1') {
-        $deposit2Day = $contract['deposit2Day'];
-        $deposit2 = $contract['deposit2'];
-    }
+        if(($deposit2Day != null && $deposit2Day != '') || ($deposit2 != null && $deposit2 != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($deposit2Day), '中間金', $deposit2));
+        }
+    }    
+    // 20230508 E_Update      
     $cell = setCell($cell, $sheet, 'deposit2Day', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($deposit2Day));
     $cell = setCell($cell, $sheet, 'deposit2', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($deposit2, false));
     // 内金③日付
     // 内金③
     $deposit3Day = '';
     $deposit3 = '';
+    // 20230508 S_Update 
+    // if($contract['deposit3DayChk'] === '1') {
+    //     $deposit3Day = $contract['deposit3Day'];
+    //     $deposit3 = $contract['deposit3'];
+    // }
+    $deposit3Day = $contract['deposit3Day'];
+    $deposit3 = $contract['deposit3'];
     if($contract['deposit3DayChk'] === '1') {
-        $deposit3Day = $contract['deposit3Day'];
-        $deposit3 = $contract['deposit3'];
-    }
+        if(($deposit3Day != null && $deposit3Day != '') || ($deposit3 != null && $deposit3 != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($deposit3Day), '中間金', $deposit3));
+        }
+    }    
+    // 20230508 E_Update     
     $cell = setCell($cell, $sheet, 'deposit3Day', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($deposit3Day));
     $cell = setCell($cell, $sheet, 'deposit3', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($deposit3, false));
     // 内金④日付
     // 内金④
     $deposit4Day = '';
     $deposit4 = '';
+    // 20230508 S_Update    
+    // if($contract['deposit4DayChk'] === '1') {
+    //     $deposit4Day = $contract['deposit4Day'];
+    //     $deposit4 = $contract['deposit4'];
+    // }
+    $deposit4Day = $contract['deposit4Day'];
+    $deposit4 = $contract['deposit4'];
     if($contract['deposit4DayChk'] === '1') {
-        $deposit4Day = $contract['deposit4Day'];
-        $deposit4 = $contract['deposit4'];
+        if(($deposit4Day != null && $deposit4Day != '') || ($deposit4 != null && $deposit4 != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($deposit4Day), '中間金', $deposit4));
+        }
     }
+    // 20230508 E_Update  
     $cell = setCell($cell, $sheet, 'deposit4Day', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($deposit4Day));
     $cell = setCell($cell, $sheet, 'deposit4', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($deposit4, false));
     // 決済日
     // 決済代金
     $decisionDay = '';
     $decisionPrice = '';
+    // 20230508 S_Update 
+    // if($contract['decisionDayChk'] === '1') {
+    //     $decisionDay = $contract['decisionDay'];
+    //     $decisionPrice = $contract['decisionPrice'];
+    // }
+    $decisionDay = $contract['decisionDay'];
+    $decisionPrice = $contract['decisionPrice'];
     if($contract['decisionDayChk'] === '1') {
-        $decisionDay = $contract['decisionDay'];
-        $decisionPrice = $contract['decisionPrice'];
+        if(($decisionDay != null && $decisionDay != '') || ($decisionPrice != null && $decisionPrice != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($decisionDay), '決済代金', $decisionPrice));
+        }
     }
+    // 20230508 E_Update 
     $cell = setCell($cell, $sheet, 'decisionDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($decisionDay));
     $cell = setCell($cell, $sheet, 'decisionPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($decisionPrice, false));
     // 留保金支払(明渡)日
     // 留保金
     $cell = setCell($cell, $sheet, 'retainageDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($contract['retainageDay']));
     $cell = setCell($cell, $sheet, 'retainage', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['retainage'], false));
+    // 20230508 S_Update 
+    // // 固都税清算金
+    // $cell = setCell($cell, $sheet, 'fixedTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['fixedTax'], false));
+    // // 20211128 S_Add
+    // // （内消費税相当額<-建物分消費税
+    // $cell = setCell($cell, $sheet, 'fixedBuildingTaxOnlyTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['fixedBuildingTaxOnlyTax'], false));
+    // // 20211128 E_Add
     // 固都税清算金
-    $cell = setCell($cell, $sheet, 'fixedTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['fixedTax'], false));
-    // 20211128 S_Add
+    $fixedTax = $contract['fixedTax'];
+    $fixedTaxDay = $contract['fixedTaxDay'];
     // （内消費税相当額<-建物分消費税
-    $cell = setCell($cell, $sheet, 'fixedBuildingTaxOnlyTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['fixedBuildingTaxOnlyTax'], false));
-    // 20211128 E_Add
+    $fixedBuildingTaxOnlyTax = $contract['fixedBuildingTaxOnlyTax'];
+
+    $cell = setCell($cell, $sheet, 'fixedTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($fixedTax, false));
+    $cell = setCell($cell, $sheet, 'fixedBuildingTaxOnlyTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($fixedBuildingTaxOnlyTax, false));
+    if($contract['fixedTaxDayChk'] === '1') {
+        if(($fixedTaxDay != null && $fixedTaxDay != '') || ($fixedTax != null && $fixedTax != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($fixedTaxDay), '固都税精算金', $fixedTax));
+        }
+    }
+    // 20230508 E_Update 
     // 仲介会社
     for ($i = 1; $i <= 2; $i++) {
         $cell = setCell(null, $sheet, 'intermediaryName', $tradingColumn, $endColumn, $tradingRow, $endRow, $contract['intermediaryName']);
@@ -239,6 +312,41 @@ foreach($contracts as $contract) {
     $cell = setCell($cell, $sheet, 'remarks', $tradingColumn, $endColumn, $tradingRow, $endRow, $contract['remarks']);
     // 20220615 E_Add
 
+    // 20230508 S_Add
+    // 入出金履歴が複数ある場合、ブロックをコピー
+    $lengthArrayDayChk = count($arrayDayChk);
+
+    $cell = searchCell($sheet, 'historyDay', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+    }  
+    $cellPrice = searchCell($sheet, 'historyPrice', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cellPrice != null) {
+        $currentColumnPrice = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cellPrice->getColumn());
+    }   
+    if($lengthArrayDayChk > 1) {
+        copyBlockWithVal($sheet, $currentRow, 1, $lengthArrayDayChk - 1, $endColumn);
+    }
+    if($lengthArrayDayChk == 0){
+        array_push($arrayDayChk, array('', '', ''));
+        $lengthArrayDayChk = 1;
+    }
+    for($i = 0; $i < $lengthArrayDayChk; $i++) {
+        $cell = setCell(null, $sheet, 'historyDay', $currentColumn, $endColumn, $currentRow, $endRow, $arrayDayChk[$i][0]);
+        $cell = setCell($cell, $sheet, 'historyName', $currentColumn, $endColumn, $currentRow, $endRow, $arrayDayChk[$i][1]);
+        $cell = setCell($cell, $sheet, 'historyPrice', $currentColumn, $endColumn, $currentRow, $endRow, $arrayDayChk[$i][2]);
+    }
+    $cell = searchCell($sheet, 'historyDay', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+    } 
+      
+    $letter = getAlphabetFromIndex($currentColumnPrice);
+
+    $cell = setCell($cell, $sheet, 'historyPriceSum', $currentColumn, $endColumn, $currentRow, $endRow, '=SUM(' .$letter . $currentRow . ':' . $letter . ($currentRow + $lengthArrayDayChk - 1) . ')');
+    // 20230508 E_Add
     $sheet->setSelectedCell('A1');// 初期選択セル設定 20220608 Add
 }
 // コピー元買主シート削除
@@ -394,6 +502,18 @@ function copyBlockWithVal($sheet, $startPos, $blockRowCount, $copyCount, $colums
     }
 }
 
+// 20230508 S_Add
+function getAlphabetFromIndex($index) {
+    $alphabet = range('A', 'Z');
+    $alphabetLength = count($alphabet);
+    
+    if ($index < 1 || $index > $alphabetLength) {
+      return null; 
+    }
+    
+    return $alphabet[$index - 1];
+}
+// 20230508 E_Add
 /**
  * セルに値設定
  */
