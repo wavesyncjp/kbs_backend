@@ -1,0 +1,247 @@
+<?php
+require("../vendor/autoload.php");
+require '../header.php';
+require '../util.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+	echo 'NOT SUPPORT';
+	exit;
+}
+
+$postparam = file_get_contents("php://input");
+$param = json_decode($postparam);
+
+header("Content-disposition: attachment; filename=sample.xlsx");
+header("Content-Type: application/vnd.ms-excel");
+header("Pragma: no-cache");
+header("Expires: 0");
+
+$fullPath  = __DIR__ . '/../template';
+$filePath = $fullPath.'/契約精算申請書.xlsx';
+// Excel操作
+$reader = new PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+$spreadsheet = $reader->load($filePath);
+
+// 仕入契約情報を取得
+$contract = ORM::for_table(TBLCONTRACTINFO)->findOne($param->pid)->asArray();
+
+// 契約・不可分一体精算申請書シート
+$sheet = $spreadsheet->getSheet(0);
+
+// 土地情報を取得
+$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->select('bukkenName')->select('startDate')->findOne($contract['tempLandInfoPid'])->asArray();
+// 仕入契約者情報を取得
+$sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->select('contractorName')->select('contractorAdress')->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
+
+// 複数契約者名（・区切り）
+$list_contractorNameDot = getContractorName($sellers, '・');
+
+// 所在地情報（物件単位）を取得
+$locsByTempLand = ORM::for_table(TBLLOCATIONINFO)->select('locationType')->select('address')->select('bottomLandPid')->where('tempLandInfoPid', $bukken['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
+
+$addressByTempLand = '';// 所在地（物件単位）
+
+$cntlocsByTempLand = 0;
+$cntLandlocsByTempLand = 0;
+$cntNotLandlocsByTempLand = 0;
+$bottomLandsByTempLand = [];
+
+$addressLandByTempLand = '';
+$addressNotLandByTempLand = '';
+
+foreach($locsByTempLand as $loc) {
+	$cntlocsByTempLand++;
+
+	// 区分が01：土地の場合
+	if($loc['locationType'] == '01') {
+		$cntLandlocsByTempLand++;
+		if($cntLandlocsByTempLand == 1) {
+			$addressLandByTempLand = $loc['address'];   // 所在地
+		}
+	}
+	else {
+		if(!empty($loc['bottomLandPid'])) $bottomLandsByTempLand[] = $loc;
+		$cntNotLandlocsByTempLand++;
+		if($cntLandlocsByTempLand == 0 && $cntNotLandlocsByTempLand == 1) {
+			$addressNotLandByTempLand = $loc['address'];// 所在地
+		}
+	}
+}
+
+if($addressLandByTempLand != '') $addressByTempLand = $addressLandByTempLand;
+else $addressByTempLand = $addressNotLandByTempLand;
+
+// 土地に指定がないかつ、底地に指定がある場合
+if($cntLandlocsByTempLand == 0 && sizeof($bottomLandsByTempLand) > 0) {
+	foreach($bottomLandsByTempLand as $loc) {
+		$bottomLand = ORM::for_table(TBLLOCATIONINFO)->find_one($loc['bottomLandPid']);
+		$addressByTempLand = $bottomLand['address'];
+		break;
+	}
+}
+
+// 所在地情報を取得
+$locs = getLocation($contract['pid']);
+$address = '';          // 所在地
+$blockNumber = '';      // 地番
+$buildingNumber = '';   // 家屋番号
+
+$cntlocs = 0;
+$cntLandlocs = 0;
+$cntNotLandlocs = 0;
+$bottomLands = [];
+
+$addressLand = '';
+$addressNotLand = '';
+
+foreach($locs as $loc) {
+	$cntlocs++;
+
+	// 区分が01：土地の場合
+	if($loc['locationType'] == '01') {
+		$cntLandlocs++;
+		if($cntLandlocs == 1) {
+			$addressLand = $loc['address'];    // 所在地
+			$blockNumber = $loc['blockNumber'];// 地番
+		}
+	}
+	else {
+		if(!empty($loc['bottomLandPid'])) $bottomLands[] = $loc;
+		$cntNotLandlocs++;
+		if($cntLandlocs == 0 && $cntNotLandlocs == 1) {
+			$addressNotLand = $loc['address'];       // 所在地
+			$buildingNumber = $loc['buildingNumber'];// 家屋番号
+		}
+	}
+}
+
+if($addressLand != '') $address = $addressLand;
+else $address = $addressNotLand;
+
+$blockOrBuildingNumber = $blockNumber;
+if(empty($blockOrBuildingNumber) && !empty($buildingNumber)) $blockOrBuildingNumber = '（' . $buildingNumber . '）';
+$addressAndBlockOrBuildingNumber = $address . $blockOrBuildingNumber;// 所在地+地番/家屋番号
+
+if($cntLandlocs > 1) {
+	$addressAndBlockOrBuildingNumber .= '　外';
+}
+// 土地に指定がないかつ、底地に指定がある場合
+else if($cntLandlocs == 0 && sizeof($bottomLands) > 0) {
+	foreach($bottomLands as $loc) {
+		$bottomLand = ORM::for_table(TBLLOCATIONINFO)->find_one($loc['bottomLandPid']);
+		$addressAndBlockOrBuildingNumber = $bottomLand['address'] . $bottomLand['blockNumber'];
+		if(!empty($loc['buildingNumber'])) $addressAndBlockOrBuildingNumber .= '（家屋番号：' . $loc['buildingNumber'] . '）';
+		break;
+	}
+}
+
+$endColumn = 18;// 最終列数
+$endRow = 25;   // 最終行数
+
+// 物件住所（物件フォルダ名）契約物件番号
+$cell = setCell(null, $sheet, 'addressAndBukkenNameAndContractBukkenNo', 1, $endColumn, 1, $endRow, $addressByTempLand . $bukken['bukkenName'] . $bukken['contractBukkenNo']);
+// 所在地（地番）
+$cell = setCell(null, $sheet, 'addressAndBlockOrBuildingNumber', 1, $endColumn, 1, $endRow, $addressAndBlockOrBuildingNumber);
+// 契約物件（名義人）
+$cell = setCell(null, $sheet, 'list_contractorNameDot', 1, $endColumn, 1, $endRow, $list_contractorNameDot);
+// 契約書番号
+$cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contract['contractFormNumber']);
+
+$sheet->setSelectedCell('A1');// 初期選択セル設定
+
+// 不可分一体契約特別歩合申請書シート
+$sheet = $spreadsheet->getSheet(1);
+
+// 契約物件（名義人）
+$cell = setCell(null, $sheet, 'startDate_dt_kanji', 1, $endColumn, 1, $endRow, convert_dt($bukken['startDate'], 'Y年n月j日'));
+
+$sheet->setSelectedCell('A1');// 初期選択セル設定
+
+$spreadsheet->setActiveSheetIndex(0);// 初期選択シート設定
+
+// 保存
+$filename = '契約精算申請書_' . date('YmdHis') . '.xlsx';
+$writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+$savePath = $fullPath . '/' . $filename;
+
+// Excel側の数式を再計算させる
+$writer->setPreCalculateFormulas(false);
+
+$writer->save($savePath);
+
+// ダウンロード
+readfile($savePath);
+
+// 削除
+unlink($savePath);
+
+/**
+ * セルに値設定
+ */
+function setCell($cell, $sheet, $keyWord, $startColumn, $endColumn, $startRow, $endRow, $value) {
+	// セルに指定がある場合
+	if($cell != null) {
+		// 対象のセルを開始位置とする
+		$startColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+		$startRow = $cell->getRow();
+	}
+	// キーワードのセルを探す
+	$cell = searchCell($sheet, $keyWord, $startColumn, $endColumn, $startRow, $endRow);
+	// 対象のセルが存在する場合
+	if($cell != null) {
+		// キーワードを置換する
+		$setValue = str_replace('$' . $keyWord . '$', $value, $cell->getValue());
+		// 値を設定する
+		$setColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+		$setRow = $cell->getRow();
+		$sheet->setCellValueByColumnAndRow($setColumn, $setRow, $setValue);
+	}
+	return $cell;
+}
+
+/**
+ * 所在地情報取得
+ */
+function getLocation($contractPid) {
+	$lst = ORM::for_table(TBLCONTRACTDETAILINFO)
+	->table_alias('p1')
+	->select('p2.locationType', 'locationType')
+	->select('p2.address', 'address')
+	->select('p2.blockNumber', 'blockNumber')
+	->select('p2.buildingNumber', 'buildingNumber')
+	->select('p2.propertyTax', 'propertyTax')
+	->select('p2.cityPlanningTax', 'cityPlanningTax')
+	->select('p2.bottomLandPid', 'bottomLandPid')
+	->inner_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p2.pid'), 'p2')
+	->where('p1.contractDataType', '01')
+	->where('p1.contractInfoPid', $contractPid)
+	->order_by_asc('p1.pid')->findArray();
+	return $lst;
+}
+
+/**
+ * 契約者取得（指定文字区切り）
+ */
+function getContractorName($lst, $split) {
+	$ret = [];
+	if(isset($lst)) {
+		foreach($lst as $data) {
+			if(!empty($data['contractorName'])) $ret[] = mb_convert_kana($data['contractorName'], 'kvrn');
+		}
+	}
+	return implode($split, $ret);
+}
+
+/**
+ * 行と値コピー
+ */
+function copyBlockWithVal($sheet, $startPos, $blockRowCount, $copyCount, $colums) {
+	$sheet->insertNewRowBefore($startPos, $blockRowCount * $copyCount);
+	$lastPos = $startPos + ($blockRowCount * $copyCount);
+	for($cursor = 0 ; $cursor < $copyCount ; $cursor++) {
+		$copyPos = $startPos  + $blockRowCount * $cursor;
+		copyRowsWithValue($sheet, $lastPos, $copyPos, $blockRowCount, $colums);
+	}
+}
+
+?>
