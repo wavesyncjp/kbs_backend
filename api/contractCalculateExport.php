@@ -138,6 +138,18 @@ else if($cntLandlocs == 0 && sizeof($bottomLands) > 0) {
 $endColumn = 18;// 最終列数
 $endRow = 25;   // 最終行数
 
+// 20230509 S_Add
+$options = array('1部', '2部', '3部', '4部', '5部', '6部', '8部', '大阪1部', '大阪2部', '大阪3部', '名古屋1部', '名古屋2部');
+createCombobox($sheet,'A3',$options);
+
+$options = array('2ヶ月', '3ヶ月', '5ヶ月');
+createCombobox($sheet,'D13',$options);
+
+//対象のセルのコメント
+$comment = $sheet -> getComment('D13');
+$comment ->getFillColor() -> setRGB('ffffe1');
+// 20230509 E_Add
+ 	
 // 物件住所（物件フォルダ名）契約物件番号
 $cell = setCell(null, $sheet, 'addressAndBukkenNameAndContractBukkenNo', 1, $endColumn, 1, $endRow, $addressByTempLand . $bukken['bukkenName'] . $bukken['contractBukkenNo']);
 // 所在地（地番）
@@ -174,6 +186,17 @@ readfile($savePath);
 
 // 削除
 unlink($savePath);
+
+// 20230509 S_Add
+function createCombobox($sheet, $cellName,$options){
+	$dataValidation = $sheet->getCell($cellName)->getDataValidation();
+	$dataValidation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST)
+    ->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION)
+    ->setAllowBlank(false)
+    ->setShowDropDown(true)
+    ->setFormula1('"'.implode(',', $options).'"');
+}
+// 20230509 E_Add
 
 /**
  * セルに値設定
