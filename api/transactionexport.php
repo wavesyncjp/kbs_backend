@@ -371,6 +371,7 @@ foreach($sales as $sale) {
     if($sale['salesName'] !== '') $sheet->setTitle($sale['salesName'] . '様');
     $spreadsheet->addSheet($sheet);
 
+    $arrayDayChk = array();// 20230509 Add
     // 列・行の位置を初期化
     $currentColumn = 1;
     $currentRow = 1;
@@ -423,28 +424,89 @@ foreach($sales as $sale) {
     $cell = setCell($cell, $sheet, 'salesTradingPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesTradingPrice'], false));
     // 売買代金（消費税）
     $cell = setCell($cell, $sheet, 'salesTradingTaxPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesTradingTaxPrice'], false));
+    // 20230510 S_Update
+    // // 手付金日付
+    // // 手付金
+    // $cell = setCell(null, $sheet, 'salesEarnestPriceDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($sale['salesEarnestPriceDay']));
+    // $cell = setCell(null, $sheet, 'salesEarnestPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesEarnestPrice'], false));
+    // // 内金①日付
+    // // 内金①
+    // $cell = setCell($cell, $sheet, 'salesDeposit1Day', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($sale['salesDeposit1Day']));
+    // $cell = setCell($cell, $sheet, 'salesDeposit1', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesDeposit1'], false));
+    // // 内金②日付
+    // // 内金②
+    // $cell = setCell($cell, $sheet, 'salesDeposit2Day', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($sale['salesDeposit2Day']));
+    // $cell = setCell($cell, $sheet, 'salesDeposit2', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesDeposit2'], false));
+    // // 決済日
+    // // 決済代金
+    // $cell = setCell($cell, $sheet, 'salesDecisionDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($sale['salesDecisionDay']));
+    // $cell = setCell($cell, $sheet, 'salesDecisionPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesDecisionPrice'], false));
+    // // 留保金支払日
+    // // 留保金
+    // $cell = setCell($cell, $sheet, 'salesRetainageDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($sale['salesRetainageDay']));
+    // $cell = setCell($cell, $sheet, 'salesRetainage', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesRetainage'], false));
+    // // 固都税清算金
+    // $cell = setCell($cell, $sheet, 'salesFixedTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesFixedTax'], false));
+
     // 手付金日付
     // 手付金
-    $cell = setCell(null, $sheet, 'salesEarnestPriceDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($sale['salesEarnestPriceDay']));
-    $cell = setCell(null, $sheet, 'salesEarnestPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesEarnestPrice'], false));
+    $salesEarnestPriceDay = $sale['salesEarnestPriceDay'];
+    $salesEarnestPrice = $sale['salesEarnestPrice'];
+    $cell = setCell(null, $sheet, 'salesEarnestPriceDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($salesEarnestPriceDay));
+    $cell = setCell(null, $sheet, 'salesEarnestPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($salesEarnestPrice, false));
+    if($sale['salesEarnestPriceDayChk'] === '1') {
+        if(($salesEarnestPriceDay != null && $salesEarnestPriceDay != '') || ($salesEarnestPrice != null && $salesEarnestPrice != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($salesEarnestPriceDay), '手付金', $salesEarnestPrice));
+        }
+    }
     // 内金①日付
     // 内金①
-    $cell = setCell($cell, $sheet, 'salesDeposit1Day', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($sale['salesDeposit1Day']));
-    $cell = setCell($cell, $sheet, 'salesDeposit1', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesDeposit1'], false));
+    $salesDeposit1Day = $sale['salesDeposit1Day'];
+    $salesDeposit1 = $sale['salesDeposit1'];
+    $cell = setCell($cell, $sheet, 'salesDeposit1Day', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($salesDeposit1Day));
+    $cell = setCell($cell, $sheet, 'salesDeposit1', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($salesDeposit1, false));
+    if($sale['salesDeposit1DayChk'] === '1') {
+        if(($salesDeposit1Day != null && $salesDeposit1Day != '') || ($salesDeposit1 != null && $salesDeposit1 != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($salesDeposit1Day), '中間金', $salesDeposit1));
+        }
+    }
     // 内金②日付
     // 内金②
-    $cell = setCell($cell, $sheet, 'salesDeposit2Day', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($sale['salesDeposit2Day']));
-    $cell = setCell($cell, $sheet, 'salesDeposit2', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesDeposit2'], false));
+    $salesDeposit2Day = $sale['salesDeposit2Day'];
+    $salesDeposit2 = $sale['salesDeposit2'];
+    $cell = setCell($cell, $sheet, 'salesDeposit2Day', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($salesDeposit2Day));
+    $cell = setCell($cell, $sheet, 'salesDeposit2', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($salesDeposit2, false));
+    if($sale['salesDeposit2DayChk'] === '1') {
+        if(($salesDeposit2Day != null && $salesDeposit2Day != '') || ($salesDeposit2 != null && $salesDeposit2 != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($salesDeposit2Day), '中間金', $salesDeposit2));
+        }
+    }
     // 決済日
     // 決済代金
-    $cell = setCell($cell, $sheet, 'salesDecisionDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($sale['salesDecisionDay']));
-    $cell = setCell($cell, $sheet, 'salesDecisionPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesDecisionPrice'], false));
+    $salesDecisionDay = $sale['salesDecisionDay'];
+    $salesDecisionPrice = $sale['salesDecisionPrice'];
+    $cell = setCell($cell, $sheet, 'salesDecisionDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($salesDecisionDay));
+    $cell = setCell($cell, $sheet, 'salesDecisionPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($salesDecisionPrice, false));
+    if($sale['salesDecisionDayChk'] === '1') {
+        if(($salesDecisionDay != null && $salesDecisionDay != '') || ($salesDecisionPrice != null && $salesDecisionPrice != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($salesDecisionDay), '決済代金', $salesDecisionPrice));
+        }
+    }
     // 留保金支払日
     // 留保金
     $cell = setCell($cell, $sheet, 'salesRetainageDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($sale['salesRetainageDay']));
     $cell = setCell($cell, $sheet, 'salesRetainage', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesRetainage'], false));
     // 固都税清算金
-    $cell = setCell($cell, $sheet, 'salesFixedTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesFixedTax'], false));
+    $salesFixedTaxDay = $sale['salesFixedTaxDay'];
+    $salesFixedTax = $sale['salesFixedTax'];
+    $cell = setCell($cell, $sheet, 'salesFixedTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($salesFixedTax, false));
+    if($sale['salesFixedTaxDayChk'] === '1') {
+        if(($salesFixedTaxDay != null && $salesFixedTaxDay != '') || ($salesFixedTax != null && $salesFixedTax != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($salesFixedTaxDay), '固都税精算金', $salesFixedTax));
+        }
+    }
+    // 20230510 E_Update
+
     // （内消費税相当額<-固都税清算金（消費税）
     // 20220608 S_Update
     // $cell = setCell($cell, $sheet, 'salesFixedConsumptionTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesFixedConsumptionTax'], false));
@@ -471,6 +533,41 @@ foreach($sales as $sale) {
     $cell = setCell($cell, $sheet, 'salesRemark', $tradingColumn, $endColumn, $tradingRow, $endRow, $sale['salesRemark']);
     // 20220615 E_Add
 
+    // 20230509 S_Add
+    // 入出金履歴が複数ある場合、ブロックをコピー
+    $lengthArrayDayChk = count($arrayDayChk);
+
+    $cell = searchCell($sheet, 'historyDay', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+    }  
+    $cellPrice = searchCell($sheet, 'historyPrice', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cellPrice != null) {
+        $currentColumnPrice = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cellPrice->getColumn());
+    }   
+    if($lengthArrayDayChk > 1) {
+        copyBlockWithVal($sheet, $currentRow, 1, $lengthArrayDayChk - 1, $endColumn);
+    }
+    if($lengthArrayDayChk == 0){
+        array_push($arrayDayChk, array('', '', ''));
+        $lengthArrayDayChk = 1;
+    }
+    for($i = 0; $i < $lengthArrayDayChk; $i++) {
+        $cell = setCell(null, $sheet, 'historyDay', $currentColumn, $endColumn, $currentRow, $endRow, $arrayDayChk[$i][0]);
+        $cell = setCell($cell, $sheet, 'historyName', $currentColumn, $endColumn, $currentRow, $endRow, $arrayDayChk[$i][1]);
+        $cell = setCell($cell, $sheet, 'historyPrice', $currentColumn, $endColumn, $currentRow, $endRow, $arrayDayChk[$i][2]);
+    }
+    $cell = searchCell($sheet, 'historyDay', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+    } 
+      
+    $letter = getAlphabetFromIndex($currentColumnPrice);
+
+    $cell = setCell($cell, $sheet, 'historyPriceSum', $currentColumn, $endColumn, $currentRow, $endRow, '=SUM(' .$letter . $currentRow . ':' . $letter . ($currentRow + $lengthArrayDayChk - 1) . ')');
+    // 20230509 E_Add
     $sheet->setSelectedCell('A1');// 初期選択セル設定 20220608 Add
 }
 // コピー元売主シート削除
