@@ -24,6 +24,34 @@ else {
 		$saleSave = ORM::for_table(TBLBUKKENSALESINFO)->find_one($sale->pid);
 		setUpdate($saleSave, $sale->updateUserId);
 		$userId = $sale->updateUserId;// 20210728 Add
+
+		// 20230511 S_Add
+		if(isset($sale->salesAttaches)){
+			foreach ($sale->salesAttaches as $salesAttach){
+				if(isset($salesAttach->pid) && $salesAttach->pid > 0){
+					$salesAttachSave = ORM::for_table(TBLBUKKENSALESATTACH)->find_one($salesAttach->pid);
+					$action = -1;
+					if($salesAttachSave->attachFileChk != $salesAttach->attachFileChk){
+						$salesAttachSave->attachFileChk = $salesAttach->attachFileChk;
+						$action = 1;
+					}
+					if($salesAttachSave->attachFileDay != $salesAttach->attachFileDay){
+						$salesAttachSave->attachFileDay = $salesAttach->attachFileDay;
+						$action = 1;
+					}
+					if($salesAttachSave->attachFileDisplayName != $salesAttach->attachFileDisplayName){
+						$salesAttachSave->attachFileDisplayName = $salesAttach->attachFileDisplayName;
+						$action = 1;
+					}
+					//更新
+					if($action == 1){
+						setUpdate($salesAttachSave, $userId);
+						$salesAttachSave->save();
+					}
+				}
+			}
+		}
+		// 20230511 E_Add
 	}
 	else {
 		$saleSave = ORM::for_table(TBLBUKKENSALESINFO)->create();
@@ -37,9 +65,21 @@ else {
 	$saleSave->save();
 
 	setPayBySale($saleSave, $userId);// 20210728 Add
+
 }
 
 $ret = ORM::for_table(TBLBUKKENSALESINFO)->find_one($saleSave->pid)->asArray();
+// 20230511 S_Add
+// 物件売契約添付ファイル
+$salesAttaches = ORM::for_table(TBLBUKKENSALESATTACH)->where('bukkenSalesInfoPid', $saleSave->pid)->where('attachFileType', '0')->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
+if(isset($salesAttaches)){
+	$ret['salesAttaches'] = $salesAttaches;
+}
+else
+{
+	$ret['salesAttaches'] = [];
+}
+// 20230511 E_Add
 echo json_encode($ret);
 
 ?>

@@ -312,6 +312,38 @@ foreach($contracts as $contract) {
     $cell = setCell($cell, $sheet, 'remarks', $tradingColumn, $endColumn, $tradingRow, $endRow, $contract['remarks']);
     // 20220615 E_Add
 
+    // 20230511 S_Add
+    // 契約書等
+    $maxRowAttach = 2;//最大件数
+    $attaches = ORM::for_table(TBLCONTRACTATTACH)->select('attachFileDay')->select('attachFileDisplayName')->where('contractInfoPid', $contract['pid'])->where('attachFileChk', '1')->where_null('deleteDate')->where_raw('(attachFileDay is not null OR attachFileDisplayName is not null)')->order_by_desc('updateDate')->findArray();
+    
+    $cell = searchCell($sheet, 'attach', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+    }
+
+    // 契約書等が最大件数件を超える場合
+    if(sizeof($attaches) > $maxRowAttach) {
+        // 添付ファイル日付 及び　表示名の行をコピー
+        copyBlockWithVal($sheet, $currentRow, 1, sizeof($attaches) - $maxRowAttach, $endColumn);
+    }
+    foreach($attaches as $attach) {
+        // 添付ファイル日付 及び　表示名
+        $attachFileDay = $attach['attachFileDay'];
+        $attachFileDisplayName = $attach['attachFileDisplayName'];
+        if($attachFileDay != null && $attachFileDay != ''){
+            $attachFileDay = convert_jpdt_kanji($attachFileDay) . "締結";
+        }
+        $cell = setCell(null, $sheet, 'attach', $currentColumn, $endColumn, $currentRow, $endRow, $attachFileDisplayName . $attachFileDay);
+    }
+    // 契約書等が最大件数未満の場合、Emptyを設定
+    for ($i = 1; $i <= $maxRowAttach - sizeof($attaches); $i++) {
+        // 売主氏名<-Empty
+        $cell = setCell(null, $sheet, 'attach', $currentColumn, $endColumn, $currentRow, $endRow, '');
+    }
+    // 20230511 E_Add
+
     // 20230508 S_Add
     // 入出金履歴が複数ある場合、ブロックをコピー
     $lengthArrayDayChk = count($arrayDayChk);
@@ -532,6 +564,38 @@ foreach($sales as $sale) {
     // 摘要<-備考
     $cell = setCell($cell, $sheet, 'salesRemark', $tradingColumn, $endColumn, $tradingRow, $endRow, $sale['salesRemark']);
     // 20220615 E_Add
+
+    // 20230511 S_Add
+    // 契約書等
+    $maxRowAttach = 2;//最大件数
+    $attaches = ORM::for_table(TBLBUKKENSALESATTACH)->select('attachFileDay')->select('attachFileDisplayName')->where('bukkenSalesInfoPid', $sale['pid'])->where('attachFileChk', '1')->where_null('deleteDate')->where_raw('(attachFileDay is not null OR attachFileDisplayName is not null)')->order_by_desc('updateDate')->findArray();
+    
+    $cell = searchCell($sheet, 'attach', $currentColumn, $endColumn, $currentRow, $endRow);
+    if($cell != null) {
+        $currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+        $currentRow = $cell->getRow();
+    }
+
+    // 契約書等が最大件数件を超える場合
+    if(sizeof($attaches) > $maxRowAttach) {
+        // 添付ファイル日付 及び　表示名の行をコピー
+        copyBlockWithVal($sheet, $currentRow, 1, sizeof($attaches) - $maxRowAttach, $endColumn);
+    }
+    foreach($attaches as $attach) {
+        // 添付ファイル日付 及び　表示名
+        $attachFileDay = $attach['attachFileDay'];
+        $attachFileDisplayName = $attach['attachFileDisplayName'];
+        if($attachFileDay != null && $attachFileDay != ''){
+            $attachFileDay = convert_jpdt_kanji($attachFileDay) . "締結";
+        }
+        $cell = setCell(null, $sheet, 'attach', $currentColumn, $endColumn, $currentRow, $endRow, $attachFileDisplayName . $attachFileDay);
+    }
+    // 契約書等が最大件数未満の場合、Emptyを設定
+    for ($i = 1; $i <= $maxRowAttach - sizeof($attaches); $i++) {
+        // 売主氏名<-Empty
+        $cell = setCell(null, $sheet, 'attach', $currentColumn, $endColumn, $currentRow, $endRow, '');
+    }
+    // 20230511 E_Add
 
     // 20230509 S_Add
     // 入出金履歴が複数ある場合、ブロックをコピー

@@ -166,6 +166,34 @@ if(isset($param->sellers)){
 	}
 }
 
+// 20230511 S_Add
+if(isset($param->contractAttaches)){
+	foreach ($param->contractAttaches as $contractAttach){
+		if(isset($contractAttach->pid) && $contractAttach->pid > 0){
+			$contractAttachSave = ORM::for_table(TBLCONTRACTATTACH)->find_one($contractAttach->pid);
+			$action = -1;
+			if($contractAttachSave->attachFileChk != $contractAttach->attachFileChk){
+				$contractAttachSave->attachFileChk = $contractAttach->attachFileChk;
+				$action = 1;
+			}
+			if($contractAttachSave->attachFileDay != $contractAttach->attachFileDay){
+				$contractAttachSave->attachFileDay = $contractAttach->attachFileDay;
+				$action = 1;
+			}
+			if($contractAttachSave->attachFileDisplayName != $contractAttach->attachFileDisplayName){
+				$contractAttachSave->attachFileDisplayName = $contractAttach->attachFileDisplayName;
+				$action = 1;
+			}
+			//更新
+			if($action == 1){
+				setUpdate($contractAttachSave, $param->updateUserId);
+				$contractAttachSave->save();
+			}
+		}
+	}
+}
+// 20230511 E_Add
+
 echo json_encode(getContractInfo($contract->pid));
 
 ?>

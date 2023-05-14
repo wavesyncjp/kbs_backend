@@ -820,10 +820,13 @@ function getLandPlan($pid) {
 		$data->plans = $plans;
 	}
 
-	// 20220329 S_Update
-	// $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $pid)->order_by_asc('pid')->findArray();
-	$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $pid)->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
-	// 20220329 E_Update
+	// 20230511 S_Update
+	// // 20220329 S_Update
+	// // $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $pid)->order_by_asc('pid')->findArray();
+	// $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $pid)->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
+	// // 20220329 E_Update
+	$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
+	// 20230511 E_Update
 	if(isset($sales)){
 
 		// 20230227 S_Add
