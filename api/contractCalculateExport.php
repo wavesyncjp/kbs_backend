@@ -29,7 +29,10 @@ $contract = ORM::for_table(TBLCONTRACTINFO)->findOne($param->pid)->asArray();
 $sheet = $spreadsheet->getSheet(0);
 
 // 土地情報を取得
-$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->select('bukkenName')->select('startDate')->findOne($contract['tempLandInfoPid'])->asArray();
+// 20230518 S_Update
+// $bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->select('bukkenName')->select('startDate')->findOne($contract['tempLandInfoPid'])->asArray();
+$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->select('bukkenName')->select('startDate')->select('pid')->findOne($contract['tempLandInfoPid'])->asArray();
+// 20230518 E_Update
 // 仕入契約者情報を取得
 $sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->select('contractorName')->select('contractorAdress')->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
 
@@ -149,9 +152,17 @@ createCombobox($sheet,'D13',$options);
 $comment = $sheet -> getComment('D13');
 $comment ->getFillColor() -> setRGB('ffffe1');
 // 20230509 E_Add
- 	
+
+// 20230518 S_Add
+$bukkenName = $bukken['bukkenName'];
+if($bukkenName != '') $bukkenName = '（' . $bukkenName . '）';
+// 20230518 E_Add
+
 // 物件住所（物件フォルダ名）契約物件番号
-$cell = setCell(null, $sheet, 'addressAndBukkenNameAndContractBukkenNo', 1, $endColumn, 1, $endRow, $addressByTempLand . $bukken['bukkenName'] . $bukken['contractBukkenNo']);
+// 20230518 S_Update
+// $cell = setCell(null, $sheet, 'addressAndBukkenNameAndContractBukkenNo', 1, $endColumn, 1, $endRow, $addressByTempLand . $bukken['bukkenName'] . $bukken['contractBukkenNo']);
+$cell = setCell(null, $sheet, 'addressAndBukkenNameAndContractBukkenNo', 1, $endColumn, 1, $endRow, $addressByTempLand . $bukkenName . $bukken['contractBukkenNo']);
+// 20230518 E_Update
 // 所在地（地番）
 $cell = setCell(null, $sheet, 'addressAndBlockOrBuildingNumber', 1, $endColumn, 1, $endRow, $addressAndBlockOrBuildingNumber);
 // 契約物件（名義人）
