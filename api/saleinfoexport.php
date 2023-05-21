@@ -267,6 +267,12 @@ $spreadsheet->setActiveSheetIndex(0);// 初期選択シート設定
 $filename = '売却決済案内_' . date('YmdHis') . '.xlsx';
 $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
 $savePath = $fullPath . '/' . $filename;
+
+// 20230521 S_Add
+// Excel側の数式を再計算させる
+$writer->setPreCalculateFormulas(false);
+// 20230521 E_Add
+
 $writer->save($savePath);
 
 // ダウンロード
