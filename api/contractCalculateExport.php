@@ -142,7 +142,7 @@ $endColumn = 18;// 最終列数
 $endRow = 25;   // 最終行数
 
 // 20230509 S_Add
-$options = array('1部', '2部', '3部', '4部', '5部', '6部', '8部', '大阪1部', '大阪2部', '大阪3部', '名古屋1部', '名古屋2部');
+$options = array('1部', '2部', '3部', '4部', '5部', '6部', '8部', '大阪1部', '大阪2部', '大阪3部', '名古屋1部', '名古屋2部', '名古屋3部');
 createCombobox($sheet,'A3',$options);
 
 $options = array('2ヶ月', '3ヶ月', '5ヶ月');
@@ -172,6 +172,24 @@ $cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $
 
 $sheet->setSelectedCell('A1');// 初期選択セル設定
 
+// 20230619 S_Add
+//「契約・不可分一体精算申請書」シート
+// エクセルの条件付き書式で行に色を付ける
+createConditionExcel($sheet,'A3','=$A3<>""');
+createConditionExcel($sheet,'E3','=$E3<>""');
+createConditionExcel($sheet,'G6','=$G6<>""');
+createConditionExcel($sheet,'M10','=$M10<>""');
+createConditionExcel($sheet,'P10','=$P10<>""');
+createConditionExcel($sheet,'G11','=$G11<>""');
+createConditionExcel($sheet,'J11','=$J11<>""');
+createConditionExcel($sheet,'M11','=$M11<>""');
+createConditionExcel($sheet,'P11','=$P11<>""');
+createConditionExcel($sheet,'G12','=$G12<>""');
+createConditionExcel($sheet,'J12','=$J12<>""');
+createConditionExcel($sheet,'M12','=$M12<>""');
+createConditionExcel($sheet,'P12','=$P12<>""');
+// 20230619 E_Add
+
 // 不可分一体契約特別歩合申請書シート
 $sheet = $spreadsheet->getSheet(1);
 
@@ -179,6 +197,15 @@ $sheet = $spreadsheet->getSheet(1);
 $cell = setCell(null, $sheet, 'startDate_dt_kanji', 1, $endColumn, 1, $endRow, convert_dt($bukken['startDate'], 'Y年n月j日'));
 
 $sheet->setSelectedCell('A1');// 初期選択セル設定
+
+// 20230619 S_Add
+// 「不可分一体契約特別歩合申請書」シート
+// エクセルの条件付き書式で行に色を付ける
+createConditionExcel($sheet,'G10','=$G10<>""');
+createConditionExcel($sheet,'J10','=$J10<>""');
+createConditionExcel($sheet,'M10','=$M10<>""');
+createConditionExcel($sheet,'P10','=$P10<>""');
+// 20230619 E_Add
 
 $spreadsheet->setActiveSheetIndex(0);// 初期選択シート設定
 
@@ -197,6 +224,21 @@ readfile($savePath);
 
 // 削除
 unlink($savePath);
+
+// 20230619 S_Add
+// エクセルの条件付き書式で行に色を付ける
+function createConditionExcel($sheet,$range,$condition){
+	// Create conditional formatting rule
+	$conditional = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
+	$conditional->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_EXPRESSION)
+		->addCondition($condition);
+	$conditional->getStyle()->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+	$conditional->getStyle()->getFill()->getEndColor()->setARGB(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_WHITE);
+	
+	// Apply conditional formatting to the range
+	$sheet->getStyle($range)->setConditionalStyles([$conditional]);	
+}
+// 20230619 E_Add
 
 // 20230509 S_Add
 function createCombobox($sheet, $cellName,$options){
