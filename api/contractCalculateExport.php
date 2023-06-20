@@ -182,12 +182,8 @@ createConditionExcel($sheet,'M10','=$M10<>""');
 createConditionExcel($sheet,'P10','=$P10<>""');
 createConditionExcel($sheet,'G11','=$G11<>""');
 createConditionExcel($sheet,'J11','=$J11<>""');
-createConditionExcel($sheet,'M11','=$M11<>""');
-createConditionExcel($sheet,'P11','=$P11<>""');
 createConditionExcel($sheet,'G12','=$G12<>""');
 createConditionExcel($sheet,'J12','=$J12<>""');
-createConditionExcel($sheet,'M12','=$M12<>""');
-createConditionExcel($sheet,'P12','=$P12<>""');
 // 20230619 E_Add
 
 // 不可分一体契約特別歩合申請書シート
@@ -203,8 +199,6 @@ $sheet->setSelectedCell('A1');// 初期選択セル設定
 // エクセルの条件付き書式で行に色を付ける
 createConditionExcel($sheet,'G10','=$G10<>""');
 createConditionExcel($sheet,'J10','=$J10<>""');
-createConditionExcel($sheet,'M10','=$M10<>""');
-createConditionExcel($sheet,'P10','=$P10<>""');
 // 20230619 E_Add
 
 $spreadsheet->setActiveSheetIndex(0);// 初期選択シート設定
