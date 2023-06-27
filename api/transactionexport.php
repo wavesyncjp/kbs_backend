@@ -283,6 +283,10 @@ foreach($contracts as $contract) {
     // （内消費税相当額<-建物分消費税
     $fixedBuildingTaxOnlyTax = $contract['fixedBuildingTaxOnlyTax'];
 
+    // 20230628 S_Add
+    // 固都税清算金日付
+    $cell = setCell($cell, $sheet, 'fixedTaxDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($fixedTaxDay));
+    // 20230628 E_Add
     $cell = setCell($cell, $sheet, 'fixedTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($fixedTax, false));
     $cell = setCell($cell, $sheet, 'fixedBuildingTaxOnlyTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($fixedBuildingTaxOnlyTax, false));
     if($contract['fixedTaxDayChk'] === '1') {
@@ -297,12 +301,24 @@ foreach($contracts as $contract) {
     }
     // 仲介手数料
     $cell = setCell(null, $sheet, 'intermediaryPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['intermediaryPrice'], false));
+    // 20230628 S_Add
+    // 仲介手数料支払日
+    $cell = setCell($cell, $sheet, 'intermediaryPricePayDay_YY', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt($contract['intermediaryPricePayDay'], 'year'));
+    $cell = setCell($cell, $sheet, 'intermediaryPricePayDay_MM', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_dt($contract['intermediaryPricePayDay'], 'm'));
+    $cell = setCell($cell, $sheet, 'intermediaryPricePayDay_DD', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_dt($contract['intermediaryPricePayDay'], 'd'));
+    // 20230628 E_Add
     // 業務委託先
     for ($i = 1; $i <= 2; $i++) {
         $cell = setCell(null, $sheet, 'outsourcingName', $tradingColumn, $endColumn, $tradingRow, $endRow, $contract['outsourcingName']);
     }
     // 業務委託料
     $cell = setCell(null, $sheet, 'outsourcingPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['outsourcingPrice'], false));
+    // 20230628 S_Add
+    // 業務委託料支払日
+    $cell = setCell($cell, $sheet, 'outsourcingPricePayDay_YY', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt($contract['outsourcingPricePayDay'], 'year'));
+    $cell = setCell($cell, $sheet, 'outsourcingPricePayDay_MM', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_dt($contract['outsourcingPricePayDay'], 'm'));
+    $cell = setCell($cell, $sheet, 'outsourcingPricePayDay_DD', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_dt($contract['outsourcingPricePayDay'], 'd'));
+    // 20230628 E_Add
     // 仲介会社住所
     $cell = setCell($cell, $sheet, 'intermediaryAddress', $tradingColumn, $endColumn, $tradingRow, $endRow, $contract['intermediaryAddress']);
     // 業務委託先住所
