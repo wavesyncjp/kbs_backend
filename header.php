@@ -80,6 +80,13 @@ ORM::configure('id_column_overrides', array(
 		, 'tblsorting'=>'pid'
 		, 'tblbank'=>'pid'
 		, 'tblmailtemplate'=>'templateId'// 20220403 Add
+		// 20230917 S_Add
+		, 'tblrentalinfo'=>'pid'
+		, 'tblrentalcontract'=>'pid'
+		, 'tblevictioninfo'=>'pid'
+		, 'tblevictioninfoattach'=>'pid'
+		, 'tblrentalreceive'=>'pid'
+		// 20230917 E_Add
 ) );
 
 $FILE_PATH = 'uploads';
@@ -133,4 +140,11 @@ define('TBLRESIDENTINFO', 'tblresidentinfo');// 20220614 Add
 define('TBLSORTING', 'tblsorting');
 define('TBLBANK', 'tblbank');
 define('TBLMAILTEMPLATE', 'tblmailtemplate');// 20220403 Add
+// 20230917 S_Add
+define('TBLRENTALINFO', 'tblrentalinfo');
+define('TBLRENTALCONTRACT', 'tblrentalcontract');
+define('TBLEVICTIONINFO', 'tblevictioninfo');
+define('TBLEVICTIONINFOATTACH', 'tblevictioninfoattach');
+define('TBLRENTALRECEIVE', 'tblrentalreceive');
+// 20230917 E_Add
 ?>

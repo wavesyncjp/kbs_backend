@@ -1377,4 +1377,142 @@ function setSaleByPay($paycontract, $userId) {
 }
 // 20210728 E_Add
 
+// 20230917 S_Add
+/**
+ * 賃貸情報を取得
+ * @param pid 賃貸情報Pid
+ */
+function getRental($pid,$getIts = false) {
+	$ren = ORM::for_table(TBLRENTALINFO)->findOne($pid)->asArray();
+
+	if (!$getIts) {
+		//賃貸契約・賃貸入金取得
+		$ren['rentalContracts'] = getRentalContracts($pid, null);
+
+		//賃貸入金
+		$ren['rentalReceives'] = getRentalReceives($pid);
+	}
+	return $ren;
+}
+
+/**
+ * 賃貸契約・入金を取得
+ * @param rentalInfoPid 賃貸情報Pid
+ */
+function getRentalContract_Receives($rentalInfoPid) {
+	$data = new stdClass();
+	$data->rentalContracts = getRentalContracts($rentalInfoPid, null);
+	$data->rentalReceives = getRentalReceives($rentalInfoPid);
+	return $data;
+}
+
+/**
+ * 賃貸入金を取得
+ * @param rentalInfoPid 賃貸情報Pid
+ */
+function getRentalReceives($rentalInfoPid) {
+	$results = array();
+
+	$receiveMonths = array();
+	$rentalReceives = ORM::for_table(TBLRENTALRECEIVE)->where('rentalInfoPid', $rentalInfoPid)->where_null('deleteDate')->order_by_asc('receiveMonth')->findArray();
+	if (isset($rentalReceives)) {
+		foreach ($rentalReceives as $rev) {
+			if (in_array($rev['receiveMonth'], $receiveMonths) == false) {
+				$receiveMonths[] = $rev['receiveMonth'];
+			}
+		}
+
+		foreach ($receiveMonths as $m) {
+			$obj = new stdClass();
+			$obj->receiveMonth = $m;
+			$obj->receiveFlgGroup = '0';//未選択
+			$objDetails = array();
+			foreach ($rentalReceives as $rev) {
+				if ($rev['receiveMonth'] == $m) {
+					$objDetails[] = $rev;
+				}
+			}
+			$obj->details = $objDetails;
+			$results[] = $obj;
+		}
+	}
+	return $results;
+}
+/**
+ * 契約の賃貸一覧を取得
+ * @param contractInfoPid 契約情報PID
+ */
+function getRentalsForContract($contractInfoPid) {
+	$query = ORM::for_table(TBLRENTALINFO)
+	->table_alias('p1')
+	->select('p1.*')
+	->select_expr('(select count(p2.pid) from tblrentalcontract p2 WHERE p2.deleteDate is null and p2.rentalInfoPid = p1.pid)', 'countContract')
+	->where_null('p1.deleteDate');
+	
+	$query = $query->where('p1.contractInfoPid', $contractInfoPid);
+	return $query->order_by_desc('p1.pid')->findArray();
+}
+
+/**
+ * 賃貸契約取得
+ * @param rentalInfoPid 賃貸情報
+ * @param rentalContractPid 賃貸契約
+ */
+function getRentalContracts($rentalInfoPid, $rentalContractPid) {
+	$queryRC = ORM::for_table(TBLRENTALCONTRACT)
+	->table_alias('p1')
+	->select('p1.*')
+	->select('p2.roomNo')
+	->select('p2.borrowerName')
+	->left_outer_join(TBLRESIDENTINFO, array('p1.residentInfoPid', '=', 'p2.pid'), 'p2')
+	->where_null('p1.deleteDate')
+	->where_null('p2.deleteDate');
+	
+	if (isset($rentalContractPid) && $rentalContractPid > 0) {
+		$results = $queryRC->findOne($rentalContractPid)->asArray();
+	}
+	else {
+		$queryRC = $queryRC->where('p1.rentalInfoPid', $rentalInfoPid);
+		$results = $queryRC->order_by_asc('p1.pid')->findArray();
+	}	
+	return $results;
+}
+
+/**
+ * 立退きを取得
+ * @param contractInfoPid 契約情報Pid
+ * @param evictionInfoPid 立退き情報Pid
+ */
+function getEvictionInfos($contractInfoPid, $evictionInfoPid) {
+	$queryRC = ORM::for_table(TBLEVICTIONINFO)
+	->table_alias('p1')
+	->distinct()
+	->select('p1.*')
+	->select('p2.roomNo')
+	->select('p2.borrowerName')
+	->inner_join(TBLRESIDENTINFO, array('p1.residentInfoPid', '=', 'p2.pid'), 'p2')
+	->where_null('p1.deleteDate')
+	->where_null('p2.deleteDate');
+	
+	if (isset($evictionInfoPid) && $evictionInfoPid > 0) {
+		$results = $queryRC->findOne($evictionInfoPid)->asArray();
+	}
+	else {
+		$queryRC = $queryRC->where('p1.contractInfoPid', $contractInfoPid);
+		$results = $queryRC->order_by_asc('p1.pid')->findArray();
+	}	
+	return $results;
+}
+
+/**
+ * 各月の日数
+ */
+function getDayInMonth($datestring) {
+	if (isset($datestring) && $datestring != '') {
+		$date = strtotime($datestring);
+		return date("t", $date);
+	}
+	return null;
+}
+// 20230917 E_Add
 ?>
