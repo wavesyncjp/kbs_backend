@@ -17,7 +17,7 @@ $userId = null;
 ORM::get_db()->beginTransaction();
 
 // 更新
-if isset($param->pid) && $param->pid > 0) {
+if (isset($param->pid) && $param->pid > 0) {
 	$rental = ORM::for_table(TBLRENTALINFO)->find_one($param->pid);
 	setUpdate($rental, $param->updateUserId);
 	$userId = $param->updateUserId;
