@@ -25,7 +25,7 @@ else {
 	$userId = $param->createUserId;
 }
 
-copyData($param, $evi, array('pid', 'roomNo', 'borrowerName', 'evictionFiles', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+copyData($param, $evi, array('pid', 'roomNo', 'borrowerName', 'apartmentName', 'evictionFiles', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 $evi->save();
 
 echo json_encode(getEvictionInfos($evi->contractInfoPid,$evi->pid));

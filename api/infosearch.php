@@ -86,6 +86,12 @@ if(sizeof($infos) > 0) {
 		if(sizeof($attachFiles) > 0) {
 			$info['attachFiles'] = $attachFiles;
 		}
+		// 20230927 S_Add
+		$approvalFilesMap = ORM::for_table(TBLINFOAPPROVALATTACH)->where('infoPid', $info['pid'])->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
+		if(sizeof($approvalFilesMap) > 0) {
+			$info['approvalFilesMap'] = $approvalFilesMap;
+		}
+		// 20230927 E_Add
 		$infoList[] = $info;
 	}
 	$infos = $infoList;

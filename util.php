@@ -1490,9 +1490,12 @@ function getEvictionInfos($contractInfoPid, $evictionInfoPid) {
 	->select('p1.*')
 	->select('p2.roomNo')
 	->select('p2.borrowerName')
+	->select('p3.apartmentName')
 	->inner_join(TBLRESIDENTINFO, array('p1.residentInfoPid', '=', 'p2.pid'), 'p2')
+	->inner_join(TBLRENTALINFO, array('p1.rentalInfoPid', '=', 'p3.pid'), 'p3')
 	->where_null('p1.deleteDate')
-	->where_null('p2.deleteDate');
+	->where_null('p2.deleteDate')
+	->where_null('p3.deleteDate');
 	
 	if (isset($evictionInfoPid) && $evictionInfoPid > 0) {
 		$results = $queryRC->findOne($evictionInfoPid)->asArray();

@@ -31,6 +31,14 @@ else if ($searchFor == 'searchRentalReceive') {
 else if ($searchFor == 'searchRentalContract_Receive') {
 	$datas = getRentalContract_Receives($param->rentalInfoPid);
 }
+// 賃貸の建物名を取得
+else if ($searchFor == 'searchRentalApartment') {
+	$datas = getRentalApartments($param->contractInfoPid);
+}
+// 契約の立退き一覧を取得
+else if ($searchFor == 'searchEvictionForContract') {
+	$datas = getEvictionInfos($param->contractInfoPid,null);
+}
 echo json_encode($datas);
 
 /**
@@ -81,5 +89,20 @@ function searchSellerName($param) {
 			->where_null('p1.deleteDate');
 
 	return $query->order_by_asc('pid')->find_array();
+}
+
+/**
+ * 賃貸の建物名を取得
+ * @param contractInfoPid 契約情報PID
+ */
+function getRentalApartments($contractInfoPid) {
+	$query = ORM::for_table(TBLRENTALINFO)
+	->table_alias('p1')
+	->select('p1.pid')
+	->select('p1.apartmentName')
+	->where_null('p1.deleteDate');
+	
+	$query = $query->where('p1.contractInfoPid', $contractInfoPid);
+	return $query->order_by_desc('p1.pid')->findArray();
 }
 ?>
