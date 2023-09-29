@@ -16,12 +16,12 @@ if ($searchFor == 'searchResident') {
 	$datas = searchResident($param);
 }
 // 地番　家屋番号を取得
-else if($searchFor == 'searchLocationNumber') {
+else if ($searchFor == 'searchLocationNumber') {
 	$datas = searchLocationNumber($param);
 }
 // 所有者名を取得
 else if ($searchFor == 'searchSellerName') {
-	$datas = searchSellerName($param);
+	$datas = searchSellerName($param->contractInfoPid);
 }
 // 賃貸入金を取得
 else if ($searchFor == 'searchRentalReceive') {
@@ -37,7 +37,7 @@ else if ($searchFor == 'searchRentalApartment') {
 }
 // 契約の立退き一覧を取得
 else if ($searchFor == 'searchEvictionForContract') {
-	$datas = getEvictionInfos($param->contractInfoPid,null);
+	$datas = getEvictionInfos($param->contractInfoPid, null);
 }
 echo json_encode($datas);
 
@@ -62,14 +62,14 @@ function searchResident($param) {
  */
 function searchLocationNumber($param) {
 	$query = ORM::for_table(TBLLOCATIONINFO)
-	->table_alias('p1')
-	->distinct()
-	->select('p1.pid','locationInfoPid')
-	->select('p1.blockNumber')
-	->select('p1.buildingNumber')
-	->inner_join(TBLCONTRACTDETAILINFO, array('p1.pid', '=', 'p2.locationInfoPid'), 'p2')
-	->where_null('p1.deleteDate')
-	->where_null('p2.deleteDate');
+		->table_alias('p1')
+		->distinct()
+		->select('p1.pid', 'locationInfoPid')
+		->select('p1.blockNumber')
+		->select('p1.buildingNumber')
+		->inner_join(TBLCONTRACTDETAILINFO, array('p1.pid', '=', 'p2.locationInfoPid'), 'p2')
+		->where_null('p1.deleteDate')
+		->where_null('p2.deleteDate');
 
 	$query = $query->where('p2.contractInfoPid', $param->contractInfoPid);
 	$query = $query->where('p2.contractDataType', '01');// 01：売主選択
@@ -78,30 +78,16 @@ function searchLocationNumber($param) {
 }
 
 /**
- * 契約の所有者名検索
- */
-function searchSellerName($param) {
-	$query = ORM::for_table(TBLCONTRACTSELLERINFO)
-			->table_alias('p1')
-			->select('p1.pid')
-			->select('p1.contractorName')
-			->where('p1.contractInfoPid', $param->contractInfoPid)
-			->where_null('p1.deleteDate');
-
-	return $query->order_by_asc('pid')->find_array();
-}
-
-/**
  * 賃貸の建物名を取得
  * @param contractInfoPid 契約情報PID
  */
 function getRentalApartments($contractInfoPid) {
 	$query = ORM::for_table(TBLRENTALINFO)
-	->table_alias('p1')
-	->select('p1.pid')
-	->select('p1.apartmentName')
-	->where_null('p1.deleteDate');
-	
+		->table_alias('p1')
+		->select('p1.pid')
+		->select('p1.apartmentName')
+		->where_null('p1.deleteDate');
+
 	$query = $query->where('p1.contractInfoPid', $contractInfoPid);
 	return $query->order_by_desc('p1.pid')->findArray();
 }

@@ -27,7 +27,7 @@ if (isset($param->pid) && $param->pid > 0) {
 	setUpdate($rentalCT, $param->updateUserId);
 	$userId = $param->updateUserId;
 	//賃料 OR 賃貸契約期間 OR 支払期限　が変更の場合
-	if($rentalCT->rentPrice != $param->rentPrice
+	if ($rentalCT->rentPrice != $param->rentPrice
 		|| $rentalCT->loanPeriodStartDate != $param->loanPeriodStartDate
 		|| $rentalCT->loanPeriodEndDate != $param->loanPeriodEndDate
 		|| $rentalCT->usance != $param->usance
@@ -48,16 +48,18 @@ else {
 }
 
 copyData($param, $rentalCT, array('pid', 'roomNo', 'borrowerName', 'locationInfoPidForSearch', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
-$rentalCT->save();
 
 // 賃貸入金処理
 // 新規登録　OR 賃貸入金未登録　の場合
 if ($isNew || ($isChangedReceive && ($receives == null || count($receives) == 0))) {
+	//賃貸契約を登録
+	$rentalCT->save();
+
 	//賃貸入金を準備
-	$objs = createRentalReceives($param,$rentalCT);
+	$objs = createRentalReceives($param, $rentalCT);
 	foreach ($objs as $obj) {
 		$receiveSave = ORM::for_table(TBLRENTALRECEIVE)->create();
-		setInsert($receiveSave, $userId);	
+		setInsert($receiveSave, $userId);
 
 		copyData($obj, $receiveSave, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 		$receiveSave->save();
@@ -68,7 +70,38 @@ else if ($isChangedReceive) {
 	$existedRePids = array();
 
 	// 賃貸入金を準備
-	$objs = createRentalReceives($param,$rentalCT);
+	$objs = createRentalReceives($param, $rentalCT);
+
+	foreach ($objs as $obj) {
+		// 既存賃貸入金をチェック
+		foreach ($receives as $rev) {
+			// 入金月日同じ
+			if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+				$existedRePids[] = $rev->pid;
+			}
+		}
+	}
+
+	//入金済をチェック
+	$paids = array();
+	foreach ($receives as $rev) {
+		// 存在しないデータを削除
+		if (in_array($rev->pid, $existedRePids) == false) {
+			if ($rev->receiveFlg == '1') { //入金済み
+				$paids[] = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
+			}
+		}
+	}
+
+	//入金済の場合、何もしない
+	if (count($paids) > 0) {
+		echo json_encode(array('statusMap' => 'NG', 'msgMap' => '契約期間に指定されている範囲外に、既に入金済の賃料があります。（' . join(',', $paids) . '）'));
+		exit;
+	}
+
+	//賃貸契約を更新
+	$rentalCT->save();
+
 	foreach ($objs as $obj) {
 		$hasRev = false;
 
@@ -77,7 +110,7 @@ else if ($isChangedReceive) {
 			// 入金月日同じ
 			if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
 				$hasRev = true;
-				$existedRePids[] = $rev->pid;
+				// $existedRePids[] = $rev->pid;
 				// 入金未済,賃料変更の場合
 				if ($rev->receiveFlg != '1' && ($rev->receivePrice != $rentalCT->rentPrice || $rev->receiveCode != $rentalCT->receiveCode)) {
 					$rev->receivePrice = $rentalCT->rentPrice;
@@ -110,7 +143,7 @@ else if ($isChangedReceive) {
 
 ORM::get_db()->commit();
 
-echo json_encode(getRentalContracts($rentalCT->rentalInfoPid,$rentalCT->pid));
+echo json_encode(getRentalContracts($rentalCT->rentalInfoPid, $rentalCT->pid));
 
 /**
  * 入金月取得
@@ -126,7 +159,7 @@ function getReceiveMonths($dateStrFrom, $dateStrTo) {
 	// $interval = $dateFrom->diff($dateTo);
 	$limit = $dateTo->format('Ym');
 
-	while($dateCheck < $limit) {
+	while ($dateCheck < $limit) {
 		$dateCheck = date('Ym', strtotime("+1 months", strtotime($dateCheck . '01')));
 		$arr[] = $dateCheck;
 	};
@@ -142,7 +175,7 @@ function createRentalReceives($param, $rentalCT) {
 	// 支払いサイト
 	$usance = $rentalCT->usance;
 	if (!isset($usance) || $usance == '') {
-		$usance = '1';//1:翌月、2:翌々月
+		$usance = '1';// 1:翌月、2:翌々月
 	}
 
 	// 支払日
@@ -169,7 +202,7 @@ function createRentalReceives($param, $rentalCT) {
 	}
 
 	// 入金月
-	$receiveMonths = getReceiveMonths($loanPeriodStartDate,$loanPeriodEndDate);
+	$receiveMonths = getReceiveMonths($loanPeriodStartDate, $loanPeriodEndDate);
 
 	// 賃貸入金作成
 	foreach ($receiveMonths as $receiveMonth) {
@@ -185,7 +218,7 @@ function createRentalReceives($param, $rentalCT) {
 		$obj->receiveMonth = $receiveMonth;
 
 		// 仮入金日
-		$dateTemp = date('Ymd', strtotime("+". $usance ." months", strtotime($receiveMonth . '01')));
+		$dateTemp = date('Ymd', strtotime("+" . $usance . " months", strtotime($receiveMonth . '01')));
 
 		// 各月の日数
 		$dayMaxInMonth = getDayInMonth($dateTemp);
@@ -198,12 +231,12 @@ function createRentalReceives($param, $rentalCT) {
 			$dayTemp = $dayMaxInMonth;
 		}
 
-		if(strlen($dayTemp) == 1) {
+		if (strlen($dayTemp) == 1) {
 			$dayTemp = '0' . $dayTemp;
 		}
 
 		// 入金日
-		$obj->receiveDay = substr($dateTemp,0,6) . $dayTemp;
+		$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
 
 		$objs[] = $obj;
 	}

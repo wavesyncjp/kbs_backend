@@ -1517,5 +1517,85 @@ function getDayInMonth($datestring) {
 	}
 	return null;
 }
+
+/**
+ * 部署コードを取得
+ */
+function getDepament($tempLandInfoPid)
+{
+	$query = ORM::for_table(TBLTEMPLANDINFO)
+		->select('department')
+		->where('pid', $tempLandInfoPid)->find_one();
+	return $query->department;
+}
+
+function createReceiveContract($renCon)
+{
+	$obj = new stdClass();
+	$obj->rentalContractPid = $renCon->pid; //賃貸契約PID
+	$obj->tempLandInfoPid = $renCon->tempLandInfoPid; //土地情報PID
+	$obj->depCode = getDepament($renCon->tempLandInfoPid); //部署コード
+	$obj->contractInfoPid = $renCon->contractInfoPid; //仕入契約情報PID
+
+	return $obj;
+}
+
+/**
+ * 入金契約詳細情報を作成
+ * ren:賃貸情報
+ * revCon:入金契約情報
+ * renCon:賃貸契約情報
+ * renRec:賃貸入金情報
+ */
+function createReceiveContractDetail($ren, $revCon, $renCon, $renRec)
+{
+	$obj = new stdClass();
+	$obj->rentalReceivePid = $renRec->pid; //賃貸入金PID
+	$obj->receiveContractPid = $revCon->pid; //入金契約情報PID
+	$obj->tempLandInfoPid = $renRec->tempLandInfoPid; //土地情報PID
+
+	$obj->banktransferPid = $ren->bankPid; //振込銀行マスタPID
+	$obj->banktransferName = $renCon->banktransferName; //振込名義人
+	$obj->banktransferNameKana = $renCon->banktransferNameKana; //振込名義人カナ
+
+	$obj->receiveCode = $renRec->receiveCode; //入金コード
+
+	if ($renCon->rentPriceTax != null && $renRec->receivePrice != null) {
+		$obj->receivePrice = $renRec->receivePrice - $renCon->rentPriceTax; //入金金額（税別）
+	} else {
+		$obj->receivePrice = $renRec->receivePrice; //入金金額（税別）
+	}
+	$obj->receiveTax = $renCon->rentPriceTax; //消費税
+	$obj->receivePriceTax = $renRec->receivePrice; //入金金額（税込）
+	$obj->contractFixDay = $renRec->receiveDay; //入金確定日
+	$obj->receiveMethod = $renCon->paymentMethod; //入金方法
+
+	//契約者
+	$contractSellerInfoPids = array();
+	$sellers = searchSellerName($ren->contractInfoPid);
+	if ($sellers != null) {
+		foreach ($sellers as $seller) {
+			$contractSellerInfoPids[] = $seller['pid'];
+		}
+	}
+	$obj->contractor = implode(',', $contractSellerInfoPids);
+
+	return $obj;
+}
+
+/**
+ * 契約の所有者名検索
+ */
+function searchSellerName($contractInfoPid)
+{
+	$query = ORM::for_table(TBLCONTRACTSELLERINFO)
+		->table_alias('p1')
+		->select('p1.pid')
+		->select('p1.contractorName')
+		->where('p1.contractInfoPid', $contractInfoPid)
+		->where_null('p1.deleteDate');
+
+	return $query->order_by_asc('pid')->find_array();
+}
 // 20230917 E_Add
 ?>
