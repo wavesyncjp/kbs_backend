@@ -268,8 +268,21 @@ foreach($contracts as $contract) {
     $cell = setCell($cell, $sheet, 'decisionPrice', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($decisionPrice, false));
     // 留保金支払(明渡)日
     // 留保金
+    // 20230929 S_Update
+    /*
     $cell = setCell($cell, $sheet, 'retainageDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($contract['retainageDay']));
     $cell = setCell($cell, $sheet, 'retainage', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['retainage'], false));
+    */
+    $retainageDay = $contract['retainageDay'];
+    $retainage = $contract['retainage'];
+    $cell = setCell($cell, $sheet, 'retainageDay', $tradingColumn, $endColumn, $tradingRow, $endRow, convert_jpdt_kanji($retainageDay));
+    $cell = setCell($cell, $sheet, 'retainage', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($retainage, false));
+    if($contract['retainageDayChk'] === '1') {
+        if(($retainageDay != null && $retainageDay != '') || ($retainage != null && $retainage != '')){
+            array_push($arrayDayChk, array(convert_jpdt_kanji($retainageDay), '留保金', $retainage));
+        }
+    }
+    // 20230929 E_Update
     // 20230508 S_Update 
     // // 固都税清算金
     // $cell = setCell($cell, $sheet, 'fixedTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($contract['fixedTax'], false));
