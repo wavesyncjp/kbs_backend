@@ -140,6 +140,10 @@ else if ($isChangedReceive) {
 		}
 	}
 }
+else{
+	//賃貸契約を更新
+	$rentalCT->save();
+}
 
 ORM::get_db()->commit();
 

@@ -9,7 +9,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
-$userId = $param->userId;
+$userId = $param->userPid;
 $pid = $param->pid;
 
 ORM::get_db()->beginTransaction();
@@ -24,9 +24,9 @@ if (isset($obj)) {
 // 賃貸契約削除
 $renCons = ORM::for_table(TBLRENTALCONTRACT)->where('rentalInfoPid', $pid)->where_null('deleteDate')->find_many();
 if ($renCons != null) {
-	foreach ($receives as $rev) {
-		setDelete($rev, $userId);
-		$rev->save();
+	foreach ($renCons as $renCon) {
+		setDelete($renCon, $userId);
+		$renCon->save();
 	}
 }
 
