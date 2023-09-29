@@ -67,6 +67,7 @@ function searchLocationNumber($param) {
 		->select('p1.pid', 'locationInfoPid')
 		->select('p1.blockNumber')
 		->select('p1.buildingNumber')
+		->select('p1.displayOrder')// 20230930 Add
 		->inner_join(TBLCONTRACTDETAILINFO, array('p1.pid', '=', 'p2.locationInfoPid'), 'p2')
 		->where_null('p1.deleteDate')
 		->where_null('p2.deleteDate');
