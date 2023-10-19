@@ -21,7 +21,10 @@ else if ($searchFor == 'searchLocationNumber') {
 }
 // 所有者名を取得
 else if ($searchFor == 'searchSellerName') {
-	$datas = searchSellerName($param->contractInfoPid);
+	// 20231010 S_Update
+	// $datas = searchSellerName($param->contractInfoPid);
+	$datas = searchSellerName($param->contractInfoPid, $param->isGetMore == 1);
+	// 20231010 E_Update
 }
 // 賃貸入金を取得
 else if ($searchFor == 'searchRentalReceive') {

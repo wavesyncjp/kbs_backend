@@ -18,6 +18,11 @@ $isNew = false;
 // 賃貸入金再作成フラグ
 $isChangedReceive = false;
 
+//20231010 S_Add
+$rentPrice = getRentPrice($param->residentInfoPid);
+$ownershipRelocationDate = getOwnershipRelocationDate($param->rentalInfoPid);
+//20231010 E_Add
+
 ORM::get_db()->beginTransaction();
 
 // 賃貸契約処理
@@ -26,10 +31,14 @@ if (isset($param->pid) && $param->pid > 0) {
 	$rentalCT = ORM::for_table(TBLRENTALCONTRACT)->find_one($param->pid);
 	setUpdate($rentalCT, $param->updateUserId);
 	$userId = $param->updateUserId;
+
+	// 20231010 S_Update
 	//賃料 OR 賃貸契約期間 OR 支払期限　が変更の場合
-	if ($rentalCT->rentPrice != $param->rentPrice
-		|| $rentalCT->loanPeriodStartDate != $param->loanPeriodStartDate
-		|| $rentalCT->loanPeriodEndDate != $param->loanPeriodEndDate
+	// if ($rentalCT->rentPrice != $param->rentPrice
+	// 	|| $rentalCT->loanPeriodStartDate != $param->loanPeriodStartDate
+	//  || $rentalCT->loanPeriodEndDate != $param->loanPeriodEndDate
+	if ($rentalCT->loanPeriodEndDate != $param->loanPeriodEndDate
+	// 20231010 E_Update
 		|| $rentalCT->usance != $param->usance
 		|| $rentalCT->paymentDay != $param->paymentDay
 		|| $rentalCT->locationInfoPid != $param->locationInfoPid
@@ -56,7 +65,11 @@ if ($isNew || ($isChangedReceive && ($receives == null || count($receives) == 0)
 	$rentalCT->save();
 
 	//賃貸入金を準備
-	$objs = createRentalReceives($param, $rentalCT);
+	// 20231010 S_Update
+	// $objs = createRentalReceives($param, $rentalCT);
+	$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $param->loanPeriodEndDate);
+	// 20231010 E_Update
+
 	foreach ($objs as $obj) {
 		$receiveSave = ORM::for_table(TBLRENTALRECEIVE)->create();
 		setInsert($receiveSave, $userId);
@@ -70,7 +83,10 @@ else if ($isChangedReceive) {
 	$existedRePids = array();
 
 	// 賃貸入金を準備
-	$objs = createRentalReceives($param, $rentalCT);
+	// 20231010 S_Update
+	// $objs = createRentalReceives($param, $rentalCT);
+	$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $param->loanPeriodEndDate);
+	// 20231010 E_Update
 
 	foreach ($objs as $obj) {
 		// 既存賃貸入金をチェック
@@ -111,9 +127,14 @@ else if ($isChangedReceive) {
 			if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
 				$hasRev = true;
 				// $existedRePids[] = $rev->pid;
+
+				// 20231010 S_Update
 				// 入金未済,賃料変更の場合
-				if ($rev->receiveFlg != '1' && ($rev->receivePrice != $rentalCT->rentPrice || $rev->receiveCode != $rentalCT->receiveCode)) {
-					$rev->receivePrice = $rentalCT->rentPrice;
+				// if ($rev->receiveFlg != '1' && ($rev->receivePrice != $rentalCT->rentPrice || $rev->receiveCode != $rentalCT->receiveCode)) {
+				// 	$rev->receivePrice = $rentalCT->rentPrice;
+				// 入金未済,入金コード変更の場合
+				if ($rev->receiveFlg != '1' || $rev->receiveCode != $rentalCT->receiveCode) {
+				// 20231010 E_Update
 					$rev->receiveCode = $rentalCT->receiveCode;
 					setUpdate($rev, $userId);
 					$rev->save();
@@ -149,101 +170,103 @@ ORM::get_db()->commit();
 
 echo json_encode(getRentalContracts($rentalCT->rentalInfoPid, $rentalCT->pid));
 
-/**
- * 入金月取得
- */
-function getReceiveMonths($dateStrFrom, $dateStrTo) {
-	$arr = array();
+// 20231010 S_Delete
+// /**
+//  * 入金月取得
+//  */
+// function getReceiveMonths($dateStrFrom, $dateStrTo) {
+// 	$arr = array();
 
-	$dateFrom = new DateTime($dateStrFrom);
-	$dateCheck = $dateFrom->format('Ym');
-	$arr[] = $dateCheck;
-	$dateTo = new DateTime($dateStrTo);
+// 	$dateFrom = new DateTime($dateStrFrom);
+// 	$dateCheck = $dateFrom->format('Ym');
+// 	$arr[] = $dateCheck;
+// 	$dateTo = new DateTime($dateStrTo);
 
-	// $interval = $dateFrom->diff($dateTo);
-	$limit = $dateTo->format('Ym');
+// 	// $interval = $dateFrom->diff($dateTo);
+// 	$limit = $dateTo->format('Ym');
 
-	while ($dateCheck < $limit) {
-		$dateCheck = date('Ym', strtotime("+1 months", strtotime($dateCheck . '01')));
-		$arr[] = $dateCheck;
-	};
-	return $arr;
-}
+// 	while ($dateCheck < $limit) {
+// 		$dateCheck = date('Ym', strtotime("+1 months", strtotime($dateCheck . '01')));
+// 		$arr[] = $dateCheck;
+// 	};
+// 	return $arr;
+// }
 
-function createRentalReceives($param, $rentalCT) {
-	$objs = array();
+// function createRentalReceives($param, $rentalCT) {
+// 	$objs = array();
 
-	// 登録日
-	$createDate = $rentalCT->createDate;
+// 	// 登録日
+// 	$createDate = $rentalCT->createDate;
 
-	// 支払いサイト
-	$usance = $rentalCT->usance;
-	if (!isset($usance) || $usance == '') {
-		$usance = '1';// 1:翌月、2:翌々月
-	}
+// 	// 支払いサイト
+// 	$usance = $rentalCT->usance;
+// 	if (!isset($usance) || $usance == '') {
+// 		$usance = '1';// 1:翌月、2:翌々月
+// 	}
 
-	// 支払日
-	$paymentDay = $rentalCT->paymentDay;
-	if (!isset($paymentDay) || $paymentDay == '' || $paymentDay == '0') {
-		$paymentDay = '31';
-	}
+// 	// 支払日
+// 	$paymentDay = $rentalCT->paymentDay;
+// 	if (!isset($paymentDay) || $paymentDay == '' || $paymentDay == '0') {
+// 		$paymentDay = '31';
+// 	}
 
-	if (strlen($paymentDay) == 1) {
-		$paymentDay = '0' . $paymentDay;
-	}
+// 	if (strlen($paymentDay) == 1) {
+// 		$paymentDay = '0' . $paymentDay;
+// 	}
 
-	// 賃貸契約開始日
-	$loanPeriodStartDate = $param->loanPeriodStartDate;
-	if (!isset($loanPeriodStartDate)) {
-		$loanPeriodStartDate = date('Ymd', strtotime($createDate));
-	}
+// 	// 賃貸契約開始日
+// 	$loanPeriodStartDate = $param->loanPeriodStartDate;
+// 	if (!isset($loanPeriodStartDate)) {
+// 		$loanPeriodStartDate = date('Ymd', strtotime($createDate));
+// 	}
 
-	// 賃貸契約終了日
-	$loanPeriodEndDate = $param->loanPeriodEndDate;
-	if (!isset($loanPeriodEndDate)) {
-		// 一年間
-		$loanPeriodEndDate = date('Ymd', strtotime("+11 months", strtotime($loanPeriodStartDate)));
-	}
+// 	// 賃貸契約終了日
+// 	$loanPeriodEndDate = $param->loanPeriodEndDate;
+// 	if (!isset($loanPeriodEndDate)) {
+// 		// 一年間
+// 		$loanPeriodEndDate = date('Ymd', strtotime("+11 months", strtotime($loanPeriodStartDate)));
+// 	}
 
-	// 入金月
-	$receiveMonths = getReceiveMonths($loanPeriodStartDate, $loanPeriodEndDate);
+// 	// 入金月
+// 	$receiveMonths = getReceiveMonths($loanPeriodStartDate, $loanPeriodEndDate);
 
-	// 賃貸入金作成
-	foreach ($receiveMonths as $receiveMonth) {
-		$obj = new stdClass();
-		$obj->rentalInfoPid = $rentalCT->rentalInfoPid;
-		$obj->rentalContractPid = $rentalCT->pid;
-		$obj->contractInfoPid = $rentalCT->contractInfoPid;
-		$obj->locationInfoPid = $rentalCT->locationInfoPid;
-		$obj->tempLandInfoPid = $rentalCT->tempLandInfoPid;
-		$obj->receivePrice = $rentalCT->rentPrice;
-		$obj->receiveCode = $rentalCT->receiveCode;
-		$obj->receiveFlg = '0';
-		$obj->receiveMonth = $receiveMonth;
+// 	// 賃貸入金作成
+// 	foreach ($receiveMonths as $receiveMonth) {
+// 		$obj = new stdClass();
+// 		$obj->rentalInfoPid = $rentalCT->rentalInfoPid;
+// 		$obj->rentalContractPid = $rentalCT->pid;
+// 		$obj->contractInfoPid = $rentalCT->contractInfoPid;
+// 		$obj->locationInfoPid = $rentalCT->locationInfoPid;
+// 		$obj->tempLandInfoPid = $rentalCT->tempLandInfoPid;
+// 		$obj->receivePrice = $rentalCT->rentPrice;
+// 		$obj->receiveCode = $rentalCT->receiveCode;
+// 		$obj->receiveFlg = '0';
+// 		$obj->receiveMonth = $receiveMonth;
 
-		// 仮入金日
-		$dateTemp = date('Ymd', strtotime("+" . $usance . " months", strtotime($receiveMonth . '01')));
+// 		// 仮入金日
+// 		$dateTemp = date('Ymd', strtotime("+" . $usance . " months", strtotime($receiveMonth . '01')));
 
-		// 各月の日数
-		$dayMaxInMonth = getDayInMonth($dateTemp);
+// 		// 各月の日数
+// 		$dayMaxInMonth = getDayInMonth($dateTemp);
 
-		// まず、日まで設定
-		$dayTemp = $paymentDay;
+// 		// まず、日まで設定
+// 		$dayTemp = $paymentDay;
 
-		// 各月の日数は日までより小さい場合
-		if (intval($dayMaxInMonth) < intval($paymentDay)) {
-			$dayTemp = $dayMaxInMonth;
-		}
+// 		// 各月の日数は日までより小さい場合
+// 		if (intval($dayMaxInMonth) < intval($paymentDay)) {
+// 			$dayTemp = $dayMaxInMonth;
+// 		}
 
-		if (strlen($dayTemp) == 1) {
-			$dayTemp = '0' . $dayTemp;
-		}
+// 		if (strlen($dayTemp) == 1) {
+// 			$dayTemp = '0' . $dayTemp;
+// 		}
 
-		// 入金日
-		$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
+// 		// 入金日
+// 		$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
 
-		$objs[] = $obj;
-	}
-	return $objs;
-}
+// 		$objs[] = $obj;
+// 	}
+// 	return $objs;
+// }
+// 20231010 E_Delete
 ?>

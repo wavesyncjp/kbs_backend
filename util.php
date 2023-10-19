@@ -1464,6 +1464,7 @@ function getRentalContracts($rentalInfoPid, $rentalContractPid) {
 	->select('p1.*')
 	->select('p2.roomNo')
 	->select('p2.borrowerName')
+	->select('p2.rentPrice', 'rentPriceRefMap')// 20231010 Add
 	->left_outer_join(TBLRESIDENTINFO, array('p1.residentInfoPid', '=', 'p2.pid'), 'p2')
 	->where_null('p1.deleteDate')
 	->where_null('p2.deleteDate');
@@ -1477,6 +1478,33 @@ function getRentalContracts($rentalInfoPid, $rentalContractPid) {
 	}	
 	return $results;
 }
+
+// 20231016 S_Add
+/**
+ * 賃貸契約取得(出力用)
+ * @param rentalInfoPid 賃貸情報
+ */
+function getRentalContractsForExport($rentalInfoPid) {
+	$queryRC = ORM::for_table(TBLRENTALCONTRACT)
+	->table_alias('p1')
+	->select('p1.*')
+	->select('p2.roomNo')
+	->select('p2.borrowerName')
+	->select('p2.rentPrice', 'rentPriceRefMap')// 20231010 Add
+	->select('p3.address', 'l_addressMap')
+	->select('p3.structure', 'l_structureMap')
+	->select('p4.contractFormNumber', 'contractFormNumberMap')
+	->left_outer_join(TBLRESIDENTINFO, array('p1.residentInfoPid', '=', 'p2.pid'), 'p2')
+	->left_outer_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p3.pid'), 'p3')
+	->left_outer_join(TBLCONTRACTINFO, array('p1.contractInfoPid', '=', 'p4.pid'), 'p4')
+	->where_null('p1.deleteDate')
+	->where_null('p2.deleteDate');
+	
+	$queryRC = $queryRC->where('p1.rentalInfoPid', $rentalInfoPid);
+	$results = $queryRC->order_by_asc('p1.pid')->findArray();
+	return $results;
+}
+// 20231016 E_Add
 
 /**
  * 立退きを取得
@@ -1549,6 +1577,11 @@ function createReceiveContract($renCon)
  */
 function createReceiveContractDetail($ren, $revCon, $renCon, $renRec)
 {
+	// 20231010 S_Add
+	$receivePrice = $renRec->receivePrice;
+	$price_Tax = getPrice_Tax($renRec->receiveCode, $renRec->receiveDay, $receivePrice);
+	// 20231010 E_Add
+
 	$obj = new stdClass();
 	$obj->rentalReceivePid = $renRec->pid; //賃貸入金PID
 	$obj->receiveContractPid = $revCon->pid; //入金契約情報PID
@@ -1560,13 +1593,19 @@ function createReceiveContractDetail($ren, $revCon, $renCon, $renRec)
 
 	$obj->receiveCode = $renRec->receiveCode; //入金コード
 
-	if ($renCon->rentPriceTax != null && $renRec->receivePrice != null) {
-		$obj->receivePrice = $renRec->receivePrice - $renCon->rentPriceTax; //入金金額（税別）
-	} else {
-		$obj->receivePrice = $renRec->receivePrice; //入金金額（税別）
-	}
-	$obj->receiveTax = $renCon->rentPriceTax; //消費税
-	$obj->receivePriceTax = $renRec->receivePrice; //入金金額（税込）
+	// 20231010 S_Update
+	// if ($renCon->rentPriceTax != null && $renRec->receivePrice != null) {
+	// 	$obj->receivePrice = $renRec->receivePrice - $renCon->rentPriceTax; //入金金額（税別）
+	// } else {
+	// 	$obj->receivePrice = $renRec->receivePrice; //入金金額（税別）
+	// }
+	// $obj->receiveTax = $renCon->rentPriceTax; //消費税
+	// $obj->receivePriceTax = $renRec->receivePrice; //入金金額（税込）
+	$obj->receivePrice = $price_Tax->price; //入金金額（税別）
+	$obj->receiveTax = $price_Tax->tax; //消費税
+	$obj->receivePriceTax = $receivePrice; //入金金額（税込）
+	// 20231010 E_Update
+	
 	$obj->contractFixDay = $renRec->receiveDay; //入金確定日
 	$obj->receiveMethod = $renCon->paymentMethod; //入金方法
 
@@ -1586,16 +1625,220 @@ function createReceiveContractDetail($ren, $revCon, $renCon, $renRec)
 /**
  * 契約の所有者名検索
  */
-function searchSellerName($contractInfoPid)
+// 20231010 S_Update
+// function searchSellerName($contractInfoPid)
+function searchSellerName($contractInfoPid, $isGetMore = false)
+// 20231010 E_Update
 {
+	// 20231010 S_Add
+	$cons = array();
+	$cons[] = array('p1.contractInfoPid' => $contractInfoPid);
+	if($isGetMore){
+		$codes = ORM::for_table(TBLCODE)->where('code', 'SYS401')->select('codeDetail')->findArray();
+		if(sizeof($codes) > 0) {
+			foreach ($codes as $code) {
+				$cons[] = array('pid' => $code['codeDetail']);
+			}
+		}
+	}
+	// 20231010 E_Add
+
 	$query = ORM::for_table(TBLCONTRACTSELLERINFO)
 		->table_alias('p1')
 		->select('p1.pid')
 		->select('p1.contractorName')
-		->where('p1.contractInfoPid', $contractInfoPid)
+		// 20231010 S_Update
+		// ->where('p1.contractInfoPid', $contractInfoPid)
+		->where_any_is($cons)
+		// 20231010 E_Update
 		->where_null('p1.deleteDate');
 
 	return $query->order_by_asc('pid')->find_array();
 }
 // 20230917 E_Add
+
+// 20231010 S_Add
+/**
+ * 入金月取得
+ */
+function getReceiveMonths($dateStrFrom, $dateStrTo) {
+	$arr = array();
+
+	$dateFrom = new DateTime($dateStrFrom);
+	$dateCheck = $dateFrom->format('Ym');
+	$arr[] = $dateCheck;
+	$dateTo = new DateTime($dateStrTo);
+
+	// $interval = $dateFrom->diff($dateTo);
+	$limit = $dateTo->format('Ym');
+
+	while ($dateCheck < $limit) {
+		$dateCheck = date('Ym', strtotime("+1 months", strtotime($dateCheck . '01')));
+		$arr[] = $dateCheck;
+	};
+	return $arr;
+}
+
+function createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $loanPeriodEndDate) {
+	$objs = array();
+
+	// 登録日
+	$createDate = $rentalCT->createDate;
+
+	// 支払いサイト
+	$usance = $rentalCT->usance;
+	if (!isset($usance) || $usance == '') {
+		$usance = '1';// 1:翌月、2:翌々月
+	}
+
+	// 支払日
+	$paymentDay = $rentalCT->paymentDay;
+	if (!isset($paymentDay) || $paymentDay == '' || $paymentDay == '0') {
+		$paymentDay = '31';
+	}
+
+	if (strlen($paymentDay) == 1) {
+		$paymentDay = '0' . $paymentDay;
+	}
+
+	// 賃貸契約開始日
+	$loanPeriodStartDate = $ownershipRelocationDate;
+	if (!isset($loanPeriodStartDate)) {
+		$loanPeriodStartDate = date('Ymd', strtotime($createDate));
+	}
+
+	// 賃貸契約終了日
+	if (!isset($loanPeriodEndDate)) {
+		// 一年間
+		$loanPeriodEndDate = date('Ymd', strtotime("+11 months", strtotime($loanPeriodStartDate)));
+	}
+
+	// 入金月
+	$receiveMonths = getReceiveMonths($loanPeriodStartDate, $loanPeriodEndDate);
+
+	// 賃貸入金作成
+	foreach ($receiveMonths as $receiveMonth) {
+		$obj = new stdClass();
+		$obj->rentalInfoPid = $rentalCT->rentalInfoPid;
+		$obj->rentalContractPid = $rentalCT->pid;
+		$obj->contractInfoPid = $rentalCT->contractInfoPid;
+		$obj->locationInfoPid = $rentalCT->locationInfoPid;
+		$obj->tempLandInfoPid = $rentalCT->tempLandInfoPid;
+		$obj->receivePrice = $rentPrice;
+		$obj->receiveCode = $rentalCT->receiveCode;
+		$obj->receiveFlg = '0';
+		$obj->receiveMonth = $receiveMonth;
+
+		// 仮入金日
+		$dateTemp = date('Ymd', strtotime("+" . $usance . " months", strtotime($receiveMonth . '01')));
+
+		// 各月の日数
+		$dayMaxInMonth = getDayInMonth($dateTemp);
+
+		// まず、日まで設定
+		$dayTemp = $paymentDay;
+
+		// 各月の日数は日までより小さい場合
+		if (intval($dayMaxInMonth) < intval($paymentDay)) {
+			$dayTemp = $dayMaxInMonth;
+		}
+
+		if (strlen($dayTemp) == 1) {
+			$dayTemp = '0' . $dayTemp;
+		}
+
+		// 入金日
+		$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
+
+		$objs[] = $obj;
+	}
+	return $objs;
+}
+/**
+ * 賃貸情報の所有権移転日を取得
+ */
+function getOwnershipRelocationDate($rentalInfoPid)
+{
+	$query = ORM::for_table(TBLRENTALINFO)
+		->select('ownershipRelocationDate')
+		->where('pid', $rentalInfoPid)->find_one();
+	return $query->ownershipRelocationDate;
+}
+
+/**
+ * 入居者情報の賃料等を取得
+ */
+function getRentPrice($residentInfoPid)
+{
+	$query = ORM::for_table(TBLRESIDENTINFO)
+		->select('rentPrice')
+		->where('pid', $residentInfoPid)->find_one();
+	return $query->rentPrice;
+}
+
+/**
+ * 入金種別の存在をチェック
+ */
+function isExistsReceiveType($receiveCode)
+{
+	$query = ORM::for_table(TBLRECEIVETYPE)->where_null('deleteDate');
+
+	$query = $query->where('receiveCode', $receiveCode);
+	return $query->count() > 0;
+}
+
+/**
+ * 消費税・税別の計算
+ */
+function getPrice_Tax($receiveCode, $taxEffectiveDay, $receivePriceTax)
+{
+	$obj = new stdClass();
+
+	$price = null;
+	$tax = null;
+	if ($receiveCode != null && $receiveCode != '' && isExistsReceiveType($receiveCode)) {
+		$taxRate = 0;
+
+		if ($taxEffectiveDay != null && $taxEffectiveDay != '') {
+			$taxRate = ORM::for_table(TBLTAX)->where_lte('effectiveDay', $taxEffectiveDay)->max('taxRate');
+			$taxRate = intval($taxRate);
+		}
+		if ($receivePriceTax != null) {
+			$price = ceil($receivePriceTax / (1 + $taxRate / 100));
+			$tax = $receivePriceTax - $price;
+		}
+	}
+	$obj->price = $price;
+	$obj->tax = $tax;
+
+	return $obj;
+}
+// 20231010 E_Add
+// 20231016 S_Add
+/**
+ * 日付計算
+ */
+function calDiffDate($dateStrFrom, $dateStrTo) {
+
+	$dateFrom = new DateTime($dateStrFrom);
+	$dateTo = new DateTime($dateStrTo);
+
+	$interval = $dateFrom->diff($dateTo);
+	return $interval;
+}
+
+/**
+ * 振込名を取得
+ */
+function getBankName($bankPid)
+{
+	if(isset($bankPid)){
+		$query = ORM::for_table(TBLBANK)
+			->select('displayName')
+			->where('pid', $bankPid)->find_one();
+		return $query->displayName;
+	}
+	return "";
+}
+// 20231016 E_Add
 ?>
