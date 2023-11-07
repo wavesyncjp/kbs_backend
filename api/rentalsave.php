@@ -10,6 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
+$rentalContractsChanged = $param->rentalContractsChanged;// 20231027 Add
 $rentalReceivesChanged = $param->rentalReceivesChanged;
 
 // 20231010 S_Add
@@ -74,7 +75,11 @@ if($isChangedOwnerDate){
 
 	foreach ($rentalContracts as $rentalCT) {
 		$rentPrice = getRentPrice($rentalCT->residentInfoPid);
-		$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $rentalCT->loanPeriodEndDate);
+		// 20231027 S_Update
+		// $objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $rentalCT->loanPeriodEndDate);
+		$evic = getEvic($rentalCT);
+		$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $evic);
+		// 20231027 E_Update
 	
 		$receives = array();
 		$existedRePids = array();
@@ -144,7 +149,10 @@ if($isChangedOwnerDate){
 }
 // 20231010 E_Add
 
-copyData($param, $rental, array('pid', 'rentalContracts', 'rentalReceives', 'rentalReceivesChanged', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+// 20231027 S_Add
+// copyData($param, $rental, array('pid', 'rentalContracts', 'rentalReceives', 'rentalReceivesChanged', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+copyData($param, $rental, array('pid', 'rentalContracts', 'rentalReceives', 'rentalContractsChanged', 'rentalReceivesChanged', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+// 20231027 E_Add
 $rental->save();
 
 // 所在地情報PIDを変更の場合、賃貸契約の入居者情報PID、所在地情報PIDをクリア
@@ -193,6 +201,23 @@ if ($isChangedLocPid) {
 		}
 	}
 }
+// 20231027 S_Add
+else if(isset($rentalContractsChanged)){
+	foreach ($rentalContractsChanged as $rcon) {
+		ORM::raw_execute("update " . TBLRESIDENTINFO . " set updateUserId = " . $param->updateUserId . ",updateDate = now()" . ",rentPrice = " . $rcon->rentPriceRefMap . " where deleteDate is null and pid = ". $rcon->residentInfoPid);
+		ORM::raw_execute("update " . TBLRENTALRECEIVE . " set updateUserId = " . $param->updateUserId . ",updateDate = now()" . ",receivePrice = " . $rcon->rentPriceRefMap . " where receiveFlg = '0' and deleteDate is null and rentalContractPid = ". $rcon->pid);
+		
+		//これから入金したいデータは入金金額を更新
+		if($isChangedReceive){
+			foreach ($rentalReceivesChanged as $rev) {
+				if($rev->rentalContractPid == $rcon->pid && $rev->receiveFlg == '1'){
+					$rev->receivePrice = $rcon->rentPriceRefMap;
+				}
+			}	
+		}
+	}
+}
+// 20231027 E_Add
 
 // 賃貸入金を更新
 // 20231010 S_Update

@@ -65,10 +65,11 @@ if ($isNew || ($isChangedReceive && ($receives == null || count($receives) == 0)
 	$rentalCT->save();
 
 	//賃貸入金を準備
-	// 20231010 S_Update
-	// $objs = createRentalReceives($param, $rentalCT);
-	$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $param->loanPeriodEndDate);
-	// 20231010 E_Update
+	// 20231027 S_Update
+	// $objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $param->loanPeriodEndDate);
+	$evic = getEvic($rentalCT);
+	$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $evic);
+	// 20231027 E_Update
 
 	foreach ($objs as $obj) {
 		$receiveSave = ORM::for_table(TBLRENTALRECEIVE)->create();
@@ -83,10 +84,11 @@ else if ($isChangedReceive) {
 	$existedRePids = array();
 
 	// 賃貸入金を準備
-	// 20231010 S_Update
-	// $objs = createRentalReceives($param, $rentalCT);
-	$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $param->loanPeriodEndDate);
-	// 20231010 E_Update
+	// 20231027 S_Update
+	// $objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $param->loanPeriodEndDate);
+	$evic = getEvic($rentalCT);
+	$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $evic);
+	// 20231027 E_Update
 
 	foreach ($objs as $obj) {
 		// 既存賃貸入金をチェック

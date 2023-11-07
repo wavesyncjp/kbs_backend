@@ -53,14 +53,17 @@ foreach($renCons as $renCon) {
     $cntRenCons++;
 
     //立ち退き情報
-    $queryEvic = ORM::for_table(TBLEVICTIONINFO)
-	->table_alias('p1')
-	->select('p1.*')
-	->where_null('p1.deleteDate');
-	$queryEvic = $queryEvic->where('p1.rentalInfoPid', $renCon['rentalInfoPid']);
-	$queryEvic = $queryEvic->where('p1.residentInfoPid', $renCon['residentInfoPid']);
+    // 20231027 S_Update
+    // $queryEvic = ORM::for_table(TBLEVICTIONINFO)
+	// ->table_alias('p1')
+	// ->select('p1.*')
+	// ->where_null('p1.deleteDate');
+	// $queryEvic = $queryEvic->where('p1.rentalInfoPid', $renCon['rentalInfoPid']);
+	// $queryEvic = $queryEvic->where('p1.residentInfoPid', $renCon['residentInfoPid']);
 	
-    $evic = $queryEvic->order_by_desc('p1.pid')->find_one();
+    // $evic = $queryEvic->order_by_desc('p1.pid')->find_one();
+    $evic = getEvic($renCon);
+    // 20231027 E_Update
     if(!isset($evic)){
         $evic = new stdClass();
         $evic->deposit1 = null;
@@ -73,6 +76,17 @@ foreach($renCons as $renCon) {
         $evic->successionDeposit = null;
     }
 
+    // 20231019 S_Add
+    $locObj = null;// 所在地情報
+    $locationInfoPidTemp = getLocationPidByBuilding($renCon['locationInfoPid']);
+    if (isset($locationInfoPidTemp) && $locationInfoPidTemp != null){
+        $locObj = getLocationInfoForReport($locationInfoPidTemp);
+    }
+    else{
+        $locObj = getLocationInfoForReport($renCon['locationInfoPid']);
+    }
+    // 20231019 E_Add
+    
     // シートをコピー
     $sheet = clone $spreadsheet->getSheet(0);
     $sheet->setTitle($renCon['borrowerName'] . '様');
@@ -117,7 +131,7 @@ foreach($renCons as $renCon) {
     //入居者 TEL				
     $cell = setCell($cell, $sheet, 'residentTel', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['residentTel']);
 
-    //物件の表示 所在地				
+    //物件の表示 所在地		
     $cell = setCell($cell, $sheet, 'l_address', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['l_addressMap']);
     //物件の表示 名  称				
     $cell = setCell($cell, $sheet, 'apartmentName', $currentColumn, $endColumn, $currentRow, $endRow, $ren['apartmentName']);
@@ -126,7 +140,10 @@ foreach($renCons as $renCon) {
     //物件の表示 号室				
     $cell = setCell($cell, $sheet, 'roomNo', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['roomNo']);
     //物件の表示 構  造				
-    $cell = setCell($cell, $sheet, 'structure', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['l_structureMap']);
+    // 20231019 S_Update
+    // $cell = setCell($cell, $sheet, 'structure', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['l_structureMap']);
+    $cell = setCell($cell, $sheet, 'structure', $currentColumn, $endColumn, $currentRow, $endRow, $locObj['l_structureMap']);
+    // 20231019 E_Update
     //物件の表示 面積		
     $cell = setCell($cell, $sheet, 'roomExtent', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['roomExtent']);
     //物件の表示 種　別					
@@ -186,16 +203,20 @@ foreach($renCons as $renCon) {
     // 賃貸契約開始日
 	// $loanPeriodStartDate = $ren['ownershipRelocationDate'];
 	$loanPeriodStartDate = $renCon['loanPeriodStartDate'];
-	if (!isset($loanPeriodStartDate)) {
-		$loanPeriodStartDate = date('Ymd', strtotime($renCon['createDate']));
-	}
+    // 20231027 S_Delete
+	// if (!isset($loanPeriodStartDate)) {
+	// 	$loanPeriodStartDate = date('Ymd', strtotime($renCon['createDate']));
+	// }
+    // 20231027 E_Delete
 
-    $loanPeriodEndDate = $renCon['loanPeriodEndDate'];
 	// 賃貸契約終了日
-	if (!isset($loanPeriodEndDate)) {
-		// 一年間
-		$loanPeriodEndDate = date('Ymd', strtotime("+11 months", strtotime($loanPeriodStartDate)));
-	}
+    $loanPeriodEndDate = $renCon['loanPeriodEndDate'];
+    // 20231027 S_Delete
+	// if (!isset($loanPeriodEndDate)) {
+	// 	// 一年間
+	// 	$loanPeriodEndDate = date('Ymd', strtotime("+11 months", strtotime($loanPeriodStartDate)));
+	// }
+    // 20231027 E_Delete
 
     // 日迄
     $diffDate = calDiffDate($loanPeriodStartDate, $loanPeriodEndDate);

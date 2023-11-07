@@ -15,6 +15,9 @@ $searchFor = $param->searchFor;
 if ($searchFor == 'searchResident') {
 	$datas = searchResident($param);
 }
+else if ($searchFor == 'searchResident2') {
+	$datas = searchResident2($param);
+}
 // 地番　家屋番号を取得
 else if ($searchFor == 'searchLocationNumber') {
 	$datas = searchLocationNumber($param);
@@ -42,17 +45,37 @@ else if ($searchFor == 'searchRentalApartment') {
 else if ($searchFor == 'searchEvictionForContract') {
 	$datas = getEvictionInfos($param->contractInfoPid, null);
 }
+// 20231027 S_Add
+// 契約を取得
+else if ($searchFor == 'searchContractSimple') {
+	$datas = searchContractSimple($param);
+}
+// 20231027 E_Add
 echo json_encode($datas);
 
 /**
  * 入居者検索
  */
 function searchResident($param) {
+	// 20231019 S_Add
+	$locationInfoPid = $param->locationInfoPid;
+	if (isset($locationInfoPid) && $locationInfoPid !== '') {
+		$locationInfoPidTemp = getLocationPidByBuilding($locationInfoPid);
+		if (isset($locationInfoPidTemp) && $locationInfoPidTemp != null){
+			$locationInfoPid = $locationInfoPidTemp;
+		}
+	}
+	// 20231019 E_Add
 	$query = ORM::for_table(TBLRESIDENTINFO)->where_null('deleteDate')->where_not_null('roomNo');
 
-	if (isset($param->locationInfoPid) && $param->locationInfoPid !== '') {
-		$query = $query->where('locationInfoPid', $param->locationInfoPid);
+	// 20231019 S_Update
+	// if (isset($param->locationInfoPid) && $param->locationInfoPid !== '') {
+	// 	$query = $query->where('locationInfoPid', $param->locationInfoPid);
+	// }
+	if (isset($locationInfoPid)) {
+		$query = $query->where('locationInfoPid', $locationInfoPid);
 	}
+	// 20231019 E_Update
 
 	if (isset($param->tempLandInfoPid) && $param->tempLandInfoPid !== '') {
 		$query = $query->where('tempLandInfoPid', $param->tempLandInfoPid);
@@ -71,6 +94,11 @@ function searchLocationNumber($param) {
 		->select('p1.blockNumber')
 		->select('p1.buildingNumber')
 		->select('p1.displayOrder')// 20230930 Add
+		// 20231019 S_Add 一棟の建物
+		->select('p1.ridgePid')
+		->select('p3.address')
+		->left_outer_join(TBLLOCATIONINFO, array('p1.ridgePid', '=', 'p3.pid'), 'p3')
+		// 20231019 E_Add 一棟の建物
 		->inner_join(TBLCONTRACTDETAILINFO, array('p1.pid', '=', 'p2.locationInfoPid'), 'p2')
 		->where_null('p1.deleteDate')
 		->where_null('p2.deleteDate');
@@ -90,9 +118,35 @@ function getRentalApartments($contractInfoPid) {
 		->table_alias('p1')
 		->select('p1.pid')
 		->select('p1.apartmentName')
+		->select('p1.locationInfoPid')// 20231019 Add
 		->where_null('p1.deleteDate');
 
 	$query = $query->where('p1.contractInfoPid', $contractInfoPid);
 	return $query->order_by_desc('p1.pid')->findArray();
 }
+// 20231027 S_Add
+/**
+ * 契約情報を取得
+ * @param tempLandInfoPid 所在地PID
+ */
+function searchContractSimple($param) {
+	$query = ORM::for_table(TBLCONTRACTINFO)
+	->table_alias('p1')
+	->select('p1.pid')
+	->select('p1.contractNumber')
+	->select('p1.tempLandInfoPid')
+	->select('p2.bukkenNo')
+	->select('p2.bukkenName')
+	->inner_join(TBLTEMPLANDINFO, array('p1.tempLandInfoPid', '=', 'p2.pid'), 'p2')
+	->where_null('p1.deleteDate');
+
+	if(isset($param->tempLandInfoPid)){
+		$query = $query->where('p1.tempLandInfoPid', $param->tempLandInfoPid);
+	}
+	if(isset($param->contractInfoPid)){
+		$query = $query->where('p1.pid', $param->contractInfoPid);
+	}
+	return $query->order_by_desc('p1.pid')->find_array();
+}
+// 20231027 E_Add
 ?>

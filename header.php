@@ -88,6 +88,7 @@ ORM::configure('id_column_overrides', array(
 		, 'tblrentalreceive'=>'pid'
 		// 20230917 E_Add
 		, 'tblinfoapprovalattach'=>'pid'// 20230927 Add
+		, 'tblbukkenphotoattach'=>'pid'// 20231020 Add
 ) );
 
 $FILE_PATH = 'uploads';
@@ -149,4 +150,5 @@ define('TBLEVICTIONINFOATTACH', 'tblevictioninfoattach');
 define('TBLRENTALRECEIVE', 'tblrentalreceive');
 // 20230917 E_Add
 define('TBLINFOAPPROVALATTACH','tblinfoapprovalattach');// 20230927 Add
+define('TBLBUKKENPHOTOATTACH','tblbukkenphotoattach');// 20231020 Add
 ?>
