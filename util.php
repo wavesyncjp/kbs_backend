@@ -56,6 +56,15 @@ function getLandInfo($pid){
 	if(isset($attachFiles)){
 		$land['attachFiles'] = $attachFiles;
 	}
+
+	// 20231020 S_Add
+	//物件写真添付
+	$photoFiles = ORM::for_table(TBLBUKKENPHOTOATTACH)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
+	if(isset($photoFiles)){
+		$land['photoFilesMap'] = $photoFiles;
+	}
+	// 20231020 E_Add
+
 	$locList = [];
 	// 20220329 S_Update
 	// $locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $pid)->where_null('deleteDate')->findArray();
@@ -1391,6 +1400,12 @@ function getRental($pid,$getIts = false) {
 
 		//賃貸入金
 		$ren['rentalReceives'] = getRentalReceives($pid);
+
+		// 20231027 S_Add
+		// 立ち退き一覧
+		$evictions = getEvictionInfos(null,null, $ren['pid']);
+		$ren['evictionsMap'] = $evictions;
+		// 20231027 E_Add
 	}
 	return $ren;
 }
@@ -1475,6 +1490,14 @@ function getRentalContracts($rentalInfoPid, $rentalContractPid) {
 	else {
 		$queryRC = $queryRC->where('p1.rentalInfoPid', $rentalInfoPid);
 		$results = $queryRC->order_by_asc('p1.pid')->findArray();
+		// 20231101 S_Add
+		if(isset($results)){
+			foreach ($results as &$renCon) {
+				$evic = getEvic($renCon);
+				$renCon['roomRentExemptionStartDateEvicMap'] = isset($evic) ? $evic->roomRentExemptionStartDate : '';
+			}
+		}
+		// 20231101 E_Add
 	}	
 	return $results;
 }
@@ -1492,7 +1515,7 @@ function getRentalContractsForExport($rentalInfoPid) {
 	->select('p2.borrowerName')
 	->select('p2.rentPrice', 'rentPriceRefMap')// 20231010 Add
 	->select('p3.address', 'l_addressMap')
-	->select('p3.structure', 'l_structureMap')
+	// ->select('p3.structure', 'l_structureMap')// 20231019 S_Delete
 	->select('p4.contractFormNumber', 'contractFormNumberMap')
 	->left_outer_join(TBLRESIDENTINFO, array('p1.residentInfoPid', '=', 'p2.pid'), 'p2')
 	->left_outer_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p3.pid'), 'p3')
@@ -1511,7 +1534,10 @@ function getRentalContractsForExport($rentalInfoPid) {
  * @param contractInfoPid 契約情報Pid
  * @param evictionInfoPid 立退き情報Pid
  */
-function getEvictionInfos($contractInfoPid, $evictionInfoPid) {
+// 20231027 S_Update
+// function getEvictionInfos($contractInfoPid, $evictionInfoPid) {
+function getEvictionInfos($contractInfoPid, $evictionInfoPid, $rentalInfoPid = null) {
+// 20231027 E_Update
 	$queryRC = ORM::for_table(TBLEVICTIONINFO)
 	->table_alias('p1')
 	->distinct()
@@ -1528,6 +1554,12 @@ function getEvictionInfos($contractInfoPid, $evictionInfoPid) {
 	if (isset($evictionInfoPid) && $evictionInfoPid > 0) {
 		$results = $queryRC->findOne($evictionInfoPid)->asArray();
 	}
+	// 20231027 S_Add
+	else if (isset($rentalInfoPid) && $rentalInfoPid > 0) {
+		$queryRC = $queryRC->where('p1.rentalInfoPid', $rentalInfoPid);
+		$results = $queryRC->order_by_asc('p1.pid')->findArray();
+	}
+	// 20231027 E_Add
 	else {
 		$queryRC = $queryRC->where('p1.contractInfoPid', $contractInfoPid);
 		$results = $queryRC->order_by_asc('p1.pid')->findArray();
@@ -1679,7 +1711,10 @@ function getReceiveMonths($dateStrFrom, $dateStrTo) {
 	return $arr;
 }
 
-function createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $loanPeriodEndDate) {
+// 20231027 S_Update
+// function createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $loanPeriodEndDate) {
+function createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $evic) {
+// 20231027 E_Update
 	$objs = array();
 
 	// 登録日
@@ -1703,15 +1738,36 @@ function createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $
 
 	// 賃貸契約開始日
 	$loanPeriodStartDate = $ownershipRelocationDate;
-	if (!isset($loanPeriodStartDate)) {
+	if (!isset($loanPeriodStartDate) || empty($loanPeriodStartDate)) {
 		$loanPeriodStartDate = date('Ymd', strtotime($createDate));
 	}
 
 	// 賃貸契約終了日
-	if (!isset($loanPeriodEndDate)) {
+	// 20231106 S_Add
+	$loanPeriodEndDate = $rentalCT->loanPeriodEndDate;
+	
+	// 明渡日YYMM
+	$surrenderDateYYMM = null;
+
+	if($evic != null){
+		// 明渡予定日
+		if(isset($evic->surrenderScheduledDate) && !empty($evic->surrenderScheduledDate)){
+			$loanPeriodEndDate = $evic->surrenderScheduledDate;
+		}
+		// 明渡日
+		if(isset($evic->surrenderDate) && !empty($evic->surrenderDate)){
+			$surrenderDateYYMM = substr($evic->surrenderDate, 0, 6);
+
+			if(!isset($evic->surrenderScheduledDate) || empty($evic->surrenderScheduledDate) || $evic->surrenderDate > $evic->surrenderScheduledDate){
+				$loanPeriodEndDate = $evic->surrenderDate;
+			}
+		}
+	}	
+	if (!isset($loanPeriodEndDate) || empty($loanPeriodEndDate)) {
 		// 一年間
 		$loanPeriodEndDate = date('Ymd', strtotime("+11 months", strtotime($loanPeriodStartDate)));
 	}
+	// 20231106 E_Add
 
 	// 入金月
 	$receiveMonths = getReceiveMonths($loanPeriodStartDate, $loanPeriodEndDate);
@@ -1730,7 +1786,10 @@ function createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $
 		$obj->receiveMonth = $receiveMonth;
 
 		// 仮入金日
-		$dateTemp = date('Ymd', strtotime("+" . $usance . " months", strtotime($receiveMonth . '01')));
+		// 20231027 S_Update
+		// $dateTemp = date('Ymd', strtotime("+" . $usance . " months", strtotime($receiveMonth . '01')));
+		$dateTemp = date('Ymd', strtotime("-" . $usance . " months", strtotime($receiveMonth . '01')));
+		// 20231027 E_Update
 
 		// 各月の日数
 		$dayMaxInMonth = getDayInMonth($dateTemp);
@@ -1748,7 +1807,21 @@ function createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $
 		}
 
 		// 入金日
-		$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
+		// 20231027 S_Update
+		// $obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
+		if(isset($surrenderDateYYMM)){
+			// 明渡日以降の場合、入金日を設定しない
+			if(substr($dateTemp, 0, 6) > $surrenderDateYYMM){
+				$obj->receiveFlg = '2';
+			}
+			else{
+				$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
+			}
+		}
+		else{
+			$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
+		}
+		// 20231027 E_Update
 
 		$objs[] = $obj;
 	}
@@ -1841,4 +1914,182 @@ function getBankName($bankPid)
 	return "";
 }
 // 20231016 E_Add
+
+// 20231019 S_Add
+function getLocationPidByBuilding($locationInfoPid){
+	$query = ORM::for_table(TBLLOCATIONINFO)
+	->select('pid')
+	->where_null('deleteDate')
+	->where('ridgePid', $locationInfoPid);
+
+	return $query->find_one()->pid;
+}
+function getLocationInfoForReport($locationInfoPid){
+	$query = ORM::for_table(TBLLOCATIONINFO)
+	->select('structure', 'l_structureMap');
+
+	return $query->find_one($locationInfoPid);
+}
+// 20231019 E_Add
+
+// 20231027 S_Add
+/**
+ * 立ち退き情報を取得
+ */
+function getEvic($renCon){
+	$isObject = is_object($renCon);// 20231116 Add
+
+	$loanPeriodStartDate = getLoanPeriodStartDate($renCon);
+	$loanPeriodEndDate = getLoanPeriodEndDate($renCon);
+
+	$query = ORM::for_table(TBLEVICTIONINFO)
+	->table_alias('p1')
+	->select('p1.*')
+	->where_null('p1.deleteDate');
+	// 20231116 S_Update
+	// $query = $query->where('p1.rentalInfoPid', $renCon->rentalInfoPid);
+	// $query = $query->where('p1.residentInfoPid', $renCon->residentInfoPid);
+	if($isObject){
+		$query = $query->where('p1.rentalInfoPid', $renCon->rentalInfoPid);
+		$query = $query->where('p1.residentInfoPid', $renCon->residentInfoPid);
+	}
+	else{
+		$query = $query->where('p1.rentalInfoPid', $renCon['rentalInfoPid']);
+		$query = $query->where('p1.residentInfoPid', $renCon['residentInfoPid']);
+	}
+	// 20231116 E_Update
+
+	$query = $query->where_raw("(p1.surrenderScheduledDate BETWEEN '" . $loanPeriodStartDate . "' AND '" . $loanPeriodEndDate . "')");
+	
+	$obj = $query->order_by_desc('p1.pid')->find_one();
+	if(!isset($obj) || !($obj->pid > 0)){
+		$query = ORM::for_table(TBLEVICTIONINFO)
+		->table_alias('p1')
+		->select('p1.*')
+		->where_null('p1.deleteDate');
+		// 20231116 S_Update
+		// $query = $query->where('p1.rentalInfoPid', $renCon->rentalInfoPid);
+		// $query = $query->where('p1.residentInfoPid', $renCon->residentInfoPid);
+		if($isObject){
+			$query = $query->where('p1.rentalInfoPid', $renCon->rentalInfoPid);
+			$query = $query->where('p1.residentInfoPid', $renCon->residentInfoPid);
+		}
+		else{
+			$query = $query->where('p1.rentalInfoPid', $renCon['rentalInfoPid']);
+			$query = $query->where('p1.residentInfoPid', $renCon['residentInfoPid']);
+		}
+		// 20231116 E_Update
+		$query = $query->where_raw("(p1.surrenderScheduledDate > '" . $loanPeriodEndDate . "')");
+		
+		$obj = $query->order_by_asc('p1.surrenderScheduledDate')->find_one();
+	
+	}
+	return $obj;
+}
+/**
+ * 立退きを紐づけるた賃貸契約を取得
+ */
+function getRentalContract($rentalInfoPid, $residentInfoPid, $surrenderScheduledDate){
+	$query = ORM::for_table(TBLRENTALCONTRACT)
+	->table_alias('p1')
+	->select('p1.*')
+	->where_null('p1.deleteDate');
+
+	$query = $query->where('p1.rentalInfoPid', $rentalInfoPid);
+	$query = $query->where('p1.residentInfoPid', $residentInfoPid);
+	$query = $query->where_raw("('". $surrenderScheduledDate ."' BETWEEN COALESCE(loanPeriodStartDate,DATE_FORMAT(createDate, '%Y%m%d'))
+	and COALESCE(loanPeriodEndDate,DATE_FORMAT(DATE_ADD(createDate, INTERVAL 11 MONTH), '%Y%m%d')))");
+	
+    $obj = $query->order_by_desc('p1.loanPeriodEndDate')->find_one();
+	
+	if(!isset($obj) || !($obj->pid > 0)){
+		$query = ORM::for_table(TBLRENTALCONTRACT)
+		->table_alias('p1')
+		->select('p1.*')
+		->where_null('p1.deleteDate');
+	
+		$query = $query->where('p1.rentalInfoPid', $rentalInfoPid);
+		$query = $query->where('p1.residentInfoPid', $residentInfoPid);
+		$query = $query->where_raw("(p1.loanPeriodEndDate < '". $surrenderScheduledDate ."')");
+		
+		$obj = $query->order_by_desc('p1.loanPeriodEndDate')->find_one();
+	}
+	return $obj;
+}
+// 20231027 E_Add
+
+// 20231106 S_Add
+/**
+ * 賃貸契約開始日
+ */
+function getLoanPeriodStartDate($rentalCT){
+	// 20231116 S_Update
+	// if (!isset($rentalCT->loanPeriodStartDate) || empty($rentalCT->loanPeriodStartDate)) {
+	// 	return date('Ymd', strtotime($rentalCT->createDate));// 賃貸契約の登録日
+	// }
+	// else{
+	// 	return $rentalCT->loanPeriodStartDate;
+	// }
+	$isObject = is_object($rentalCT);
+
+	if($isObject){
+		if (!isset($rentalCT->loanPeriodStartDate) || empty($rentalCT->loanPeriodStartDate)) {
+			return date('Ymd', strtotime($rentalCT->createDate));// 賃貸契約の登録日
+		}
+		else{
+			return $rentalCT->loanPeriodStartDate;
+		}
+	}
+	else{
+		if (!isset($rentalCT['loanPeriodStartDate']) || empty($rentalCT['loanPeriodStartDate'])) {
+			return date('Ymd', strtotime($rentalCT['createDate']));// 賃貸契約の登録日
+		}
+		else{
+			return $rentalCT['loanPeriodStartDate'];
+		}
+	}
+	// 20231116 E_Update
+}
+/**
+ * 賃貸契約終了日
+ */
+function getLoanPeriodEndDate($rentalCT){
+	// 20231116 S_Update
+	// if (!isset($rentalCT->loanPeriodEndDate) || empty($rentalCT->loanPeriodEndDate)) {
+	// 	$loanPeriodStartDate = getLoanPeriodStartDate($rentalCT);
+	// 	return date('Ymd', strtotime("+11 months", strtotime($loanPeriodStartDate)));
+	// }
+	// else{
+	// 	return $rentalCT->loanPeriodEndDate;
+	// }
+	$isObject = is_object($rentalCT);
+
+	if($isObject){
+		if (!isset($rentalCT->loanPeriodEndDate) || empty($rentalCT->loanPeriodEndDate)) {
+			$loanPeriodStartDate = getLoanPeriodStartDate($rentalCT);
+			return date('Ymd', strtotime("+11 months", strtotime($loanPeriodStartDate)));
+		}
+		else{
+			return $rentalCT->loanPeriodEndDate;
+		}
+	}
+	else{
+		if (!isset($rentalCT['loanPeriodEndDate']) || empty($rentalCT['loanPeriodEndDate'])) {
+			$loanPeriodStartDate = getLoanPeriodStartDate($rentalCT);
+			return date('Ymd', strtotime("+11 months", strtotime($loanPeriodStartDate)));
+		}
+		else{
+			return $rentalCT['loanPeriodEndDate'];
+		}
+	}
+	// 20231116 E_Update
+}
+// 20231106 E_Add
+
+// 20231110 S_Add
+function exitByDuplicate(){
+	echo json_encode(array('statusMap' => 'NG', 'msgMap' => '他のユーザーが登録中です。しばらく待ってから、再度登録ボタンを押してください。'));
+	exit;
+}
+// 20231110 E_Add
 ?>

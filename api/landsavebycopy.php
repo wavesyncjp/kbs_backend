@@ -19,7 +19,13 @@ if(!file_exists($fullPath) || !file_exists($fullPathLoc) || !file_exists($fullPa
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
+$count_retry = 0;// 202321110 Add
+
 //登録
+// 202321110 S_Add
+RETRY_HERE:
+$count_retry++;
+// 202321110 E_Add
 $land = ORM::for_table(TBLTEMPLANDINFO)->create();	
 setInsert($land, $param->createUserId);
 
@@ -29,7 +35,20 @@ $nextNo = str_pad($maxNum, 6, '0', STR_PAD_LEFT);
 $land->bukkenNo = $nextNo;
 
 copyData($param, $land, array('pid', 'bukkenNo', 'locations', 'mapFiles', 'attachFiles', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
-$land->save();
+// 202321110 S_Update
+// $land->save();
+try {
+	$land->save();
+} catch (Exception $e) {
+	if($count_retry < 3){
+		sleep(1); 
+		goto RETRY_HERE;
+	}
+	else{
+		exitByDuplicate();
+	}
+}
+// 202321110 E_Update
 
 // 地図添付ファイル
 if(isset($param->mapFiles)) {

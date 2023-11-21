@@ -2,6 +2,7 @@
 require '../header.php';
 require '../util.php';
 
+$isPhoto = $_POST['isPhoto'];// 20231020 Add
 $isAttach = $_POST['isAttach'];
 $bukkenId = $_POST['bukkenId'];
 $createUserId = $_POST['createUserId'];// 20220701 Add
@@ -31,6 +32,16 @@ if($isAttach == '1') {
 		}
 	}
 }
+// 20231020 S_Add
+else if($isPhoto == '1') {
+	$dirPath = $fullPath . '/bukkenPhoto';
+	if (!file_exists($dirPath)) {
+		if (!mkdir($dirPath)) {
+			die('NG');
+		}
+	}
+}
+// 20231020 E_Add
 else {
 	$dirPath = $fullPath . '/map';
 	if (!file_exists($dirPath)) {
@@ -71,6 +82,17 @@ if($isAttach == '1') {
 	$map->save();
 	
 }
+// 20231020 S_Add
+else if($isPhoto == '1') {
+	$map = ORM::for_table(TBLBUKKENPHOTOATTACH)->create();
+	$map->tempLandInfoPid = $bukkenId;
+	$map->bukkenPhotoAttachFileName = $fileName;
+	$map->bukkenPhotoAttachFilePath = 'backend/uploads/bukkenPhoto/' . $bukkenId . '/' . $uniq . '/';
+	setInsert($map, $createUserId);
+	$map->save();
+	
+}
+// 20231020 E_Add
 else {
 	// $map = ORM::for_table('tblmapattach')->create();
 	$map = ORM::for_table(TBLMAPATTACH)->create();

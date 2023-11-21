@@ -29,6 +29,18 @@ if ($param->isAttach){
 	$file->save();
 	// 20220701 E_Update
 }
+// 20231020 S_Add
+//物件写真添付
+else if ($param->isPhoto){
+	$file = ORM::for_table(TBLBUKKENPHOTOATTACH)->find_one($param->pid);
+	
+	$split = explode('/', $file->attachFilePath);
+	$dir = $fullPath . '/' . $split[sizeof($split) - 4] . '/' . $split[sizeof($split) - 3] . '/' . $split[sizeof($split) - 2];// bukken/pid/uniq/
+	
+	setDelete($file, $param->deleteUserId);
+	$file->save();
+}
+// 20231020 E_Add
 else {
 	// $file = ORM::for_table('tblmapattach')->find_one($param->pid);
 	$file = ORM::for_table(TBLMAPATTACH)->find_one($param->pid);

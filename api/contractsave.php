@@ -11,6 +11,8 @@ $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 $userId = null;// 20210728 Add
 
+$count_retry = 0;// 202321110 Add
+
 //更新
 if(isset($param->pid) && $param->pid > 0){
 	$contract = ORM::for_table(TBLCONTRACTINFO)->find_one($param->pid);
@@ -19,6 +21,10 @@ if(isset($param->pid) && $param->pid > 0){
 }
 //登録
 else {
+	// 202321110 S_Add
+	RETRY_HERE:
+	$count_retry++;
+	// 202321110 E_Add	
 	//000002
 	$contract = ORM::for_table(TBLCONTRACTINFO)->create();	
 	$maxNo = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->tempLandInfoPid)->max('contractNumber');
@@ -40,7 +46,26 @@ copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 's
 */
 copyData($param, $contract, array('pid', 'contractNumber', 'land', 'details', 'sellers', 'locations', 'contractFiles', 'contractAttaches', 'updateUserId', 'updateDate', 'createUserId', 'createDate', 'sharingStartDayYYYY', 'sharingStartDayMMDD'));
 // 20230227 E_Update
-$contract->save();
+
+// 202321110 S_Update
+// $contract->save();
+if($param->pid > 0){
+	$contract->save();
+}
+else{
+	try {
+		$contract->save();
+	} catch (Exception $e) {
+		if($count_retry < 3){
+			sleep(1); 
+			goto RETRY_HERE;
+		}
+		else{
+			exitByDuplicate();
+		}
+	}
+}
+// 202321110 E_Update
 
 setPayByContract($contract, $userId);// 20210728 Add
 

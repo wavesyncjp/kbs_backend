@@ -10,6 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
+$count_retry = 0;// 202321110 Add
+
 //更新
 if($param->pid > 0){
 	$land = ORM::for_table(TBLTEMPLANDINFO)->find_one($param->pid);
@@ -28,6 +30,10 @@ if($param->pid > 0){
 }
 //登録
 else {
+	// 202321110 S_Add
+	RETRY_HERE:
+	$count_retry++;
+	// 202321110 E_Add
 	//000002
 	$land = ORM::for_table(TBLTEMPLANDINFO)->create();	
 	$maxNo = ORM::for_table(TBLTEMPLANDINFO)->where_not_equal('createUserId', '9999')->max('bukkenNo');
@@ -39,7 +45,25 @@ else {
 
 
 copyData($param, $land, array('pid', 'bukkenNo', 'locations', 'mapFiles', 'attachFiles', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
-$land->save();
+// 202321110 S_Update
+// $land->save();
+if($param->pid > 0){
+	$land->save();
+}
+else{
+	try {
+		$land->save();
+	} catch (Exception $e) {
+		if($count_retry < 3){
+			sleep(1); 
+			goto RETRY_HERE;
+		}
+		else{
+			exitByDuplicate();
+		}
+	}
+}
+// 202321110 E_Update
 
 echo json_encode(getLandInfo($land->pid));
 

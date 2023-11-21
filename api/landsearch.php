@@ -187,7 +187,14 @@ foreach($lands as $land){
 	if(isset($mapFiles)){
 		$land['mapFiles'] = $mapFiles;
 	}
-	
+
+	// 20231020 S_Add
+	//物件写真添付
+	$photoFiles = ORM::for_table(TBLBUKKENPHOTOATTACH)->where('tempLandInfoPid', $land['pid'])->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
+	if(isset($photoFiles)){
+		$land['photoFilesMap'] = $photoFiles;
+	}	
+	// 20231020 E_Add
 	$ret[] = $land;
 }
 echo json_encode($ret);
