@@ -1067,7 +1067,24 @@ function setPayByContract($contract, $userId) {
 						}
 					}
 					$paycontractdetail['contractor'] = $contractor;                    // 契約者
-					$paycontractdetail['payPriceTax'] = $contract[$code['codeDetail']];// 支払金額（税込）
+					// 20231207 S_Update
+					// $paycontractdetail['payPriceTax'] = $contract[$code['codeDetail']];// 支払金額（税込）
+					// 売買代金（土地）
+					if($code['codeDetail'] == 'tradingLandPrice'){
+						$paycontractdetail['payPriceTax'] = intval($contract['tradingLandPrice']) + intval($contract['tradingLeasePrice']);
+						$paycontractdetail['payPrice'] = $paycontractdetail['payPriceTax'];
+					}
+					// 固都税清算金（建物）
+					else if($code['codeDetail'] == 'fixedBuildingTax'){
+						$paycontractdetail['payPriceTax'] = intval($contract['fixedBuildingTax']) + intval($contract['fixedBuildingTaxOnlyTax']);
+						$paycontractdetail['payPrice'] = $contract['fixedBuildingTax'];
+						$paycontractdetail['payTax'] = $contract['fixedBuildingTaxOnlyTax'];
+					}
+					else{
+						$paycontractdetail['payPriceTax'] = $contract[$code['codeDetail']];// 支払金額（税込）
+						$paycontractdetail['payPrice'] = $paycontractdetail['payPriceTax'];
+					}
+					// 20231207 E_Update
 					$payPriceTax = intval($paycontractdetail['payPriceTax']);
 
 					// 支払金額（税別）・消費税を設定する
@@ -1110,6 +1127,38 @@ function setPayByContract($contract, $userId) {
 						if($contract['deposit4DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit4Day'];// 支払確定日<-内金４日付
 						else $paycontractdetail['contractDay'] = $contract['deposit4Day'];                                     // 支払予定日<-内金４日付
 					}
+					// 20231207 S_Add
+					// 内金５
+					else if($code['codeDetail'] === 'deposit5') {
+						if($contract['deposit5DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit5Day'];// 支払確定日<-内金５日付
+						else $paycontractdetail['contractDay'] = $contract['deposit5Day'];                                     // 支払予定日<-内金５日付
+					}
+					// 内金６
+					else if($code['codeDetail'] === 'deposit6') {
+						if($contract['deposit6DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit6Day'];// 支払確定日<-内金６日付
+						else $paycontractdetail['contractDay'] = $contract['deposit6Day'];                                     // 支払予定日<-内金６日付
+					}
+					// 内金７
+					else if($code['codeDetail'] === 'deposit7') {
+						if($contract['deposit7DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit7Day'];// 支払確定日<-内金７日付
+						else $paycontractdetail['contractDay'] = $contract['deposit7Day'];                                     // 支払予定日<-内金７日付
+					}
+					// 内金８
+					else if($code['codeDetail'] === 'deposit8') {
+						if($contract['deposit8DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit8Day'];// 支払確定日<-内金８日付
+						else $paycontractdetail['contractDay'] = $contract['deposit8Day'];                                     // 支払予定日<-内金８日付
+					}
+					// 内金９
+					else if($code['codeDetail'] === 'deposit9') {
+						if($contract['deposit9DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit9Day'];// 支払確定日<-内金９日付
+						else $paycontractdetail['contractDay'] = $contract['deposit9Day'];                                     // 支払予定日<-内金９日付
+					}
+					// 内金１０
+					else if($code['codeDetail'] === 'deposit10') {
+						if($contract['deposit10DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit10Day'];// 支払確定日<-内金１０日付
+						else $paycontractdetail['contractDay'] = $contract['deposit10Day'];                                     // 支払予定日<-内金１０日付
+					}
+					// 20231207 E_Add
 					// 手付金
 					else if($code['codeDetail'] === 'earnestPrice') {
 						if($contract['earnestPriceDayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['earnestPriceDay'];// 支払確定日<-手付金日付
@@ -1120,6 +1169,18 @@ function setPayByContract($contract, $userId) {
 						if($contract['decisionDayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['decisionDay'];// 支払確定日<-決済日
 						else $paycontractdetail['contractDay'] = $contract['decisionDay'];                                     // 支払予定日<-決済日
 					}
+					// 20231208 S_Add
+					// 固都税清算金（土地）
+					else if($code['codeDetail'] === 'fixedLandTax') {
+						if($contract['decisionDayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['decisionDay'];// 支払確定日<-決済日
+						else $paycontractdetail['contractDay'] = $contract['decisionDay'];                                     // 支払予定日<-決済日
+					}
+					// 固都税清算金（建物）
+					else if($code['codeDetail'] === 'fixedBuildingTax') {
+						if($contract['decisionDayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['decisionDay'];// 支払確定日<-決済日
+						else $paycontractdetail['contractDay'] = $contract['decisionDay'];                                     // 支払予定日<-決済日
+					}
+					// 20231208 E_Add
 					// 留保金
 					else if($code['codeDetail'] === 'retainage') {
 						if($contract['retainageDayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['retainageDay'];// 支払確定日<-<-留保金支払(明渡)日
