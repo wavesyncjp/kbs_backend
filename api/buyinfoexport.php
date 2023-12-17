@@ -36,7 +36,10 @@ $codeLists['paymentType'] = $paymentTypeList;
 // 20220331 E_Add
 
 // 決済代金の支払コードを取得
-$paymentCodeByDecisionPrice = '';
+// 20231218 S_Update
+// $paymentCodeByDecisionPrice = '';
+$paymentCodeByDecisionPriceList = [];
+// 20231218 E_Update
 // 20220331 S_Add
 $paymentCodeByIntermediaryPrice = '';   // 仲介手数料
 $paymentCodeByOutsourcingPrice = '';	// 業務委託料
@@ -44,9 +47,16 @@ $paymentCodeByOutsourcingPrice = '';	// 業務委託料
 $codes = ORM::for_table(TBLCODE)->where_Like('code', 'SYS1%')->order_by_asc('code')->findArray();
 if(sizeof($codes) > 0) {
 	foreach($codes as $code) {
+		// 20231218 S_Update
+		/*
 		if($code['codeDetail'] == 'decisionPrice') {
 			$paymentCodeByDecisionPrice = $code['name'];
 		}
+		*/
+		if($code['codeDetail'] == 'tradingLandPrice' || $code['codeDetail'] == 'tradingBuildingPrice') {
+			$paymentCodeByDecisionPriceList[] = $code['name'];
+		}
+		// 20231218 E_Update
 		// 20220331 S_Add
 		else if($code['codeDetail'] == 'intermediaryPrice') {
 			$paymentCodeByIntermediaryPrice = $code['name'];
@@ -117,11 +127,20 @@ foreach($contracts as $contract) {
 		$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $pay['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
 		if(sizeof($details) > 0) {
 			foreach($details as $detail) {
+				// 20231218 S_Update
+				/*
 				if($detail['paymentCode'] == $paymentCodeByDecisionPrice) {
 					$contractFixDay = $detail['contractFixDay'];
 					$contractFixTime = $detail['contractFixTime'];
 					$payPriceTax = intval($detail['payPriceTax']);// 20220223 Add
 				}
+				*/
+				if(in_array($detail['paymentCode'], $paymentCodeByDecisionPriceList)) {
+					if(!empty($detail['contractFixDay'])) $contractFixDay = $detail['contractFixDay'];
+					if(!empty($detail['contractFixTime'])) $contractFixTime = $detail['contractFixTime'];
+					if(!empty($detail['payPriceTax'])) $payPriceTax += intval($detail['payPriceTax']);
+				}
+				// 20231218 E_Update
 				// 20220331 S_Add
 				// 支払コードが仲介料の場合
 				else if($detail['paymentCode'] == $paymentCodeByIntermediaryPrice) {
