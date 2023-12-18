@@ -1071,7 +1071,16 @@ function setPayByContract($contract, $userId) {
 					// $paycontractdetail['payPriceTax'] = $contract[$code['codeDetail']];// 支払金額（税込）
 					// 売買代金（土地）
 					if($code['codeDetail'] == 'tradingLandPrice'){
-						$paycontractdetail['payPriceTax'] = intval($contract['tradingLandPrice']) + intval($contract['tradingLeasePrice']);
+						// 20231218 S_Update
+						// $paycontractdetail['payPriceTax'] = intval($contract['tradingLandPrice']) + intval($contract['tradingLeasePrice']);
+						if((intval($contract['decisionPrice']) - intval($contract['tradingBuildingPrice'])) > 0){
+							// 決済代金-売買代金（建物）
+							$paycontractdetail['payPriceTax'] = intval($contract['decisionPrice']) - intval($contract['tradingBuildingPrice']);
+						}
+						else{
+							$paycontractdetail['payPriceTax'] = 0;
+						}
+						// 20231218 E_Update
 						$paycontractdetail['payPrice'] = $paycontractdetail['payPriceTax'];
 					}
 					// 固都税清算金（建物）
@@ -1107,6 +1116,18 @@ function setPayByContract($contract, $userId) {
 						$paycontractdetail['contractFixDay'] = $contract['decisionDay'];  // 支払確定日<-決済日
 						$paycontractdetail['contractDay'] = $contract['deliveryFixedDay'];// 支払予定日<-決済予定日
 					}
+					// 20231218 S_Add
+					// 売買代金（土地）
+					else if($code['codeDetail'] == 'tradingLandPrice') {
+						$paycontractdetail['contractFixDay'] = $contract['decisionDay'];  // 支払確定日<-決済日
+						$paycontractdetail['contractDay'] = $contract['deliveryFixedDay'];// 支払予定日<-決済予定日
+					}
+					// 売買代金（建物）
+					else if($code['codeDetail'] == 'tradingBuildingPrice') {
+						$paycontractdetail['contractFixDay'] = $contract['decisionDay'];  // 支払確定日<-決済日
+						$paycontractdetail['contractDay'] = $contract['deliveryFixedDay'];// 支払予定日<-決済予定日
+					}
+					// 20231218 E_Add
 					// 内金１
 					else if($code['codeDetail'] === 'deposit1') {
 						if($contract['deposit1DayChk'] == '1') $paycontractdetail['contractFixDay'] = $contract['deposit1Day'];// 支払確定日<-内金１日付
