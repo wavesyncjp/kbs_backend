@@ -152,6 +152,18 @@ if(isset($param->startDate_To) && $param->startDate_To != ''){
 }
 // 20221116 E_Add
 
+// 20240201 S_Add
+// 測量依頼先
+if(isset($param->surveyRequested) && $param->surveyRequested !== ''){
+	$query = $query->where_like('p1.surveyRequested', '%'.$param->surveyRequested.'%');
+}
+
+// 測量未納品チェック
+if(isset($param->surveyDeliveryDayChk) && $param->surveyDeliveryDayChk == '1'){
+	$query = $query->where('p1.surveyDeliveryDayChk', $param->surveyDeliveryDayChk);
+}
+// 20240201 E_Add
+
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();
 foreach($lands as $land){

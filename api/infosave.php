@@ -90,7 +90,11 @@ if($isRegist && isset($param->attachFiles) && count($attachFiles) > 0) {
 // 20230215 S_Update
 // if($info['infoType'] == '1') {
 // 掲示板タイプが1:お知らせ（名古屋支店）もしくは、2:お知らせ（大阪支店）の場合
-if($info['infoType'] == '1' || $info['infoType'] == '2') {
+// 20240201 S_Update
+// if($info['infoType'] == '1' || $info['infoType'] == '2') {
+// 掲載終了しない　かつ　掲示板タイプが1:お知らせ（名古屋支店）、2:お知らせ（大阪支店）、3:お知らせ（福岡支店）の場合
+if(!($param->finishFlg == '1') && ($info['infoType'] == '1' || $info['infoType'] == '2' || $info['infoType'] == '3')) {
+// 20240201 E_Update
 // 20230215 E_Update
 	$targets = [];
 	// 新規登録の場合

@@ -1110,6 +1110,10 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $cell = setCell(null, $sheet, 'b_address', $currentColumn, $endColumn, $currentRow, $endRow, $loc['address']);
         // 家屋番号
         $cell = setCell($cell, $sheet, 'b_buildingNumber', $currentColumn, $endColumn, $currentRow, $endRow, $loc['buildingNumber']);
+        // 20240123 S_Add
+        // 建物の名称
+        $cell = setCell($cell, $sheet, 'b_apartmentName', $currentColumn, $endColumn, $currentRow, $endRow, $loc['apartmentName']);
+        // 20240123 E_Add
         // 20220914 S_Update
         // 権利の種類
         /*
@@ -1150,6 +1154,10 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $cell = setCell(null, $sheet, 'b_address', $currentColumn, $endColumn, $currentRow, $endRow, '');
         // 家屋番号<-Empty
         $cell = setCell($cell, $sheet, 'b_buildingNumber', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 20240123 S_Add
+        // 建物の名称<-Empty
+        $cell = setCell($cell, $sheet, 'b_apartmentName', $currentColumn, $endColumn, $currentRow, $endRow, '');
+        // 20240123 E_Add
         // 20220912 S_Add
         // 権利の種類<-Empty
         $cell = setCell($cell, $sheet, 'b_rightsForm', $currentColumn, $endColumn, $currentRow, $endRow, '');

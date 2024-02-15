@@ -325,6 +325,77 @@ foreach($payContracts as $pay) {
         }
     }
 }
+// 20240131 S_Add
+if(sizeof($payList1) > 0) {
+    $payList1Temp = $payList1;
+    $payList1 = [];
+    foreach ($payList1Temp as $key => $payDetail) {
+        $payList1Temp[$key]['contractorName'] = getContractor($newList, $payDetail);
+    }
+
+    foreach($payList1Temp as $payDetail) {
+        // 「立退き費用」の場合、key=支払先+契約者
+        if($payDetail['paymentCode'] == '1103'){
+            $key = $payDetail['supplierName'] . '-' . $payDetail['contractorName'];
+        }
+        else{
+            $key = $payDetail['pid'];
+        }
+
+        // グルーピングを行う
+        if(!isset($payList1[$key])) {
+            $payList1[$key] = $payDetail;
+        } else {
+            $group = $payList1[$key];
+            // 金額を加算
+            $group['payPriceTax'] = intval($group['payPriceTax']) + intval($payDetail['payPriceTax']);
+            $group['withholdingTax'] = intval($group['withholdingTax']) + intval($payDetail['withholdingTax']);
+            
+            // 支払時期を設定
+            if(isset($payDetail['paymentSeason'])){
+                if(isset($group['paymentSeason'])){
+                    $group['paymentSeason'] = $group['paymentSeason'] . '、' . $payDetail['paymentSeason'];
+                }
+                else{
+                    $group['paymentSeason'] = $payDetail['paymentSeason'];
+                }
+            }
+
+            // 最小支払予定日を設定
+            if($group['contractDay'] == '' || strcmp($group['contractDay'], $payDetail['contractDay']) > 0){
+                $group['contractDay'] = $payDetail['contractDay'];
+            }
+            
+            // 最小支払日を設定
+            if($group['contractFixDay'] == '' || strcmp($group['contractFixDay'], $payDetail['contractFixDay']) > 0){
+                $group['contractFixDay'] = $payDetail['contractFixDay'];
+            }
+
+            // 備考を設定
+            if(isset($payDetail['detailRemarks'])){
+                if(isset($group['detailRemarks'])){
+                    $group['detailRemarks'] = $group['detailRemarks'] . '、' . $payDetail['detailRemarks'];
+                }
+                else{
+                    $group['detailRemarks'] = $payDetail['detailRemarks'];
+                }
+            }
+            
+            $payList1[$key] = $group;
+        }
+    }
+    
+    foreach ($payList1 as $key => $payDetail) {
+        if($payDetail['paymentCode'] == '1103'){
+            $payList1[$key]['paymentSeason'] = null;
+            $payList1[$key]['contractDay'] = null;
+            $payList1[$key]['contractFixDay'] = null;
+            $payList1[$key]['detailRemarks'] = null;
+        }
+    }
+}
+// 20240131 E_Add
+
 // データが複数ある場合、ブロックをコピー
 if(sizeof($payList1) > 1) {
     copyBlockWithVal($sheet, $payPos, 1, sizeof($payList1) - 1, 21);
@@ -347,7 +418,10 @@ foreach($payList1 as $payDetail) {
 //    $sheet->setCellValue('H'.$payPos, formatYenNumber($payDetail['payPrice']));
     // 20220725 S_Update
 //    $sheet->setCellValue('I'.$payPos, $payDetail['payPriceTax']);
-    $sheet->setCellValue('I'.$payPos, intval($payDetail['payPriceTax']) + intval($payDetail['withholdingTax']));
+    // 20240131 S_Update
+    // $sheet->setCellValue('I'.$payPos, intval($payDetail['payPriceTax']) + intval($payDetail['withholdingTax']));
+    $sheet->setCellValue('I'.$payPos, intval($payDetail['payPriceTax']));
+    // 20240131 E_Update
     // 20220725 E_Update
     // 支払時期
     $sheet->setCellValue('J'.$payPos, $payDetail['paymentSeason']);
@@ -371,7 +445,10 @@ foreach($payList1 as $payDetail) {
     $sheet->setCellValue('L'.$payPos, convert_jpdt($payDetail['contractFixDay']));
     // 20201107 E_Update
     // 契約者
-    $sheet->setCellValue('M'.$payPos, getContractor($newList, $payDetail));
+    // 20240131 S_Update
+    // $sheet->setCellValue('M'.$payPos, getContractor($newList, $payDetail));
+    $sheet->setCellValue('M'.$payPos, $payDetail['contractorName']);
+    // 20240131 E_Update
     // 備考
     $sheet->setCellValue('P'.$payPos, $payDetail['detailRemarks']);
     $payPos++;
@@ -442,7 +519,10 @@ foreach($payList2 as $payDetail) {
 //    $sheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
     // 20220725 S_Update
 //    $sheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
-    $sheet->setCellValue('H'.$payPos, intval($payDetail['payPriceTax']) + intval($payDetail['withholdingTax']));
+    // 20240131 S_Update
+    // $sheet->setCellValue('H'.$payPos, intval($payDetail['payPriceTax']) + intval($payDetail['withholdingTax']));
+    $sheet->setCellValue('H'.$payPos, intval($payDetail['payPriceTax']));
+    // 20240131 E_Update
     // 20220725 E_Update
     // 支払方法
     $sheet->setCellValue('I'.$payPos, getPayMethodName($payDetail['paymentMethod']));
@@ -602,7 +682,10 @@ foreach($contracts as $contract) {
 //            $clonedWorksheet->setCellValue('G'.$payPos, formatYenNumber($payDetail['payPrice']));
             // 20220725 S_Update
 //            $clonedWorksheet->setCellValue('H'.$payPos, $payDetail['payPriceTax']);
-            $clonedWorksheet->setCellValue('H'.$payPos, intval($payDetail['payPriceTax']) + intval($payDetail['withholdingTax']));
+            // 20240131 S_Update
+            // $clonedWorksheet->setCellValue('H'.$payPos, intval($payDetail['payPriceTax']) + intval($payDetail['withholdingTax']));
+            $clonedWorksheet->setCellValue('H'.$payPos, intval($payDetail['payPriceTax']));
+            // 20240131 E_Update
             // 20220725 E_Update
             // 支払時期
             $clonedWorksheet->setCellValue('I'.$payPos, $payDetail['paymentSeason']);

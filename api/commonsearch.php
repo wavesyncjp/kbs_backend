@@ -51,6 +51,12 @@ else if ($searchFor == 'searchContractSimple') {
 	$datas = searchContractSimple($param);
 }
 // 20231027 E_Add
+// 20240123 S_Add
+// 賃貸契約取得(計算用)
+else if ($searchFor == 'getRentalContractsForCalc') {
+	$datas = getRentalContractsForCalc($param->contractInfoPid);
+}
+// 20240123 E_Add
 echo json_encode($datas);
 
 /**

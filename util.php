@@ -2174,4 +2174,356 @@ function exitByDuplicate(){
 	exit;
 }
 // 20231110 E_Add
+
+// 20240123 S_Add
+/**
+ * 賃貸契約取得(計算用)
+ * @param contractInfoPid 契約情報Pid
+ */
+function getRentalContractsForCalc($contractInfoPid) {
+	$queryRC = ORM::for_table(TBLRENTALCONTRACT)
+	->table_alias('p1')
+	->select('p1.*')
+	->select('p2.roomNo')
+	->left_outer_join(TBLRESIDENTINFO, array('p1.residentInfoPid', '=', 'p2.pid'), 'p2')
+	->where_null('p1.deleteDate')
+	->where_null('p2.deleteDate');
+	
+	$queryRC = $queryRC->where('p1.contractInfoPid', $contractInfoPid);
+	$results = $queryRC->order_by_expr('LENGTH(p2.roomNo) asc, p2.roomNo asc, p1.pid asc')->findArray();
+
+	return $results;
+}
+
+/**
+ * 振込名を取得
+ */
+function getForRegisterRental($locationInfoPid)
+{
+	$query = ORM::for_table(TBLCONTRACTDETAILINFO)
+		->table_alias('p1')
+		->select('p1.contractInfoPid','contractInfoPid')
+		->select('p2.pid','contractSellerInfoPid')
+		->inner_join(TBLCONTRACTSELLERINFO, array('p1.contractInfoPid', '=', 'p2.contractInfoPid'), 'p2')
+		->where_null('p1.deleteDate')
+		->where_null('p2.deleteDate')
+		->where('p1.locationInfoPid', $locationInfoPid)
+		->where('p1.contractDataType', '01')
+		;
+	// 20240201 S_Update	
+	// return $query->order_by_asc('p2.pid')->find_one();
+	$resultTemp = $query->order_by_asc('p2.pid')->find_many();
+	
+	if ($resultTemp !== null && count($resultTemp) > 0){
+		$distinctContractInfoPids = [];
+		foreach ($resultTemp as $row) {
+			$distinctContractInfoPids[] = $row['contractInfoPid'];
+		}
+
+		$distinctContractInfoPids = array_unique($distinctContractInfoPids);
+
+		// 20240214 S_Add
+		$distinctContractSellerInfoPids = [];
+		foreach ($resultTemp as $row) {
+			$distinctContractSellerInfoPids[] = $row['contractSellerInfoPid'];
+		}
+
+		$distinctContractSellerInfoPids = array_unique($distinctContractSellerInfoPids);	
+		// 20240214 E_Add
+		if(count($distinctContractInfoPids) == 1){
+			// 20240214 S_Add
+			if(count($distinctContractSellerInfoPids) > 1){
+				$resultTemp[0]['contractSellerInfoPid'] = null;
+			}
+			// 20240214 E_Add
+			return $resultTemp[0];
+		}
+		else
+		{
+			$obj = $resultTemp[0];
+			$obj->contractInfoPid = null;
+			return $obj; 
+		}
+	}
+	return null;
+	// 20240201 E_Update	
+}
+
+/**
+ * 賃貸契約情報登録
+ */
+function saveRentalContract($param,$isNeedTran = true){
+	$userId = null;
+
+	// 新規登録フラグ
+	$isNew = false;
+
+	// 賃貸入金再作成フラグ
+	$isChangedReceive = false;
+
+	$rentPrice = getRentPrice($param->residentInfoPid);
+	$ownershipRelocationDate = getOwnershipRelocationDate($param->rentalInfoPid);
+
+	if($isNeedTran){
+		ORM::get_db()->beginTransaction();
+	}
+
+	// 賃貸契約処理
+	// 更新
+	if (isset($param->pid) && $param->pid > 0) {
+		$rentalCT = ORM::for_table(TBLRENTALCONTRACT)->find_one($param->pid);
+		setUpdate($rentalCT, $param->updateUserId);
+		$userId = $param->updateUserId;
+
+		//賃料 OR 賃貸契約期間 OR 支払期限　が変更の場合
+		if ($rentalCT->loanPeriodEndDate != $param->loanPeriodEndDate
+			|| $rentalCT->usance != $param->usance
+			|| $rentalCT->paymentDay != $param->paymentDay
+			|| $rentalCT->locationInfoPid != $param->locationInfoPid
+			|| $rentalCT->receiveCode != $param->receiveCode
+		) {
+			$isChangedReceive = true;
+			$receives = ORM::for_table(TBLRENTALRECEIVE)->where('rentalContractPid', $param->pid)->where_null('deleteDate')->find_many();
+		}
+	}
+	// 登録
+	else {
+		$isNew = true;
+		$rentalCT = ORM::for_table(TBLRENTALCONTRACT)->create();
+		setInsert($rentalCT, $param->createUserId);
+		$userId = $param->createUserId;
+	}
+
+	copyData($param, $rentalCT, array('pid', 'roomNo', 'borrowerName', 'locationInfoPidForSearch', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+
+	// 賃貸入金処理
+	// 新規登録　OR 賃貸入金未登録　の場合
+	if ($isNew || ($isChangedReceive && ($receives == null || count($receives) == 0))) {
+		//賃貸契約を登録
+		$rentalCT->save();
+
+		//賃貸入金を準備
+		// 20231027 S_Update
+		// $objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $param->loanPeriodEndDate);
+		$evic = getEvic($rentalCT);
+		$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $evic);
+		// 20231027 E_Update
+
+		foreach ($objs as $obj) {
+			$receiveSave = ORM::for_table(TBLRENTALRECEIVE)->create();
+			setInsert($receiveSave, $userId);
+
+			copyData($obj, $receiveSave, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+			$receiveSave->save();
+		}
+	}
+	else if ($isChangedReceive) {
+		// 既存賃貸入金PID
+		$existedRePids = array();
+
+		// 賃貸入金を準備
+		$evic = getEvic($rentalCT);
+		$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $evic);
+
+		foreach ($objs as $obj) {
+			// 既存賃貸入金をチェック
+			foreach ($receives as $rev) {
+				// 入金月日同じ
+				if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+					$existedRePids[] = $rev->pid;
+				}
+			}
+		}
+
+		//入金済をチェック
+		$paids = array();
+		foreach ($receives as $rev) {
+			// 存在しないデータを削除
+			if (in_array($rev->pid, $existedRePids) == false) {
+				if ($rev->receiveFlg == '1') { //入金済み
+					$paids[] = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
+				}
+			}
+		}
+
+		//入金済の場合、何もしない
+		if (count($paids) > 0) {
+			echo json_encode(array('statusMap' => 'NG', 'msgMap' => '契約期間に指定されている範囲外に、既に入金済の賃料があります。（' . join(',', $paids) . '）'));
+			exit;
+		}
+
+		//賃貸契約を更新
+		$rentalCT->save();
+
+		foreach ($objs as $obj) {
+			$hasRev = false;
+
+			// 既存賃貸入金をチェック
+			foreach ($receives as $rev) {
+				// 入金月日同じ
+				if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+					$hasRev = true;
+
+					// 入金未済,入金コード変更の場合
+					if ($rev->receiveFlg != '1' || $rev->receiveCode != $rentalCT->receiveCode) {
+						$rev->receiveCode = $rentalCT->receiveCode;
+						setUpdate($rev, $userId);
+						$rev->save();
+						break;
+					}
+				}
+			}
+
+			// 賃貸入金存在しない場合、新規登録
+			if ($hasRev == false) {
+				$receiveSave = ORM::for_table(TBLRENTALRECEIVE)->create();
+				setInsert($receiveSave, $userId);
+
+				copyData($obj, $receiveSave, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+				$receiveSave->save();
+			}
+		}
+		// 賃貸入金再作成対象外の場合、削除
+		foreach ($receives as $rev) {
+			// 存在しないデータを削除
+			if (in_array($rev->pid, $existedRePids) == false) {
+				setDelete($rev, $userId);
+				$rev->save();
+			}
+		}
+	}
+	else{
+		//賃貸契約を更新
+		$rentalCT->save();
+	}
+	return $rentalCT;
+}
+
+/**
+ * 立ち退き情報登録
+ */
+function saveEviction($param){
+	$userId = null;
+
+	// 賃貸入金再作成フラグ
+	$isChangedReceive = false;
+	$rentalCT = getRentalContract($param->rentalInfoPid, $param->residentInfoPid, $param->surrenderScheduledDate);
+
+	// 更新
+	if (isset($param->pid) && $param->pid > 0) {
+		$evi = ORM::for_table(TBLEVICTIONINFO)->find_one($param->pid);
+		setUpdate($evi, $param->updateUserId);
+		$userId = $param->updateUserId;
+
+		if(isset($rentalCT)){
+			if ($evi->surrenderDate != $param->surrenderDate
+				|| $evi->surrenderScheduledDate != $param->surrenderScheduledDate
+			) {
+				$isChangedReceive = true;
+				$receives = ORM::for_table(TBLRENTALRECEIVE)->where('rentalContractPid', $rentalCT->pid)->where_null('deleteDate')->find_many();
+			}
+		}
+	}
+	// 登録
+	else {
+		$evi = ORM::for_table(TBLEVICTIONINFO)->create();
+		setInsert($evi, $param->createUserId);
+		$userId = $param->createUserId;
+		if(isset($rentalCT)){
+			if (isset($param->surrenderDate)
+				|| isset($param->surrenderScheduledDate)
+			) {
+				$isChangedReceive = true;
+				$receives = ORM::for_table(TBLRENTALRECEIVE)->where('rentalContractPid', $rentalCT->pid)->where_null('deleteDate')->find_many();
+			}
+		}
+	}
+
+	copyData($param, $evi, array('pid', 'roomNo', 'borrowerName', 'apartmentName', 'evictionFiles', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+	
+	if ($isChangedReceive) {
+		$rentPrice = getRentPrice($param->residentInfoPid);
+		$ownershipRelocationDate = getOwnershipRelocationDate($param->rentalInfoPid);
+
+		// 既存賃貸入金PID
+		$existedRePids = array();
+
+		// 賃貸入金を準備
+		$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $param);
+
+		foreach ($objs as $obj) {
+			// 既存賃貸入金をチェック
+			foreach ($receives as $rev) {
+				// 入金月日同じ
+				if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+					$existedRePids[] = $rev->pid;
+				}
+			}
+		}
+
+		//入金済をチェック
+		$paids = array();
+		foreach ($receives as $rev) {
+			// 存在しないデータを削除
+			if (in_array($rev->pid, $existedRePids) == false) {
+				if ($rev->receiveFlg == '1') { //入金済み
+					$paids[] = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
+				}
+			}
+		}
+
+		//入金済の場合、何もしない
+		if (count($paids) > 0) {
+			echo json_encode(array('statusMap' => 'NG', 'msgMap' => '契約期間に指定されている範囲外に、既に入金済の賃料があります。（' . join(',', $paids) . '）'));
+			exit;
+		}
+
+		//立ち退きを更新
+		$evi->save();
+
+		foreach ($objs as $obj) {
+			$hasRev = false;
+
+			// 既存賃貸入金をチェック
+			foreach ($receives as $rev) {
+				// 入金月日同じ
+				if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+					$hasRev = true;
+
+					// 入金未済,賃料変更の場合
+					// 入金未済,入金コード変更の場合
+					if ($rev->receiveFlg != '1' || $rev->receiveCode != $rentalCT->receiveCode) {
+						$rev->receiveCode = $rentalCT->receiveCode;
+						setUpdate($rev, $userId);
+						$rev->save();
+						break;
+					}
+				}
+			}
+
+			// 賃貸入金存在しない場合、新規登録
+			if ($hasRev == false) {
+				$receiveSave = ORM::for_table(TBLRENTALRECEIVE)->create();
+				setInsert($receiveSave, $userId);
+
+				copyData($obj, $receiveSave, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+				$receiveSave->save();
+			}
+		}
+		// 賃貸入金再作成対象外の場合、削除
+		foreach ($receives as $rev) {
+			// 存在しないデータを削除
+			if (in_array($rev->pid, $existedRePids) == false) {
+				setDelete($rev, $userId);
+				$rev->save();
+			}
+		}
+	}
+	else{
+		$evi->save();
+	}
+	return $evi;
+}
+// 20240123 E_Add
+
 ?>

@@ -173,6 +173,10 @@ foreach($contracts as $contract) {
 	$list_contractorName_outsourcing = getPayContractorName($sellers, $payDetail_outsourcing);   // 複数契約者名（業務委託料）
 	// 20220331 E_Add
 
+	// 20240207 S_Add
+	$renCons = getRentalContractsForCalc($contract['pid']);
+	// 20240207 E_Add
+
 	// 所在地情報を取得
 	$locs = getLocation($contract['pid']);
 	$address = '';          // 所在地
@@ -353,10 +357,10 @@ foreach($contracts as $contract) {
 	$sheet->setSelectedCell('A1');// 初期選択セル設定
 	// 20220529 E_Add
 
-	// 20220529 S_Update
-	// for($i = 0 ; $i < 4; $i++) {
-	for($i = 1 ; $i < 6; $i++) {
-	// 20220529 E_Update
+	// 20240207 S_Update
+	// for($i = 1 ; $i < 6; $i++) {
+	for($i = 1 ; $i <= 6; $i++) {
+	// 20240207 E_Update
 
 		// 20220703 S_Add
 		// 仲介料と業務委託料が未登録の場合、支払依頼書帳票シートは作成しない
@@ -577,6 +581,107 @@ foreach($contracts as $contract) {
 			// 支払確定日（業務委託料）
 			$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji_outsourcing', 1, $endColumn, 1, $endRow, convert_dt($payDetail_outsourcing['contractFixDay'], 'Y年n月j日'));
 		}
+
+		//20240207 S_Add
+		// ・R-A　PK精算シート
+		if($i == 6) {
+			if (empty($renCons)) {
+				$renCons[] = []; 
+			}
+
+			$endRow = 46;   // 最終行数
+			$currentRow = 1;
+
+			// 物件所在地
+			$cell = setCell(null, $sheet, 'addressAndBlockOrBuildingNumber', 1, $endColumn, 1, $endRow, $addressAndBlockOrBuildingNumber);
+			// 支払確定日
+			$cell = setCell(null, $sheet, 'contractFixDay_jpdt_kanji', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($contractFixDay, 'n月j日'));
+			$cell = setCell(null, $sheet, 'list_contractorNameDot', 1, $endColumn, 1, $endRow, $list_contractorNameDot);
+		
+			//敷金・保証金 START
+			$pos = 0;
+			$currentColumn = 2;
+			$cell = searchCell($sheet, 'roomNo', $currentColumn, $endColumn, $currentRow, $endRow);
+			if($cell != null) {
+				$currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+				$currentRow = $cell->getRow();
+				$pos = $currentRow;
+			}
+
+			if(sizeof($renCons) > 1) {
+				$endRow += sizeof($renCons) - 1;
+				copyBlockWithVal($sheet, $currentRow, 1, sizeof($renCons) - 1, $endColumn);
+			}
+			$cell = null;
+
+			foreach($renCons as $renCon) {
+			
+				//部屋番号
+				$cell = setCell($cell, $sheet, 'roomNo', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['roomNo']);
+			
+				//敷金・保証金		
+				$cell = setCell($cell, $sheet, 'SuccessionDepositAndSecurity', $currentColumn, $endColumn, $currentRow, $endRow, intval($renCon['deposit']) + intval($renCon['securityDeposit']));
+			
+				$currentRow++;
+			}
+			//敷金・保証金	合計
+			$cell = setCell($cell, $sheet, 'sumSuccessionDepositAndSecurity', $currentColumn, $endColumn, $currentRow, $endRow, '=SUM(C' . $pos . ':C' . ($currentRow - 1) . ')');
+			//敷金・保証金 END
+
+			$currentRow += 2;
+			//月額賃料等 END
+			$cell = null;
+			//決済日
+			$decisionDay = $contract['decisionDay'];
+			if (!empty($decisionDay) && strlen($decisionDay) === 8) {
+				$year = substr($decisionDay, 0, 4);
+				$month = substr($decisionDay, 4, 2);
+				$day = substr($decisionDay, 6, 2);
+			
+				$decisionDay = $year . "/" . $month . "/" . $day;
+			}
+			$cell = setCell($cell, $sheet, 'decisionDay', $currentColumn, $endColumn, $currentRow, $endRow, $decisionDay);
+			
+			//月額賃料等 START
+			$cell = null;
+			$cell = searchCell($sheet, 'roomNo', $currentColumn, $endColumn, $currentRow, $endRow);
+			if($cell != null) {
+				$currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+				$currentRow = $cell->getRow();
+				$pos = $currentRow;
+			}
+
+			if(sizeof($renCons) > 1) {
+				$endRow += sizeof($renCons) - 1;
+				copyBlockWithVal($sheet, $currentRow, 1, sizeof($renCons) - 1, $endColumn);
+			}
+			$cell = null;
+
+			foreach($renCons as $renCon) {
+			
+				//部屋番号
+				$cell = setCell($cell, $sheet, 'roomNo', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['roomNo']);
+
+				//賃料（消費税込）	
+				$cell = setCell($cell, $sheet, 'rentPriceInTax', $currentColumn, $endColumn, $currentRow, $endRow, intval($renCon['rentPrice']) + intval($renCon['rentPriceTax']));
+
+				//管理費等（消費税込）			
+				$cell = setCell($cell, $sheet, 'managementFeeAndCondoFeeInTax', $currentColumn, $endColumn, $currentRow, $endRow, intval($renCon['condoFee']) + intval($renCon['managementFee']) + intval($renCon['condoFeeTax']) + intval($renCon['managementFeeTax']));
+			
+				//賃料（消費税込） + 管理費等（消費税込）		
+				$cell = setCell($cell, $sheet, 'sumPriceAndFeeRow', $currentColumn, $endColumn, $currentRow, $endRow, '=SUM(C' . $currentRow . ':E' . $currentRow. ')');
+
+				$currentRow++;
+			}
+			//賃料（消費税込）合計
+			$cell = setCell($cell, $sheet, 'sumRentPriceInTax', $currentColumn, $endColumn, $currentRow, $endRow, '=SUM(C' . $pos . ':C' . ($currentRow - 1) . ')');
+			//管理費等（消費税込）合計
+			$cell = setCell($cell, $sheet, 'sumManagementFeeAndCondoFeeInTax', $currentColumn, $endColumn, $currentRow, $endRow, '=SUM(E' . $pos . ':E' . ($currentRow - 1) . ')');
+			//賃料（消費税込）合計 + 管理費等（消費税込）合計
+			$cell = setCell($cell, $sheet, 'sumPriceAndFeeAll', $currentColumn, $endColumn, $currentRow, $endRow, '=SUM(C' . $currentRow . ':E' . $currentRow . ')');
+
+		}
+		//20240207 E_Add
 		$sheet->setSelectedCell('A1');// 初期選択セル設定
 	}
 }
@@ -591,8 +696,10 @@ for($i = 0 ; $i < 5; $i++) {
 	$spreadsheet->removeSheetByIndex(0);
 }
 */
-// R-A　PK精算シートを保持
-$sheet = clone $spreadsheet->getSheet(6);
+// 20240207 S_Delete
+// // R-A　PK精算シートを保持
+// $sheet = clone $spreadsheet->getSheet(6);
+// 20240207 E_Delete
 
 // コピー元シート削除
 // 20220529 S_Update
@@ -607,8 +714,10 @@ for($i = 1 ; $i < 7; $i++) {
 // 20220529 E_Update
 // 20220331 E_Update
 
-// R-A　PK精算シートを一番右へ追加
-$spreadsheet->addSheet($sheet);
+// 20240207 S_Delete
+// // R-A　PK精算シートを一番右へ追加
+// $spreadsheet->addSheet($sheet);
+// 20240207 E_Delete
 
 $spreadsheet->setActiveSheetIndex(0);// 初期選択シート設定
 

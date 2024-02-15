@@ -16,7 +16,10 @@ $query = ORM::for_table(TBLRENTALINFO)
 			->select('p1.*')
 			->select('p3.bukkenNo')
 			->select('p3.contractBukkenNo')
-			->inner_join(TBLCONTRACTINFO, array('p1.contractInfoPid', '=', 'p2.pid'), 'p2')
+			// 20240201 S_Update
+			// ->inner_join(TBLCONTRACTINFO, array('p1.contractInfoPid', '=', 'p2.pid'), 'p2')
+			->left_outer_join(TBLCONTRACTINFO, array('p1.contractInfoPid', '=', 'p2.pid'), 'p2')
+			// 20240201 E_Update
 			->inner_join(TBLTEMPLANDINFO, array('p1.tempLandInfoPid', '=', 'p3.pid'), 'p3')
 			->where_null('p1.deleteDate')
 			->where_null('p2.deleteDate')

@@ -30,6 +30,12 @@ $codeLists['accountType'] = $accountTypeCodeList;
 $paymentTypeList = ORM::for_table(TBLPAYMENTTYPE)->select('paymentCode', 'codeDetail')->select('paymentName', 'name')->where_null('deleteDate')->findArray();
 $codeLists['paymentType'] = $paymentTypeList;
 
+// 20240213 S_Add
+// 支払依頼書出力パターン
+$patternCodeList = ORM::for_table(TBLCODE)->select('codeDetail')->select('name')->select('displayOrder')->where('code', 'SYS501')->where_null('deleteDate')->order_by_asc('displayOrder')->findArray();
+// 20240213 E_Add
+
+$targetsSum = [];// 20240213 Add
 $targets = [];
 
 // 支払契約詳細情報を取得
@@ -50,14 +56,58 @@ foreach($payDetails as $payDetail) {
 		$groups = [];
 		$groups[] = $payDetail;
 		$targets[$key] = $groups;
+		$targetsSum[$key] = $groups;// 20240213 Add
 	} else {
+		$groupsSum = $targetsSum[$key];// 20240213 Add
+
 		$groups = $targets[$key];
 		$groups[] = $payDetail;
 		$targets[$key] = $groups;
+
+		// 20240213 S_Add
+		$existsCode = false;
+
+		foreach ($patternCodeList as $row) {
+			if ($row['codeDetail'] === $payDetail['paymentCode']) {
+				$existsCode = true;
+				break; 
+			}
+		}
+
+		if($existsCode){
+			$displayOrder = null;
+			foreach ($patternCodeList as $pattern) {
+				if ($pattern['codeDetail'] == $payDetail['paymentCode']) {
+					$displayOrder = $pattern['displayOrder'];
+					break;
+				}
+			}
+
+			foreach ($groupsSum as $keySub => $payDetailSub) {
+				foreach ($patternCodeList as $row) {
+					if ($row['codeDetail'] === $payDetailSub['paymentCode']) {
+						$groupsSum[$keySub]['payPriceTax'] = intval($groupsSum[$keySub]['payPriceTax']) + intval($payDetail['payPriceTax']);
+						$groupsSum[$keySub]['withholdingTax'] = intval($groupsSum[$keySub]['withholdingTax']) + intval($payDetail['withholdingTax']);
+						
+						if($displayOrder < $row['displayOrder']){
+							$groupsSum[$keySub]['paymentCode'] = $payDetail['paymentCode'];
+							$groupsSum[$keySub]['detailRemarks'] = $payDetail['detailRemarks'];
+						}
+						break; 
+					}
+				}
+			}
+		}
+		else{
+			$groupsSum[] = $payDetail;
+		}
+		$targetsSum[$key] = $groupsSum;
+		// 20240213 E_Add
 	}
 }
 
-foreach ($targets as $key => $groups) {
+// 20240213 S_Add
+foreach ($targetsSum as $key => $groups) {
 	// 支払依頼書帳票シートをコピー
 	$sheet = clone $spreadsheet->getSheet(0);
 	$title = $sheet->getTitle();
@@ -68,23 +118,14 @@ foreach ($targets as $key => $groups) {
 	$pos = 4;
 	// データが複数ある場合、ブロックをコピー
 	if(sizeof($groups) > 1) {
-		// 20220712 S_Update
-//		copyBlockWithVal($sheet, $pos, 1, sizeof($groups) - 1, 14);
 		copyBlockWithVal($sheet, $pos, 1, sizeof($groups) - 1, 17);
-		// 20220712 E_Update
 	}
 	// 合計の計算式
 	$sheet->setCellValue('J' . ($pos + sizeof($groups)), '=SUM(J' . $pos . ':J' . ($pos + sizeof($groups) - 1) . ')');
 	$sheet->setCellValue('K' . ($pos + sizeof($groups)), '=SUM(K' . $pos . ':K' . ($pos + sizeof($groups) - 1) . ')');
-	// 20220707 S_Update
-	// $sheet->setCellValue('L' . ($pos + sizeof($groups)), '=SUM(L' . $pos . ':L' . ($pos + sizeof($groups) - 1) . ')');
 	$sheet->setCellValue('M' . ($pos + sizeof($groups)), '=SUM(M' . $pos . ':M' . ($pos + sizeof($groups) - 1) . ')');
-	// 20220707 E_Update
 
-	// 20220703 S_Update
-	// $endColumn = 13;// 最終列数
 	$endColumn = 16;// 最終列数
-	// 20220703 E_Update
 	$endRow = 43;   // 最終行数
 
 	foreach($groups as $payDetail) {
@@ -92,18 +133,7 @@ foreach ($targets as $key => $groups) {
 		$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->select('infoStaff')->findOne($payDetail['tempLandInfoPid'])->asArray();
 		// 支払契約情報を取得
 		$pay = ORM::for_table(TBLPAYCONTRACT)->findOne($payDetail['payContractPid'])->asArray();
-		// 20220627 S_Update
-		/*
-		// 仕入契約情報を取得
-		$contract = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
-		$contractFormNumber = '';// 契約書番号
-		$locs = [];
-		if(sizeof($contract) > 0) {
-			$contractFormNumber = $contract['contractFormNumber'];
-			// 所在地情報を取得
-			$locs = getLocation($contract['pid']);
-		}
-		*/
+		
 		$contracts = [];
 		if(!empty($pay['contractInfoPid'])) {
 			// 仕入契約情報を取得
@@ -112,10 +142,8 @@ foreach ($targets as $key => $groups) {
 		else if(!empty($payDetail['contractor'])) {
 			$contractor = $payDetail['contractor'];
 			$contractSellerInfoPids = [];
-			// 20221110 S_Add
 			$explode1st = [];
 			$explode2nd = [];
-			// 20221110 E_Add
 			// |で分割されている場合
 			if(strpos($contractor, '|') !== false) {
 				$explode1st = explode('|', $contractor);
@@ -124,13 +152,10 @@ foreach ($targets as $key => $groups) {
 			foreach($explode1st as $explode1) {
 				// ,で分割されている場合
 				if(strpos($explode1, ',') !== false) {
-					// 20220708 S_Update
-//					$explode2nd = explode(',', $explode1);
 					$temps = explode(',', $explode1);
 					foreach($temps as $temp) {
 						$explode2nd[] = $temp;
 					}
-					// 20220708 S_Update
 				}
 				else $explode2nd[] = $explode1;
 			}
@@ -164,31 +189,21 @@ foreach ($targets as $key => $groups) {
 			// 所在地情報を取得
 			$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $payDetail['tempLandInfoPid'])->where_null('deleteDate')->order_by_asc('displayOrder')->findArray();
 		}
-		// 20220627 E_Update
 		// 所在地
 		$address = '';
 		// 複数地番・複数家屋番号
 		$list_blockOrBuildingNumber = '';
-		// 20220824 S_Add
 		$blockNumber = '';      // 地番
 		$buildingNumber = '';   // 家屋番号
 		$bottomLands = [];
-		// 20220824 E_Add
 		if(sizeof($locs) > 0) {
 			if(sizeof($contracts) > 0) $list_blockOrBuildingNumber = getBuildingNumber($locs, chr(10));
 			$cntLandlocs = 0;
 			$cntNotLandlocs = 0;
-			// 20220707 S_Add
 			$addressLand = '';
 			$addressNotLand = '';
-			// 20220707 E_Add
 			foreach($locs as $loc) {
 				// 区分が01：土地の場合
-				// 20220708 S_Update
-				/*
-				if($loc['locationType'] == '01') $cntLandlocs++;
-				else $cntNotLandlocs++;
-				*/
 				if($loc['locationType'] == '01') {
 					$cntLandlocs++;
 					if($cntLandlocs == 1)
@@ -199,31 +214,16 @@ foreach ($targets as $key => $groups) {
 				}
 				else {
 					$cntNotLandlocs++;
-					// 20220824 S_Update
-					// if($cntNotLandlocs == 1) $addressNotLand = $loc['address'];
 					if($cntLandlocs == 0 && $cntNotLandlocs == 1)
 					{
 						$addressNotLand = $loc['address'];
 						$buildingNumber = $loc['buildingNumber'];// 家屋番号 20220824 Add
 					}
-					// 20220824 E_Update
-					// 20220824 S_Add
 					if(!empty($loc['bottomLandPid'])) $bottomLands[] = $loc;
-					// 20220824 E_Add
 				}
-				// 20220708 E_Update
-				// 20220707 S_Delete
-				/*
-				if($cntLandlocs == 1) $address = $loc['address'];
-				if($cntLandlocs == 0 && $cntNotLandlocs == 1) $address = $loc['address'];
-				*/
-				// 20220707 E_Delete
 			}
-			// 20220707 S_Add
 			if($addressLand != '') $address = $addressLand;
 			else $address = $addressNotLand;
-			// 20220707 E_Add
-			// 20220824 S_Add
 			$blockOrBuildingNumber = $blockNumber;
 			if(empty($blockOrBuildingNumber) && !empty($buildingNumber)) $blockOrBuildingNumber = '（' . $buildingNumber . '）';
 			$addressAndBlockOrBuildingNumber = $address . $blockOrBuildingNumber;// 所在地+地番/家屋番号
@@ -239,7 +239,6 @@ foreach ($targets as $key => $groups) {
 					break;
 				}
 			}
-			// 20220824 E_Add
 		}
 		// 居住表示
 		// $cell = setCell(null, $sheet, 'supplierAddress', 1, $endColumn, 1, $endRow, $pay['supplierAddress']);
@@ -249,10 +248,7 @@ foreach ($targets as $key => $groups) {
 		// 支払確定日
 		$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_dt($payDetail['contractFixDay'], 'Y年n月j日'));
 		// 担当<-物件担当者
-		// 20220703 S_Update
-		// $cell = setCell(null, $sheet, 'payContractStaffName', 1, $endColumn, 1, $endRow, getUserName($pay['userId']));
 		$cell = setCell(null, $sheet, 'infoStaffName', 1, $endColumn, 1, $endRow, getInfoStaff($bukken['infoStaff']));
-		// 20220703 E_Update
 
 		// 日時
 		$contractFixDateTime = convert_dt($payDetail['contractFixDay'], 'Y/m/d');
@@ -260,7 +256,6 @@ foreach ($targets as $key => $groups) {
 		if(!empty($payDetail['contractFixTime'])) $contractFixDateTime .= $payDetail['contractFixTime'] . '～';
 		$cell = setCell(null, $sheet, 'contractFixDateTime', 1, $endColumn, 1, $endRow, $contractFixDateTime);
 		// 契約書番号
-		// $cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contractFormNumber);
 		$cell = setCell(null, $sheet, 'list_contractFormNumber', 1, $endColumn, 1, $endRow, $list_contractFormNumber);
 		// 複数地番/複数家屋番号
 		$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
@@ -277,14 +272,256 @@ foreach ($targets as $key => $groups) {
 		// 口座番号<-口座
 		$cell = setCell(null, $sheet, 'accountName', 1, $endColumn, 1, $endRow, $pay['accountName']);
 		// 代金
-		$cell = setCell(null, $sheet, 'payPriceTax', 1, $endColumn, 1, $endRow, $payDetail['payPriceTax']);
+		$cell = setCell(null, $sheet, 'payPriceTax', 1, $endColumn, 1, $endRow, intval($payDetail['payPriceTax']) - intval($payDetail['withholdingTax']));
 		// 送金金額
-		$cell = setCell(null, $sheet, 'payPriceTaxPlusFixedTax', 1, $endColumn, 1, $endRow, $payDetail['payPriceTax']);
+		$cell = setCell(null, $sheet, 'payPriceTaxPlusFixedTax', 1, $endColumn, 1, $endRow, intval($payDetail['payPriceTax']) - intval($payDetail['withholdingTax']));
 		// 支払名称
 		$cell = setCell(null, $sheet, 'paymentName', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail['paymentCode']));
 		// 備考
 		$cell = setCell(null, $sheet, 'detailRemarks', 1, $endColumn, 1, $endRow, $payDetail['detailRemarks']);
+	}
+	$sheet->setSelectedCell('A1');// 初期選択セル設定
+}
+// 20240213 E_Add
 
+foreach ($targets as $key => $groups) {
+	// 20240213 S_Delete
+// 	// 支払依頼書帳票シートをコピー
+// 	$sheet = clone $spreadsheet->getSheet(0);
+// 	$title = $sheet->getTitle();
+// 	$sheet->setTitle($title . '_' . $key);
+// 	$spreadsheet->addSheet($sheet);
+
+// 	// 開始セル行
+// 	$pos = 4;
+// 	// データが複数ある場合、ブロックをコピー
+// 	if(sizeof($groups) > 1) {
+// 		// 20220712 S_Update
+// //		copyBlockWithVal($sheet, $pos, 1, sizeof($groups) - 1, 14);
+// 		copyBlockWithVal($sheet, $pos, 1, sizeof($groups) - 1, 17);
+// 		// 20220712 E_Update
+// 	}
+// 	// 合計の計算式
+// 	$sheet->setCellValue('J' . ($pos + sizeof($groups)), '=SUM(J' . $pos . ':J' . ($pos + sizeof($groups) - 1) . ')');
+// 	$sheet->setCellValue('K' . ($pos + sizeof($groups)), '=SUM(K' . $pos . ':K' . ($pos + sizeof($groups) - 1) . ')');
+// 	// 20220707 S_Update
+// 	// $sheet->setCellValue('L' . ($pos + sizeof($groups)), '=SUM(L' . $pos . ':L' . ($pos + sizeof($groups) - 1) . ')');
+// 	$sheet->setCellValue('M' . ($pos + sizeof($groups)), '=SUM(M' . $pos . ':M' . ($pos + sizeof($groups) - 1) . ')');
+// 	// 20220707 E_Update
+	// 20240213 E_Delete
+
+	// 20220703 S_Update
+	// $endColumn = 13;// 最終列数
+	$endColumn = 16;// 最終列数
+	// 20220703 E_Update
+	$endRow = 43;   // 最終行数
+
+	foreach($groups as $payDetail) {
+		// 20240213 S_Delete
+// 		// 土地情報を取得
+// 		$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->select('infoStaff')->findOne($payDetail['tempLandInfoPid'])->asArray();
+// 		// 支払契約情報を取得
+// 		$pay = ORM::for_table(TBLPAYCONTRACT)->findOne($payDetail['payContractPid'])->asArray();
+// 		// 20220627 S_Update
+// 		/*
+// 		// 仕入契約情報を取得
+// 		$contract = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
+// 		$contractFormNumber = '';// 契約書番号
+// 		$locs = [];
+// 		if(sizeof($contract) > 0) {
+// 			$contractFormNumber = $contract['contractFormNumber'];
+// 			// 所在地情報を取得
+// 			$locs = getLocation($contract['pid']);
+// 		}
+// 		*/
+// 		$contracts = [];
+// 		if(!empty($pay['contractInfoPid'])) {
+// 			// 仕入契約情報を取得
+// 			$contracts[] = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
+// 		}
+// 		else if(!empty($payDetail['contractor'])) {
+// 			$contractor = $payDetail['contractor'];
+// 			$contractSellerInfoPids = [];
+// 			// 20221110 S_Add
+// 			$explode1st = [];
+// 			$explode2nd = [];
+// 			// 20221110 E_Add
+// 			// |で分割されている場合
+// 			if(strpos($contractor, '|') !== false) {
+// 				$explode1st = explode('|', $contractor);
+// 			}
+// 			else $explode1st[] = $contractor;
+// 			foreach($explode1st as $explode1) {
+// 				// ,で分割されている場合
+// 				if(strpos($explode1, ',') !== false) {
+// 					// 20220708 S_Update
+// //					$explode2nd = explode(',', $explode1);
+// 					$temps = explode(',', $explode1);
+// 					foreach($temps as $temp) {
+// 						$explode2nd[] = $temp;
+// 					}
+// 					// 20220708 S_Update
+// 				}
+// 				else $explode2nd[] = $explode1;
+// 			}
+// 			foreach($explode2nd as $explode2) {
+// 				$contractSellerInfoPids[] = $explode2;
+// 			}
+// 			// 仕入契約者情報を取得
+// 			$sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where_in('pid', $contractSellerInfoPids)->where_null('deleteDate')->findArray();
+// 			if(sizeof($sellers) > 0) {
+// 				$contractInfoPids = [];
+// 				foreach($sellers as $seller) {
+// 					$contractInfoPids[] = $seller['contractInfoPid'];
+// 				}
+// 				// 仕入契約情報を取得
+// 				$contracts = ORM::for_table(TBLCONTRACTINFO)->where_in('pid', $contractInfoPids)->where_null('deleteDate')->findArray();
+// 			}
+// 		}
+// 		// 複数契約書番号
+// 		$list_contractFormNumber = '';
+// 		$locs = [];
+// 		if(sizeof($contracts) > 0) {
+// 			$list_contractFormNumber = getContractFormNumber($contracts, chr(10));
+// 			$contractInfoPids = [];
+// 			foreach($contracts as $contract) {
+// 				$contractInfoPids[] = $contract['pid'];
+// 			}
+// 			// 所在地情報を取得
+// 			$locs = getLocations($contractInfoPids);
+// 		}
+// 		else if(!empty($payDetail['tempLandInfoPid'])) {
+// 			// 所在地情報を取得
+// 			$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $payDetail['tempLandInfoPid'])->where_null('deleteDate')->order_by_asc('displayOrder')->findArray();
+// 		}
+// 		// 20220627 E_Update
+// 		// 所在地
+// 		$address = '';
+// 		// 複数地番・複数家屋番号
+// 		$list_blockOrBuildingNumber = '';
+// 		// 20220824 S_Add
+// 		$blockNumber = '';      // 地番
+// 		$buildingNumber = '';   // 家屋番号
+// 		$bottomLands = [];
+// 		// 20220824 E_Add
+// 		if(sizeof($locs) > 0) {
+// 			if(sizeof($contracts) > 0) $list_blockOrBuildingNumber = getBuildingNumber($locs, chr(10));
+// 			$cntLandlocs = 0;
+// 			$cntNotLandlocs = 0;
+// 			// 20220707 S_Add
+// 			$addressLand = '';
+// 			$addressNotLand = '';
+// 			// 20220707 E_Add
+// 			foreach($locs as $loc) {
+// 				// 区分が01：土地の場合
+// 				// 20220708 S_Update
+// 				/*
+// 				if($loc['locationType'] == '01') $cntLandlocs++;
+// 				else $cntNotLandlocs++;
+// 				*/
+// 				if($loc['locationType'] == '01') {
+// 					$cntLandlocs++;
+// 					if($cntLandlocs == 1)
+// 					{
+// 						$addressLand = $loc['address'];
+// 						$blockNumber = $loc['blockNumber'];// 地番 20220824 Add
+// 					}
+// 				}
+// 				else {
+// 					$cntNotLandlocs++;
+// 					// 20220824 S_Update
+// 					// if($cntNotLandlocs == 1) $addressNotLand = $loc['address'];
+// 					if($cntLandlocs == 0 && $cntNotLandlocs == 1)
+// 					{
+// 						$addressNotLand = $loc['address'];
+// 						$buildingNumber = $loc['buildingNumber'];// 家屋番号 20220824 Add
+// 					}
+// 					// 20220824 E_Update
+// 					// 20220824 S_Add
+// 					if(!empty($loc['bottomLandPid'])) $bottomLands[] = $loc;
+// 					// 20220824 E_Add
+// 				}
+// 				// 20220708 E_Update
+// 				// 20220707 S_Delete
+// 				/*
+// 				if($cntLandlocs == 1) $address = $loc['address'];
+// 				if($cntLandlocs == 0 && $cntNotLandlocs == 1) $address = $loc['address'];
+// 				*/
+// 				// 20220707 E_Delete
+// 			}
+// 			// 20220707 S_Add
+// 			if($addressLand != '') $address = $addressLand;
+// 			else $address = $addressNotLand;
+// 			// 20220707 E_Add
+// 			// 20220824 S_Add
+// 			$blockOrBuildingNumber = $blockNumber;
+// 			if(empty($blockOrBuildingNumber) && !empty($buildingNumber)) $blockOrBuildingNumber = '（' . $buildingNumber . '）';
+// 			$addressAndBlockOrBuildingNumber = $address . $blockOrBuildingNumber;// 所在地+地番/家屋番号
+// 			if($cntLandlocs > 1) {
+// 				$addressAndBlockOrBuildingNumber .= '　外';
+// 			}
+// 			// 土地に指定がないかつ、底地に指定がある場合
+// 			else if($cntLandlocs == 0 && sizeof($bottomLands) > 0) {
+// 				foreach($bottomLands as $loc) {
+// 					$bottomLand = ORM::for_table(TBLLOCATIONINFO)->find_one($loc['bottomLandPid']);
+// 					$addressAndBlockOrBuildingNumber = $bottomLand['address'] . $bottomLand['blockNumber'];
+// 					if(!empty($loc['buildingNumber'])) $addressAndBlockOrBuildingNumber .= '（家屋番号：' . $loc['buildingNumber'] . '）';
+// 					break;
+// 				}
+// 			}
+// 			// 20220824 E_Add
+// 		}
+// 		// 居住表示
+// 		// $cell = setCell(null, $sheet, 'supplierAddress', 1, $endColumn, 1, $endRow, $pay['supplierAddress']);
+// 		$cell = setCell(null, $sheet, 'address', 1, $endColumn, 1, $endRow, $address);
+// 		// 契約物件番号
+// 		$cell = setCell(null, $sheet, 'contractBukkenNo', 1, $endColumn, 1, $endRow, $bukken['contractBukkenNo']);
+// 		// 支払確定日
+// 		$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji', 1, $endColumn, 1, $endRow, convert_dt($payDetail['contractFixDay'], 'Y年n月j日'));
+// 		// 担当<-物件担当者
+// 		// 20220703 S_Update
+// 		// $cell = setCell(null, $sheet, 'payContractStaffName', 1, $endColumn, 1, $endRow, getUserName($pay['userId']));
+// 		$cell = setCell(null, $sheet, 'infoStaffName', 1, $endColumn, 1, $endRow, getInfoStaff($bukken['infoStaff']));
+// 		// 20220703 E_Update
+
+// 		// 日時
+// 		$contractFixDateTime = convert_dt($payDetail['contractFixDay'], 'Y/m/d');
+// 		if(!empty($contractFixDateTime)) $contractFixDateTime .= '  ';
+// 		if(!empty($payDetail['contractFixTime'])) $contractFixDateTime .= $payDetail['contractFixTime'] . '～';
+// 		$cell = setCell(null, $sheet, 'contractFixDateTime', 1, $endColumn, 1, $endRow, $contractFixDateTime);
+// 		// 契約書番号
+// 		// $cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contractFormNumber);
+// 		$cell = setCell(null, $sheet, 'list_contractFormNumber', 1, $endColumn, 1, $endRow, $list_contractFormNumber);
+// 		// 複数地番/複数家屋番号
+// 		$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
+// 		// 支払先<-取引先名称
+// 		$cell = setCell(null, $sheet, 'supplierName', 1, $endColumn, 1, $endRow, $pay['supplierName']);
+// 		// 振込口座名義<-名義
+// 		$cell = setCell(null, $sheet, 'bankName', 1, $endColumn, 1, $endRow, $pay['bankName']);
+// 		// 銀行・信用金庫等<-銀行名
+// 		$cell = setCell(null, $sheet, 'bank', 1, $endColumn, 1, $endRow, $pay['bank']);
+// 		// 支店
+// 		$cell = setCell(null, $sheet, 'branchName', 1, $endColumn, 1, $endRow, $pay['branchName']);
+// 		// 口座種類<-口座種別
+// 		$cell = setCell(null, $sheet, 'accountTypeName', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['accountType'], $pay['accountType']));
+// 		// 口座番号<-口座
+// 		$cell = setCell(null, $sheet, 'accountName', 1, $endColumn, 1, $endRow, $pay['accountName']);
+// 		// 代金
+// 		// 20240201 S_Update
+// 		// $cell = setCell(null, $sheet, 'payPriceTax', 1, $endColumn, 1, $endRow, $payDetail['payPriceTax']);
+// 		$cell = setCell(null, $sheet, 'payPriceTax', 1, $endColumn, 1, $endRow, intval($payDetail['payPriceTax']) - intval($payDetail['withholdingTax']));
+// 		// 20240201 E_Update
+// 		// 送金金額
+// 		// 20240201 S_Update
+// 		// $cell = setCell(null, $sheet, 'payPriceTaxPlusFixedTax', 1, $endColumn, 1, $endRow, $payDetail['payPriceTax']);
+// 		$cell = setCell(null, $sheet, 'payPriceTaxPlusFixedTax', 1, $endColumn, 1, $endRow, intval($payDetail['payPriceTax']) - intval($payDetail['withholdingTax']));
+// 		// 20240201 S_Update
+// 		// 支払名称
+// 		$cell = setCell(null, $sheet, 'paymentName', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail['paymentCode']));
+// 		// 備考
+// 		$cell = setCell(null, $sheet, 'detailRemarks', 1, $endColumn, 1, $endRow, $payDetail['detailRemarks']);
+
+		//20240213 E_Delete
 		// 領収証シートをコピー
 		$subSheet = clone $spreadsheet->getSheet(1);
 		$subTitle = $subSheet->getTitle();
