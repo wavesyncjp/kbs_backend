@@ -142,7 +142,10 @@ $param = json_decode($postparam);
 // // 20231027 E_Add
 // 	$evi->save();
 // }// 20231027 Add
-$evi = saveEviction();
+// 20240221 S_Update
+// $evi = saveEviction();
+$evi = saveEviction($param);
+// 20240221 E_Update
 // 20240123 E_Update
 echo json_encode(getEvictionInfos($evi->contractInfoPid,$evi->pid));
 ?>
