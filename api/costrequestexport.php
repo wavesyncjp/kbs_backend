@@ -35,6 +35,7 @@ $codeLists['paymentType'] = $paymentTypeList;
 $patternCodeList = ORM::for_table(TBLCODE)->select('codeDetail')->select('name')->select('displayOrder')->where('code', 'SYS501')->where_null('deleteDate')->order_by_asc('displayOrder')->findArray();
 // 20240213 E_Add
 
+$addedSum = false;// 20240220 Add
 $targetsSum = [];// 20240213 Add
 $targets = [];
 
@@ -57,6 +58,15 @@ foreach($payDetails as $payDetail) {
 		$groups[] = $payDetail;
 		$targets[$key] = $groups;
 		$targetsSum[$key] = $groups;// 20240213 Add
+
+		// 20240221 S_Add
+		foreach ($patternCodeList as $row) {
+			if ($row['codeDetail'] === $payDetail['paymentCode']) {
+				$addedSum = true;
+				break; 
+			}
+		}
+		// 20240221 E_Add
 	} else {
 		$groupsSum = $targetsSum[$key];// 20240213 Add
 
@@ -74,7 +84,10 @@ foreach($payDetails as $payDetail) {
 			}
 		}
 
-		if($existsCode){
+		// 20240220 S_Update
+		// if($existsCode){
+		if($existsCode && $addedSum){
+		// 20240220 E_Update
 			$displayOrder = null;
 			foreach ($patternCodeList as $pattern) {
 				if ($pattern['codeDetail'] == $payDetail['paymentCode']) {
@@ -93,6 +106,7 @@ foreach($payDetails as $payDetail) {
 							$groupsSum[$keySub]['paymentCode'] = $payDetail['paymentCode'];
 							$groupsSum[$keySub]['detailRemarks'] = $payDetail['detailRemarks'];
 						}
+						$addedSum = true;// 20240220 Add
 						break; 
 					}
 				}
@@ -100,6 +114,11 @@ foreach($payDetails as $payDetail) {
 		}
 		else{
 			$groupsSum[] = $payDetail;
+			// 20240220 S_Add
+			if($existsCode){
+				$addedSum = true;
+			}
+			// 20240220 E_Add
 		}
 		$targetsSum[$key] = $groupsSum;
 		// 20240213 E_Add

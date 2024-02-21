@@ -334,10 +334,16 @@ if(sizeof($payList1) > 0) {
     }
 
     foreach($payList1Temp as $payDetail) {
-        // 「立退き費用」の場合、key=支払先+契約者
+        // 20240220 S_Update
+        // // 「立退き費用」の場合、key=支払先+契約者
+        // if($payDetail['paymentCode'] == '1103'){
+        //     $key = $payDetail['supplierName'] . '-' . $payDetail['contractorName'];
+        // }
+        // 「立退き費用」の場合、key=支払コード
         if($payDetail['paymentCode'] == '1103'){
-            $key = $payDetail['supplierName'] . '-' . $payDetail['contractorName'];
+            $key = '-' . $payDetail['paymentCode'];
         }
+        // 20240220 E_Update
         else{
             $key = $payDetail['pid'];
         }
@@ -387,6 +393,7 @@ if(sizeof($payList1) > 0) {
     
     foreach ($payList1 as $key => $payDetail) {
         if($payDetail['paymentCode'] == '1103'){
+            $payList1[$key]['supplierName'] = '立退料';// 20240221 Add
             $payList1[$key]['paymentSeason'] = null;
             $payList1[$key]['contractDay'] = null;
             $payList1[$key]['contractFixDay'] = null;
@@ -478,8 +485,18 @@ if(sizeof($payList2) > 0) {
     $payList2Temp = $payList2;
     $payList2 = [];
     foreach($payList2Temp as $payDetail) {
-        // key=支払先+摘要+支払方法
-        $key = $payDetail['supplierName'] . '-' . $payDetail['paymentName'] . '-' . $payDetail['paymentMethod'];
+        // 20240221 S_Update
+        // // key=支払先+摘要+支払方法
+        // $key = $payDetail['supplierName'] . '-' . $payDetail['paymentName'] . '-' . $payDetail['paymentMethod'];
+        // 「立退き費用」の場合、key=支払コード
+        if($payDetail['paymentCode'] == '1103'){
+            $key = '-' . $payDetail['paymentCode'];
+        } 
+        else{
+            // key=支払先+摘要+支払方法
+            $key = $payDetail['supplierName'] . '-' . $payDetail['paymentName'] . '-' . $payDetail['paymentMethod'];
+        }
+        // 20240221 E_Update
         // グルーピングを行う
         if(!isset($payList2[$key])) {
             // 最小支払日・最大支払日を設定
@@ -501,6 +518,18 @@ if(sizeof($payList2) > 0) {
             $payList2[$key] = $group;
         }
     }
+
+    // 20240221 S_Add
+    foreach ($payList2 as $key => $payDetail) {
+        if($payDetail['paymentCode'] == '1103'){
+            $payList2[$key]['supplierName'] = '立退料';
+            $payList2[$key]['paymentSeason'] = null;
+            $payList2[$key]['contractDay'] = null;
+            $payList2[$key]['contractFixDay'] = null;
+            $payList2[$key]['detailRemarks'] = null;
+        }
+    } 
+    // 20240221 E_Add
 }
 // 20220705 E_Add
 
