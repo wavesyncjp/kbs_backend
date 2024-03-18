@@ -37,6 +37,13 @@ else if ($searchFor == 'searchRentalReceive') {
 else if ($searchFor == 'searchRentalContract_Receive') {
 	$datas = getRentalContract_Receives($param->rentalInfoPid);
 }
+// 20240229 S_Add
+// 賃貸契約・入金を取得・立ち退き登録
+else if ($searchFor == 'searchRentalContract_Receive_Eviction') {
+	$datas = getRentalContract_Receives($param->rentalInfoPid);
+	$datas->evictions = getEvictionInfos(null, null,$param->rentalInfoPid);
+}
+// 20240229 E_Add
 // 賃貸の建物名を取得
 else if ($searchFor == 'searchRentalApartment') {
 	$datas = getRentalApartments($param->contractInfoPid);

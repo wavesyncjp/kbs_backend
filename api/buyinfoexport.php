@@ -177,6 +177,21 @@ foreach($contracts as $contract) {
 	$renCons = getRentalContractsForCalc($contract['pid']);
 	// 20240207 E_Add
 
+	// 20240221 S_Add
+	if(!empty($renCons)){
+		$renConsNew = array();
+
+		foreach ($renCons as $rentalCT) {
+			$evic = getEvic($rentalCT);
+			// 立退き情報の明渡日が決済日以前ではない
+			if(!(isset($contract['decisionDay']) && isset($evic['surrenderDate']) && $evic['surrenderDate'] < $contract['decisionDay'])){
+				$renConsNew[] = $rentalCT;
+			}
+		}
+		$renCons = $renConsNew;
+	}
+	// 20240221 E_Add
+
 	// 所在地情報を取得
 	$locs = getLocation($contract['pid']);
 	$address = '';          // 所在地

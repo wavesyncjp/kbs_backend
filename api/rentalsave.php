@@ -10,7 +10,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $postparam = file_get_contents("php://input");
 $param = json_decode($postparam);
 
-$rentalContractsChanged = $param->rentalContractsChanged;// 20231027 Add
+// 20240221 S_Delete
+// $rentalContractsChanged = $param->rentalContractsChanged;// 20231027 Add
+// 20240221 E_Delete
 $rentalReceivesChanged = $param->rentalReceivesChanged;
 
 // 20231010 S_Add
@@ -19,7 +21,15 @@ $isChangedOwnerDate = false;// 所有権移転日変更フラグ
 $rentalReceiveAllDeleteObj = array();// 全部賃貸入金削除データ
 $rentalReceiveAllDeletePid = array();// 全部賃貸入金削除Pid
 $rentalReceiveAllNewObj = array();// 全部賃貸入金（新規）
-// 20231010 E_Add
+// 20231012 S_Add
+$rentalReceiveAllUpdateObj = array();// 全部賃貸入金（更新）
+$rentalReceivesChangedPid =array();// 全部賃貸入金変更Pid（画面更新）
+if($isChangedReceive){
+	foreach ($rentalReceivesChanged as $revChanged) {
+		$rentalReceivesChangedPid[] = $revChanged->pid;
+	}
+}
+// 20240312 E_Add
 
 $userId = null;
 
@@ -78,9 +88,15 @@ if($isChangedOwnerDate){
 		// 20231027 S_Update
 		// $objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $rentalCT->loanPeriodEndDate);
 		$evic = getEvic($rentalCT);
+		
 		$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $evic);
 		// 20231027 E_Update
 	
+		// 20240311 S_Add
+		$minReceiveMonth = getMinReceiveMonth($objs);
+		$maxReceiveMonth = getMaxReceiveMonth($evic);
+		// 20240311 E_Add
+
 		$receives = array();
 		$existedRePids = array();
 
@@ -91,13 +107,24 @@ if($isChangedOwnerDate){
 		}
 
 		foreach ($objs as $obj) {
+			
 			$isExists = false;
 
 			// 既存賃貸入金をチェック
 			foreach ($receives as $rev) {
 				// 入金月日同じ
 				if (in_array($rev->pid, $existedRePids) == false) {
-					if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+					// 20240312 S_Update
+					// if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+					if ($rev->receiveMonth == $obj->receiveMonth) {
+						//未入金　かつ　入金日変更 かつ　画面で変更した入金リストが含まない
+						if($rev->receiveFlg != '1' && $rev->receiveDay != $obj->receiveDay){
+							if(!$isChangedReceive || ($isChangedReceive && !in_array($rev->pid, $rentalReceivesChangedPid))){
+								$rev->receiveDay = $obj->receiveDay;
+								$rentalReceiveAllUpdateObj[] = $rev;
+							}
+						}
+					// 20240312 E_Update
 						$existedRePids[] = $rev->pid;
 						$isExists = true;
 					}
@@ -127,16 +154,33 @@ if($isChangedOwnerDate){
 						}
 					}
 
-					if(!$isSkip){
-						$tmp = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
-						if (in_array($tmp, $paids) == false) {
-							$paids[] = $tmp;
+					// 20240312 S_Update
+					// if(!$isSkip){
+					// 	$tmp = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
+					// 	if (in_array($tmp, $paids) == false) {
+					// 		$paids[] = $tmp;
+					// 	}
+					// }
+					if(isOutOfRangeReceiveMonth($rev->receiveMonth, $minReceiveMonth, $maxReceiveMonth)){
+						// 入金済を未入金に変更の場合、削除
+						if($isSkip){
+							$rentalReceiveAllDeleteObj[] = $rev;
+							$rentalReceiveAllDeletePid[] = $rev->pid;
+						}
+						else{// 登録できない
+							$tmp = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
+							if (in_array($tmp, $paids) == false) {
+								$paids[] = $tmp;
+							}	
 						}
 					}
+					// 20240312 E_Update
 				}
 				else{
-					$rentalReceiveAllDeleteObj[] = $rev;
-					$rentalReceiveAllDeletePid[] = $rev->pid;
+					if(isOutOfRangeReceiveMonth($rev->receiveMonth, $minReceiveMonth, $maxReceiveMonth)){// 20240307 Add
+						$rentalReceiveAllDeleteObj[] = $rev;
+						$rentalReceiveAllDeletePid[] = $rev->pid;
+					}// 20240307 Add
 				}
 			}
 		}
@@ -149,10 +193,7 @@ if($isChangedOwnerDate){
 }
 // 20231010 E_Add
 
-// 20231027 S_Add
-// copyData($param, $rental, array('pid', 'rentalContracts', 'rentalReceives', 'rentalReceivesChanged', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 copyData($param, $rental, array('pid', 'rentalContracts', 'rentalReceives', 'rentalContractsChanged', 'rentalReceivesChanged', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
-// 20231027 E_Add
 $rental->save();
 
 // 所在地情報PIDを変更の場合、賃貸契約の入居者情報PID、所在地情報PIDをクリア
@@ -202,21 +243,23 @@ if ($isChangedLocPid) {
 	}
 }
 // 20231027 S_Add
-else if(isset($rentalContractsChanged)){
-	foreach ($rentalContractsChanged as $rcon) {
-		ORM::raw_execute("update " . TBLRESIDENTINFO . " set updateUserId = " . $param->updateUserId . ",updateDate = now()" . ",rentPrice = " . $rcon->rentPriceRefMap . " where deleteDate is null and pid = ". $rcon->residentInfoPid);
-		ORM::raw_execute("update " . TBLRENTALRECEIVE . " set updateUserId = " . $param->updateUserId . ",updateDate = now()" . ",receivePrice = " . $rcon->rentPriceRefMap . " where receiveFlg = '0' and deleteDate is null and rentalContractPid = ". $rcon->pid);
+// 20240221 S_Delete
+// else if(isset($rentalContractsChanged)){
+// 	foreach ($rentalContractsChanged as $rcon) {
+// 		ORM::raw_execute("update " . TBLRESIDENTINFO . " set updateUserId = " . $param->updateUserId . ",updateDate = now()" . ",rentPrice = " . $rcon->rentPriceRefMap . " where deleteDate is null and pid = ". $rcon->residentInfoPid);
+// 		ORM::raw_execute("update " . TBLRENTALRECEIVE . " set updateUserId = " . $param->updateUserId . ",updateDate = now()" . ",receivePrice = " . $rcon->rentPriceRefMap . " where receiveFlg = '0' and deleteDate is null and rentalContractPid = ". $rcon->pid);
 		
-		//これから入金したいデータは入金金額を更新
-		if($isChangedReceive){
-			foreach ($rentalReceivesChanged as $rev) {
-				if($rev->rentalContractPid == $rcon->pid && $rev->receiveFlg == '1'){
-					$rev->receivePrice = $rcon->rentPriceRefMap;
-				}
-			}	
-		}
-	}
-}
+// 		//これから入金したいデータは入金金額を更新
+// 		if($isChangedReceive){
+// 			foreach ($rentalReceivesChanged as $rev) {
+// 				if($rev->rentalContractPid == $rcon->pid && $rev->receiveFlg == '1'){
+// 					$rev->receivePrice = $rcon->rentPriceRefMap;
+// 				}
+// 			}	
+// 		}
+// 	}
+// }
+// 20240221 E_Delete
 // 20231027 E_Add
 
 // 賃貸入金を更新
@@ -230,13 +273,25 @@ if (!$isChangedLocPid && $isChangedReceive) {
 
 	foreach ($rentalReceivesChanged as $rev) {
 		if (in_array($rev->pid, $rentalReceiveAllDeletePid) == false) {
-			$revDB = ORM::for_table(TBLRENTALRECEIVE)->find_one($rev->pid);
-			$receiveFlgDB = $revDB->receiveFlg;// 20231010 Add
+			// 20240229 S_Add
+			if($rev->pid < 1){
+				$revDB = ORM::for_table(TBLRENTALRECEIVE)->create();
+				setInsert($revDB, $userId);
 
-			setUpdate($revDB, $userId);
-			$revDB->receiveFlg = $rev->receiveFlg;
-			$revDB->receiveDay = $rev->receiveDay;// 20231010 Add
-			$revDB->save();
+				copyData($rev, $revDB, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+				$revDB->save();
+			}
+			else{
+			// 20240229 E_Add
+				$revDB = ORM::for_table(TBLRENTALRECEIVE)->find_one($rev->pid);
+				$receiveFlgDB = $revDB->receiveFlg;// 20231010 Add
+
+				setUpdate($revDB, $userId);
+				$revDB->receiveFlg = $rev->receiveFlg;
+				$revDB->receiveDay = $rev->receiveDay;// 20231010 Add
+				$revDB->receivePrice = $rev->receivePrice;// 20240221 Add
+				$revDB->save();
+			}// 20240229 Add
 
 			if ($rev->receiveFlg == '1') { //入金済
 				// 20231010 S_Add
@@ -246,6 +301,12 @@ if (!$isChangedLocPid && $isChangedReceive) {
 					$revConDetail = ORM::for_table(TBLRECEIVECONTRACTDETAIL)->where_null('deleteDate')->where('rentalReceivePid', $revDB->pid)->find_one();
 					if ($revConDetail != null) {
 						setUpdate($revConDetail, $userId);
+						// 20240221 S_Add
+						$price_Tax = getPrice_Tax($rev->receiveCode, $rev->receiveDay, $rev->receivePrice);
+						$revConDetail->receivePrice = $price_Tax->price; //入金金額（税別）
+						$revConDetail->receiveTax = $price_Tax->tax; //消費税
+						$revConDetail->receivePriceTax = $rev->receivePrice; //入金金額（税込）
+						// 20240221 E_Add
 						$revConDetail->contractFixDay = $rev->receiveDay; //入金確定日
 						$revConDetail->save();
 					}
@@ -280,14 +341,16 @@ if (!$isChangedLocPid && $isChangedReceive) {
 			}
 			else {
 				//入金契約詳細情報を削除
-				$revConDetail = ORM::for_table(TBLRECEIVECONTRACTDETAIL)->where_null('deleteDate')->where('rentalReceivePid', $revDB->pid)->find_one();
-				if ($revConDetail != null) {
-					if (!in_array($revConDetail->receiveContractPid, $receiveContractPids)) {
-						$receiveContractPids[] = $revConDetail->receiveContractPid;
-					}
+				if($rev->pid > 0){// 20240229 Add
+					$revConDetail = ORM::for_table(TBLRECEIVECONTRACTDETAIL)->where_null('deleteDate')->where('rentalReceivePid', $revDB->pid)->find_one();
+					if ($revConDetail != null) {
+						if (!in_array($revConDetail->receiveContractPid, $receiveContractPids)) {
+							$receiveContractPids[] = $revConDetail->receiveContractPid;
+						}
 
-					$revConDetail->delete();
-				}
+						$revConDetail->delete();
+					}
+				}// 20240229 Add
 			}
 		}
 	}
@@ -315,6 +378,14 @@ if (!$isChangedLocPid && $isChangedOwnerDate) {
 		setDelete($rev, $userId);
 		$rev->save();
 	}
+
+	// 20240311 S_Update
+	// 範囲内データを更新
+	foreach ($rentalReceiveAllUpdateObj as $rev) {
+		setUpdate($rev, $userId);
+		$rev->save();
+	}
+	// 20240311 E_Update
 
 	// 範囲内データを登録
 	foreach ($rentalReceiveAllNewObj as $obj) {

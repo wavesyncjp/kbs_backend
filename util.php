@@ -1,4 +1,5 @@
 <?php
+error_reporting(0);
 function endsWith($needle, $haystack) {
 	return preg_match('/' . preg_quote($needle, '/') . '$/', $haystack);
 }
@@ -1577,6 +1578,9 @@ function getRentalContracts($rentalInfoPid, $rentalContractPid) {
 			foreach ($results as &$renCon) {
 				$evic = getEvic($renCon);
 				$renCon['roomRentExemptionStartDateEvicMap'] = isset($evic) ? $evic->roomRentExemptionStartDate : '';
+				// 20240228 S_Add 明渡日
+				$renCon['surrenderDateEvicMap'] = isset($evic) ? $evic->surrenderDate : '';
+				// 20240228 E_Add
 			}
 		}
 		// 20231101 E_Add
@@ -1825,25 +1829,39 @@ function createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $
 	}
 
 	// 賃貸契約終了日
-	// 20231106 S_Add
-	$loanPeriodEndDate = $rentalCT->loanPeriodEndDate;
+	// 20240229 S_Update
+	// // 20231106 S_Add
+	// $loanPeriodEndDate = $rentalCT->loanPeriodEndDate;
 	
-	// 明渡日YYMM
-	$surrenderDateYYMM = null;
+	// // 明渡日YYMM
+	// $surrenderDateYYMM = null;
+	$loanPeriodEndDate = null;
+	// 20240229 E_Update
 
 	if($evic != null){
-		// 明渡予定日
-		if(isset($evic->surrenderScheduledDate) && !empty($evic->surrenderScheduledDate)){
-			$loanPeriodEndDate = $evic->surrenderScheduledDate;
+		// 20240229 S_Update
+		// // 明渡予定日
+		// if(isset($evic->surrenderScheduledDate) && !empty($evic->surrenderScheduledDate)){
+		// 	$loanPeriodEndDate = $evic->surrenderScheduledDate;
+		// }
+		// // 明渡日
+		// if(isset($evic->surrenderDate) && !empty($evic->surrenderDate)){
+		// 	$surrenderDateYYMM = substr($evic->surrenderDate, 0, 6);
+
+		// 	if(!isset($evic->surrenderScheduledDate) || empty($evic->surrenderScheduledDate) || $evic->surrenderDate > $evic->surrenderScheduledDate){
+		// 		$loanPeriodEndDate = $evic->surrenderDate;
+		// 	}
+		// }
+
+		// 賃貸免除開始日
+		if(isset($evic->roomRentExemptionStartDate) && !empty($evic->roomRentExemptionStartDate)){
+			$loanPeriodEndDate = date('Ymd', strtotime("-1 months", strtotime($evic->roomRentExemptionStartDate)));
 		}
 		// 明渡日
-		if(isset($evic->surrenderDate) && !empty($evic->surrenderDate)){
-			$surrenderDateYYMM = substr($evic->surrenderDate, 0, 6);
-
-			if(!isset($evic->surrenderScheduledDate) || empty($evic->surrenderScheduledDate) || $evic->surrenderDate > $evic->surrenderScheduledDate){
-				$loanPeriodEndDate = $evic->surrenderDate;
-			}
+		else if(isset($evic->surrenderDate) && !empty($evic->surrenderDate)){
+			$loanPeriodEndDate = date('Ymd', strtotime("-1 months", strtotime($evic->surrenderDate)));
 		}
+		// 20240229 E_Update
 	}	
 	if (!isset($loanPeriodEndDate) || empty($loanPeriodEndDate)) {
 		// 一年間
@@ -1889,21 +1907,24 @@ function createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $
 		}
 
 		// 入金日
-		// 20231027 S_Update
-		// $obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
-		if(isset($surrenderDateYYMM)){
-			// 明渡日以降の場合、入金日を設定しない
-			if(substr($dateTemp, 0, 6) > $surrenderDateYYMM){
-				$obj->receiveFlg = '2';
-			}
-			else{
-				$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
-			}
-		}
-		else{
-			$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
-		}
-		// 20231027 E_Update
+		// 20240229 S_Update
+		// // 20231027 S_Update
+		// // $obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
+		// if(isset($surrenderDateYYMM)){
+		// 	// 明渡日以降の場合、入金日を設定しない
+		// 	if(substr($dateTemp, 0, 6) > $surrenderDateYYMM){
+		// 		$obj->receiveFlg = '2';
+		// 	}
+		// 	else{
+		// 		$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
+		// 	}
+		// }
+		// else{
+		// 	$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
+		// }
+		// // 20231027 E_Update
+		$obj->receiveDay = substr($dateTemp, 0, 6) . $dayTemp;
+		// 20240229 E_Update
 
 		$objs[] = $obj;
 	}
@@ -2092,9 +2113,13 @@ function getRentalContract($rentalInfoPid, $residentInfoPid, $surrenderScheduled
 	
 		$query = $query->where('p1.rentalInfoPid', $rentalInfoPid);
 		$query = $query->where('p1.residentInfoPid', $residentInfoPid);
-		$query = $query->where_raw("(p1.loanPeriodEndDate < '". $surrenderScheduledDate ."')");
+		// 20240229 S_Update
+		// $query = $query->where_raw("(p1.loanPeriodEndDate < '". $surrenderScheduledDate ."')");
+		// $obj = $query->order_by_desc('p1.loanPeriodEndDate')->find_one();
+		$query = $query->where_raw("(COALESCE(p1.loanPeriodEndDate,DATE_FORMAT(DATE_ADD(p1.createDate, INTERVAL 11 MONTH), '%Y%m%d')) < '". $surrenderScheduledDate ."')");
+		$obj = $query->order_by_expr("COALESCE(p1.loanPeriodEndDate,DATE_FORMAT(DATE_ADD(p1.createDate, INTERVAL 11 MONTH), '%Y%m%d')) DESC")->find_one();
+		// 20240229 E_Update
 		
-		$obj = $query->order_by_desc('p1.loanPeriodEndDate')->find_one();
 	}
 	return $obj;
 }
@@ -2276,8 +2301,11 @@ function saveRentalContract($param,$isNeedTran = true){
 		$userId = $param->updateUserId;
 
 		//賃料 OR 賃貸契約期間 OR 支払期限　が変更の場合
-		if ($rentalCT->loanPeriodEndDate != $param->loanPeriodEndDate
-			|| $rentalCT->usance != $param->usance
+		// 20240229 S_Update
+		// if ($rentalCT->loanPeriodEndDate != $param->loanPeriodEndDate
+		// 	|| $rentalCT->usance != $param->usance
+		if ($rentalCT->usance != $param->usance
+		// 20240229 E_Update
 			|| $rentalCT->paymentDay != $param->paymentDay
 			|| $rentalCT->locationInfoPid != $param->locationInfoPid
 			|| $rentalCT->receiveCode != $param->receiveCode
@@ -2323,13 +2351,22 @@ function saveRentalContract($param,$isNeedTran = true){
 
 		// 賃貸入金を準備
 		$evic = getEvic($rentalCT);
+		
 		$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $evic);
+		
+		// 20240311 S_Add
+		$minReceiveMonth = getMinReceiveMonth($objs);
+		$maxReceiveMonth = getMaxReceiveMonth($evic);
+		// 20240311 E_Add
 
 		foreach ($objs as $obj) {
 			// 既存賃貸入金をチェック
 			foreach ($receives as $rev) {
 				// 入金月日同じ
-				if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+				// 20240311 S_Update
+				// if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+				if ($rev->receiveMonth == $obj->receiveMonth) {
+				// 20240311 E_Update
 					$existedRePids[] = $rev->pid;
 				}
 			}
@@ -2340,7 +2377,10 @@ function saveRentalContract($param,$isNeedTran = true){
 		foreach ($receives as $rev) {
 			// 存在しないデータを削除
 			if (in_array($rev->pid, $existedRePids) == false) {
-				if ($rev->receiveFlg == '1') { //入金済み
+				// 20240311 S_Update
+				// if ($rev->receiveFlg == '1') { //入金済み
+				if ($rev->receiveFlg == '1' && isOutOfRangeReceiveMonth($rev->receiveMonth, $minReceiveMonth, $maxReceiveMonth)) { //入金済み　及び　範囲外
+				// 20240311 E_Update
 					$paids[] = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
 				}
 			}
@@ -2356,22 +2396,38 @@ function saveRentalContract($param,$isNeedTran = true){
 		$rentalCT->save();
 
 		foreach ($objs as $obj) {
+
 			$hasRev = false;
 
 			// 既存賃貸入金をチェック
 			foreach ($receives as $rev) {
-				// 入金月日同じ
-				if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+				// 20240311 S_Update
+				// // 入金月日同じ
+				// if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+				// 	$hasRev = true;
+
+				// 	// 入金未済,入金コード変更の場合
+				// 	if ($rev->receiveFlg != '1' || $rev->receiveCode != $rentalCT->receiveCode) {
+				// 		$rev->receiveCode = $rentalCT->receiveCode;
+				// 		setUpdate($rev, $userId);
+				// 		$rev->save();
+				// 		break;
+				// 	}
+				// }
+				// 入金月同じ
+				if ($rev->receiveMonth == $obj->receiveMonth) {
 					$hasRev = true;
 
-					// 入金未済,入金コード変更の場合
-					if ($rev->receiveFlg != '1' || $rev->receiveCode != $rentalCT->receiveCode) {
+					// 入金未済の場合
+					if ($rev->receiveFlg != '1') {
 						$rev->receiveCode = $rentalCT->receiveCode;
+						$rev->receiveDay = $obj->receiveDay;
 						setUpdate($rev, $userId);
 						$rev->save();
 						break;
 					}
 				}
+				// 20240311 E_Update
 			}
 
 			// 賃貸入金存在しない場合、新規登録
@@ -2383,10 +2439,14 @@ function saveRentalContract($param,$isNeedTran = true){
 				$receiveSave->save();
 			}
 		}
+
 		// 賃貸入金再作成対象外の場合、削除
 		foreach ($receives as $rev) {
 			// 存在しないデータを削除
-			if (in_array($rev->pid, $existedRePids) == false) {
+			// 20240311 S_Update
+			// if (in_array($rev->pid, $existedRePids) == false) {
+			if (in_array($rev->pid, $existedRePids) == false && isOutOfRangeReceiveMonth($rev->receiveMonth, $minReceiveMonth, $maxReceiveMonth)) {
+			// 20240311 E_Update
 				setDelete($rev, $userId);
 				$rev->save();
 			}
@@ -2417,7 +2477,10 @@ function saveEviction($param){
 
 		if(isset($rentalCT)){
 			if ($evi->surrenderDate != $param->surrenderDate
-				|| $evi->surrenderScheduledDate != $param->surrenderScheduledDate
+				// 20240229 S_Update
+				// || $evi->surrenderScheduledDate != $param->surrenderScheduledDate
+				|| $evi->roomRentExemptionStartDate != $param->roomRentExemptionStartDate
+				// 20240229 E_Update
 			) {
 				$isChangedReceive = true;
 				$receives = ORM::for_table(TBLRENTALRECEIVE)->where('rentalContractPid', $rentalCT->pid)->where_null('deleteDate')->find_many();
@@ -2431,7 +2494,10 @@ function saveEviction($param){
 		$userId = $param->createUserId;
 		if(isset($rentalCT)){
 			if (isset($param->surrenderDate)
-				|| isset($param->surrenderScheduledDate)
+				// 20240229 S_Update
+				// || isset($param->surrenderScheduledDate)
+				|| isset($param->roomRentExemptionStartDate)
+				// 20240229 E_Update
 			) {
 				$isChangedReceive = true;
 				$receives = ORM::for_table(TBLRENTALRECEIVE)->where('rentalContractPid', $rentalCT->pid)->where_null('deleteDate')->find_many();
@@ -2450,12 +2516,21 @@ function saveEviction($param){
 
 		// 賃貸入金を準備
 		$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $param);
+		
+		// 20240311 S_Add
+		$minReceiveMonth = getMinReceiveMonth($objs);
+		$maxReceiveMonth = getMaxReceiveMonth($evi);
+		// 20240311 E_Add
 
 		foreach ($objs as $obj) {
+
 			// 既存賃貸入金をチェック
 			foreach ($receives as $rev) {
 				// 入金月日同じ
-				if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+				// 20240311 S_Update
+				// if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+				if ($rev->receiveMonth == $obj->receiveMonth) {
+				// 20240311 E_Update
 					$existedRePids[] = $rev->pid;
 				}
 			}
@@ -2466,7 +2541,10 @@ function saveEviction($param){
 		foreach ($receives as $rev) {
 			// 存在しないデータを削除
 			if (in_array($rev->pid, $existedRePids) == false) {
-				if ($rev->receiveFlg == '1') { //入金済み
+				// 20240311 S_Update
+				// if ($rev->receiveFlg == '1') { //入金済み
+				if ($rev->receiveFlg == '1' && isOutOfRangeReceiveMonth($rev->receiveMonth, $minReceiveMonth, $maxReceiveMonth)) { //入金済み　及び　範囲外
+				// 20240311 E_Update
 					$paids[] = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
 				}
 			}
@@ -2486,19 +2564,34 @@ function saveEviction($param){
 
 			// 既存賃貸入金をチェック
 			foreach ($receives as $rev) {
+				// 20240311 S_Update
+				// // 入金月日同じ
+				// if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+				// 	$hasRev = true;
+
+				// 	// 入金未済,賃料変更の場合
+				// 	// 入金未済,入金コード変更の場合
+				// 	if ($rev->receiveFlg != '1' || $rev->receiveCode != $rentalCT->receiveCode) {
+				// 		$rev->receiveCode = $rentalCT->receiveCode;
+				// 		setUpdate($rev, $userId);
+				// 		$rev->save();
+				// 		break;
+				// 	}
+				// }
 				// 入金月日同じ
-				if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+				if ($rev->receiveMonth == $obj->receiveMonth) {
 					$hasRev = true;
 
-					// 入金未済,賃料変更の場合
-					// 入金未済,入金コード変更の場合
-					if ($rev->receiveFlg != '1' || $rev->receiveCode != $rentalCT->receiveCode) {
+					// 入金未済
+					if ($rev->receiveFlg != '1') {
 						$rev->receiveCode = $rentalCT->receiveCode;
+						$rev->receiveDay = $obj->receiveDay;
 						setUpdate($rev, $userId);
 						$rev->save();
 						break;
 					}
 				}
+				// 20240311 E_Update
 			}
 
 			// 賃貸入金存在しない場合、新規登録
@@ -2510,10 +2603,14 @@ function saveEviction($param){
 				$receiveSave->save();
 			}
 		}
+
 		// 賃貸入金再作成対象外の場合、削除
 		foreach ($receives as $rev) {
 			// 存在しないデータを削除
-			if (in_array($rev->pid, $existedRePids) == false) {
+			// 20240311 S_Update
+			// if (in_array($rev->pid, $existedRePids) == false) {
+			if (in_array($rev->pid, $existedRePids) == false && isOutOfRangeReceiveMonth($rev->receiveMonth, $minReceiveMonth, $maxReceiveMonth)) {
+			// 20240311 E_Update
 				setDelete($rev, $userId);
 				$rev->save();
 			}
@@ -2525,5 +2622,53 @@ function saveEviction($param){
 	return $evi;
 }
 // 20240123 E_Add
+
+// 20240311 S_Add
+/**
+ * 最初の入金月
+ */
+function getMinReceiveMonth($rentalReceives){
+	$result = null;
+
+	if($rentalReceives != null && count($rentalReceives) > 0){
+		$result = $rentalReceives[0]->receiveMonth;
+	}
+	return $result;
+}
+
+/**
+ * 最後の入金月の一か月後
+ */
+function getMaxReceiveMonth($evic){
+	$result = null;
+
+	if($evic != null){
+		//賃貸免除開始日
+		if(isset($evic->roomRentExemptionStartDate) && $evic->roomRentExemptionStartDate != ''){
+			$result = $evic->roomRentExemptionStartDate;
+		}
+		//明渡日
+		else if(isset($evic->surrenderDate) && $evic->surrenderDate != ''){
+			$result = $evic->surrenderDate;
+		}
+	}
+	if($result != null && strlen($result) > 6){
+		$result = substr($result, 0, 6);
+	}
+	return $result;
+}
+
+/**
+ * 入金月 < 入金開始月 OR 入金月 >= 入金終了月
+ * 入金月: receiveMonth
+ * 入金開始月: minReceiveMonth
+ * 入金終了月: maxReceiveMonth
+ */
+function isOutOfRangeReceiveMonth($receiveMonth, $minReceiveMonth, $maxReceiveMonth){
+	return $minReceiveMonth == null || $receiveMonth < $minReceiveMonth
+	      || ($maxReceiveMonth != null && $receiveMonth >= $maxReceiveMonth);
+}
+
+// 20240311 E_Add
 
 ?>

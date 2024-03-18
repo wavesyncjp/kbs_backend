@@ -97,15 +97,19 @@ if(isset($param->residents)) {
     // 入居者情報ループ
     $residentPos = 1;
     foreach($param->residents as $resident){
-        $isChangeRentPrice = false;// 20231010 Add
+        // 20240221 S_Delete
+        // $isChangeRentPrice = false;// 20231010 Add
+        // 20240221 E_Delete
 
         if(isset($resident->pid) && $resident->pid > 0) {
             $residentSave = ORM::for_table(TBLRESIDENTINFO)->find_one($resident->pid);
             setUpdate($residentSave, $param->updateUserId);
 
-            // 20231010 S_Add
-            $isChangeRentPrice = $residentSave->rentPrice != $param->rentPrice;
-            // 20231010 E_Add
+            // 20240221 S_Delete
+            // // 20231010 S_Add
+            // $isChangeRentPrice = $residentSave->rentPrice != $param->rentPrice;
+            // // 20231010 E_Add
+            // 20240221 E_Delete
         }
         else {
             $residentSave = ORM::for_table(TBLRESIDENTINFO)->create();
@@ -125,11 +129,13 @@ if(isset($param->residents)) {
         
         $residentPos++;
         
-        // 20231010 S_Add
-        if($isChangeRentPrice){
-            ORM::raw_execute("update " . TBLRENTALRECEIVE . " set updateUserId = " . $param->updateUserId . ",updateDate = now()" . ",receivePrice = " . $residentSave->rentPrice . " where receiveFlg = '0' and deleteDate is null and rentalContractPid in (select pid from " . TBLRENTALCONTRACT." where deleteDate is null and residentInfoPid = ". $residentSave->pid .")");
-        }
-        // 20231010 E_Add
+        // 20240221 S_Delete
+        // // 20231010 S_Add
+        // if($isChangeRentPrice){
+        //     ORM::raw_execute("update " . TBLRENTALRECEIVE . " set updateUserId = " . $param->updateUserId . ",updateDate = now()" . ",receivePrice = " . $residentSave->rentPrice . " where receiveFlg = '0' and deleteDate is null and rentalContractPid in (select pid from " . TBLRENTALCONTRACT." where deleteDate is null and residentInfoPid = ". $residentSave->pid .")");
+        // }
+        // // 20231010 E_Add
+        // 20240221 E_Delete
     }
 }
 // 削除
