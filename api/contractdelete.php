@@ -66,6 +66,16 @@ if(isset($param->pid) && $param->pid != ''){
 	else {
 		echo "DELETE CONTRACTSELLER ERROR";
 	}
+
+	// 20240328 S_Add
+	// 賃貸情報の削除
+	$rentals = ORM::for_table(TBLRENTALINFO)->where('contractInfoPid', $param->pid)->where_null('deleteDate')->findArray();
+	if(isset($rentals)){
+		foreach($rentals as $ren){
+			deleteRental($ren['pid'], $param->deleteUserId);
+		}
+	}
+	// 20240328 E_Add
 }
 else
 {

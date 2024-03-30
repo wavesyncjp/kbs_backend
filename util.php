@@ -2671,4 +2671,42 @@ function isOutOfRangeReceiveMonth($receiveMonth, $minReceiveMonth, $maxReceiveMo
 
 // 20240311 E_Add
 
+// 20243028 S_Add
+function deleteRental($pid,$userId){
+		
+	// 賃貸削除
+	$obj = ORM::for_table(TBLRENTALINFO)->find_one($pid);
+	if (isset($obj)) {
+		setDelete($obj, $userId);
+		$obj->save();
+	}
+
+	// 賃貸契約削除
+	$renCons = ORM::for_table(TBLRENTALCONTRACT)->where('rentalInfoPid', $pid)->where_null('deleteDate')->find_many();
+	if ($renCons != null) {
+		foreach ($renCons as $renCon) {
+			setDelete($renCon, $userId);
+			$renCon->save();
+		}
+	}
+
+	//賃貸入金削除
+	$receives = ORM::for_table(TBLRENTALRECEIVE)->where('rentalInfoPid', $pid)->where_null('deleteDate')->find_many();
+	if ($receives != null) {
+		foreach ($receives as $rev) {
+			setDelete($rev, $userId);
+			$rev->save();
+		}
+	}
+
+	//立退き削除
+	$evics = ORM::for_table(TBLEVICTIONINFO)->where('rentalInfoPid', $pid)->where_null('deleteDate')->find_many();
+	if ($evics != null) {
+		foreach ($evics as $item) {
+			setDelete($item, $userId);
+			$item->save();
+		}
+	}
+}
+// 20243028 E_Add
 ?>
