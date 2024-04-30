@@ -214,6 +214,7 @@ foreach($renRevGroups as $renRevGroup) {
             $cell = setCell($cell, $sheet, 'receiveDay_' . $i, $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($detail->receiveDay, 'Y/m/d'), $detail->isDisable ? $color : null);
         }
 
+        $endRow += 1;// 20240426 Add
         for ($i = 1; $i <= 12; $i++) {
             $detail = $rev->details[$i];
             //金額			
@@ -364,7 +365,9 @@ function getRentalReceiveForExport($rentalInfoPid) {
 
                     $roomRentExemptionStartDate = isset($evic) ? $evic->roomRentExemptionStartDate : '';
                     
-                    $isDisable = isset($roomRentExemptionStartDate) && !empty($roomRentExemptionStartDate) && substr($roomRentExemptionStartDate, 0, 6) <= $rev['receiveMonth'];
+                    // 20240426 S_Delete
+                    // $isDisable = isset($roomRentExemptionStartDate) && !empty($roomRentExemptionStartDate) && substr($roomRentExemptionStartDate, 0, 6) <= $rev['receiveMonth'];
+                    // 20240426 E_Delete
 
                     $key = $y.'_'.$rev['roomNo'].'_'.$rev['rentalContractPid'];
 					
@@ -378,7 +381,21 @@ function getRentalReceiveForExport($rentalInfoPid) {
 
                             $objDay->receiveDay = null;
                             $objDay->receivePrice = null;
-                            $objDay->isDisable = false;
+                            // 20240426 S_Update
+                            // $objDay->isDisable = false;
+                            if(isset($roomRentExemptionStartDate) && !empty($roomRentExemptionStartDate)){
+                                $ym = $y . ($i < 10 ? '0' : '') . $i;
+                                if(isBeginDayInMonth($roomRentExemptionStartDate)){
+                                    $objDay->isDisable = substr($roomRentExemptionStartDate, 0, 6) <= $ym;
+                                }
+                                else {
+                                    $objDay->isDisable = substr($roomRentExemptionStartDate, 0, 6) < $ym;
+                                }
+                            }
+                            else{
+                                $objDay->isDisable = false;
+                            }
+                            // 20240426 E_Update
 
                             $details[$i] = $objDay;
                         }
@@ -405,7 +422,9 @@ function getRentalReceiveForExport($rentalInfoPid) {
                                 $detail->receiveDay = $receiveDay;
                                 $detail->receivePrice = $receivePrice;
                             }
-                            $detail->isDisable = $isDisable; 
+                            // 20240426 S_Delete
+                            // $detail->isDisable = $isDisable; 
+                            // 20240426 E_Delete
                         }
                     }
 				}

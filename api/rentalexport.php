@@ -35,6 +35,11 @@ $newline = "\n";
 // 賃貸情報を取得
 $ren = ORM::for_table(TBLRENTALINFO)->findOne($param->pid)->asArray();
 
+// 20240404 S_Add
+// 契約者名
+$contractorName = getContractorName($ren['contractSellerInfoPid']);
+// 20240404 E_Add
+
 //契約方法
 $contractMethodList = ORM::for_table(TBLCODE)->select('codeDetail')->select('name')->where('code', '043')->where_null('deleteDate')->findArray();
 //種　別
@@ -119,8 +124,15 @@ foreach($renCons as $renCon) {
     $cell = setCell($cell, $sheet, 'agreementDate', $currentColumn, $endColumn, $currentRow, $endRow, convert_jpdt_kanji($renCon['agreementDate']));
     // 承継年月日
     $cell = setCell($cell, $sheet, 'ownershipRelocationDate', $currentColumn, $endColumn, $currentRow, $endRow, convert_jpdt_kanji($ren['ownershipRelocationDate']));
+    // 20240404 S_Add
+    // 旧所有者
+    $cell = setCell($cell, $sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow, $contractorName);
+    // 20240404 E_Add
     //借主 氏  名				
-    $cell = setCell($cell, $sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['borrowerName']);
+    // 20240404 S_Update
+    // $cell = setCell($cell, $sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['borrowerName']);
+    $cell = setCell($cell, $sheet, 'borrowerName', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['borrowerName']);
+    // 20240404 E_Update
     //借主 TEL				
     $cell = setCell($cell, $sheet, 'borrowerTel', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['borrowerTel']);
     //借主 住  所			
