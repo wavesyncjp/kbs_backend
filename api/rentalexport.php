@@ -37,7 +37,11 @@ $ren = ORM::for_table(TBLRENTALINFO)->findOne($param->pid)->asArray();
 
 // 20240404 S_Add
 // 契約者名
-$contractorName = getContractorName($ren['contractSellerInfoPid']);
+
+// 20240501 S_Update
+// $contractorName = getContractorName($ren['contractSellerInfoPid']);
+$contractorName = getContractorNameCommon($ren['contractSellerInfoPid']);
+// 20240501 E_Update
 // 20240404 E_Add
 
 //契約方法

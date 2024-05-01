@@ -2849,7 +2849,10 @@ function calcAdjustDate($adjustTime, $strDate){
 /**
  * 契約者名を取得
  */
-function getContractorName($pid)
+// 20240501 S_Update
+// function getContractorName($pid)
+function getContractorNameCommon($pid)
+// 20240501 E_Update
 {
 	if(isset($pid)){
 		$query = ORM::for_table(TBLCONTRACTSELLERINFO)
