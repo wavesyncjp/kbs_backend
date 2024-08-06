@@ -140,11 +140,19 @@ foreach ($targetsSum as $key => $groups) {
 		copyBlockWithVal($sheet, $pos, 1, sizeof($groups) - 1, 17);
 	}
 	// 合計の計算式
-	$sheet->setCellValue('J' . ($pos + sizeof($groups)), '=SUM(J' . $pos . ':J' . ($pos + sizeof($groups) - 1) . ')');
+	// 20240806 S_Update
+	// $sheet->setCellValue('J' . ($pos + sizeof($groups)), '=SUM(J' . $pos . ':J' . ($pos + sizeof($groups) - 1) . ')');
+	// $sheet->setCellValue('K' . ($pos + sizeof($groups)), '=SUM(K' . $pos . ':K' . ($pos + sizeof($groups) - 1) . ')');
+	// $sheet->setCellValue('M' . ($pos + sizeof($groups)), '=SUM(M' . $pos . ':M' . ($pos + sizeof($groups) - 1) . ')');
 	$sheet->setCellValue('K' . ($pos + sizeof($groups)), '=SUM(K' . $pos . ':K' . ($pos + sizeof($groups) - 1) . ')');
 	$sheet->setCellValue('M' . ($pos + sizeof($groups)), '=SUM(M' . $pos . ':M' . ($pos + sizeof($groups) - 1) . ')');
+	$sheet->setCellValue('N' . ($pos + sizeof($groups)), '=SUM(N' . $pos . ':N' . ($pos + sizeof($groups) - 1) . ')');
+	// 20240806 E_Update
 
-	$endColumn = 16;// 最終列数
+	// 20240801 S_Update
+	// $endColumn = 16;// 最終列数
+	$endColumn = 17;// 最終列数
+	// 20240801 E_Update
 	$endRow = 43;   // 最終行数
 
 	foreach($groups as $payDetail) {
@@ -157,6 +165,32 @@ foreach ($targetsSum as $key => $groups) {
 		if(!empty($pay['contractInfoPid'])) {
 			// 仕入契約情報を取得
 			$contracts[] = ORM::for_table(TBLCONTRACTINFO)->select('pid')->select('contractFormNumber')->findOne($pay['contractInfoPid'])->asArray();
+			// 20240801 S_Add
+			$contractor = $payDetail['contractor'];
+			$contractSellerInfoPids = [];
+			$explode1st = [];
+			$explode2nd = [];
+			// |で分割されている場合
+			if(strpos($contractor, '|') !== false) {
+				$explode1st = explode('|', $contractor);
+			}
+			else $explode1st[] = $contractor;
+			foreach($explode1st as $explode1) {
+				// ,で分割されている場合
+				if(strpos($explode1, ',') !== false) {
+					$temps = explode(',', $explode1);
+					foreach($temps as $temp) {
+						$explode2nd[] = $temp;
+					}
+				}
+				else $explode2nd[] = $explode1;
+			}
+			foreach($explode2nd as $explode2) {
+				$contractSellerInfoPids[] = $explode2;
+			}
+			// 仕入契約者情報を取得
+			$sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where_in('pid', $contractSellerInfoPids)->where_null('deleteDate')->findArray();
+			// 20240801 E_Add
 		}
 		else if(!empty($payDetail['contractor'])) {
 			$contractor = $payDetail['contractor'];
@@ -278,6 +312,10 @@ foreach ($targetsSum as $key => $groups) {
 		$cell = setCell(null, $sheet, 'list_contractFormNumber', 1, $endColumn, 1, $endRow, $list_contractFormNumber);
 		// 複数地番/複数家屋番号
 		$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
+		// 20240801 S_Add
+		// 地権者（売主）
+		$cell = setCell(null, $sheet, 'contractor', 1, $endColumn, 1, $endRow, !empty($payDetail['contractor']) ? getContractorName($sellers, '、') : '');
+		// 20240801 E_Add
 		// 支払先<-取引先名称
 		$cell = setCell(null, $sheet, 'supplierName', 1, $endColumn, 1, $endRow, $pay['supplierName']);
 		// 振込口座名義<-名義
@@ -698,4 +736,19 @@ function copyBlockWithVal($sheet, $startPos, $blockRowCount, $copyCount, $colums
 		copyRowsWithValue($sheet, $lastPos, $copyPos, $blockRowCount, $colums);
 	}
 }
+
+// 20240528 S_Add
+/**
+ * 契約者取得（指定文字区切り）
+ */
+function getContractorName($lst, $split) {
+	$ret = [];
+	if(isset($lst)) {
+		foreach($lst as $data) {
+			if(!empty($data['contractorName'])) $ret[] = mb_convert_kana($data['contractorName'], 'kvrn');
+		}
+	}
+	return implode($split, $ret);
+}
+// 20240528 E_Add
 ?>
