@@ -140,14 +140,13 @@ foreach ($targetsSum as $key => $groups) {
 		copyBlockWithVal($sheet, $pos, 1, sizeof($groups) - 1, 17);
 	}
 	// 合計の計算式
-	// 20240806 S_Update
+	// 20240905 S_Update
 	// $sheet->setCellValue('J' . ($pos + sizeof($groups)), '=SUM(J' . $pos . ':J' . ($pos + sizeof($groups) - 1) . ')');
 	// $sheet->setCellValue('K' . ($pos + sizeof($groups)), '=SUM(K' . $pos . ':K' . ($pos + sizeof($groups) - 1) . ')');
 	// $sheet->setCellValue('M' . ($pos + sizeof($groups)), '=SUM(M' . $pos . ':M' . ($pos + sizeof($groups) - 1) . ')');
 	$sheet->setCellValue('K' . ($pos + sizeof($groups)), '=SUM(K' . $pos . ':K' . ($pos + sizeof($groups) - 1) . ')');
-	$sheet->setCellValue('M' . ($pos + sizeof($groups)), '=SUM(M' . $pos . ':M' . ($pos + sizeof($groups) - 1) . ')');
-	$sheet->setCellValue('N' . ($pos + sizeof($groups)), '=SUM(N' . $pos . ':N' . ($pos + sizeof($groups) - 1) . ')');
-	// 20240806 E_Update
+	$sheet->setCellValue('L' . ($pos + sizeof($groups)), '=SUM(L' . $pos . ':L' . ($pos + sizeof($groups) - 1) . ')');
+	// 20240905 E_Update
 
 	// 20240801 S_Update
 	// $endColumn = 16;// 最終列数
@@ -340,6 +339,237 @@ foreach ($targetsSum as $key => $groups) {
 	$sheet->setSelectedCell('A1');// 初期選択セル設定
 }
 // 20240213 E_Add
+
+
+// 20240905 S_Add
+$slipRemarks = '';
+$list_contractorNameComma = '';
+$contractType = '0';
+$slipCodes = getCodesCommon('SYS601');
+
+foreach ($targets as $key => $groups) {
+	// 振替伝票シートをコピー
+	$sheet = clone $spreadsheet->getSheet(1);
+	$title = $sheet->getTitle();
+	$sheet->setTitle($title . '_' . $key);
+	$spreadsheet->addSheet($sheet);
+
+	// 開始セル行
+	$endColumn = 11; // 最終列数 
+	$endRow = 10;   // 最終行数
+	$currentRow = 3;
+	$currentColumn = 2;
+	$cell = null;
+	$pos = 4;
+
+	$transferSlipDatas = array();
+
+	foreach($groups as $payDetail) {
+		// 土地情報を取得
+		$bukken = ORM::for_table(TBLTEMPLANDINFO)->select('contractBukkenNo')->select('infoStaff')->findOne($payDetail['tempLandInfoPid'])->asArray();
+		// 支払契約情報を取得
+		$pay = ORM::for_table(TBLPAYCONTRACT)->findOne($payDetail['payContractPid'])->asArray();
+		
+		$contracts = [];
+		$isSetContracts = false;
+		if(!empty($pay['contractInfoPid'])) {
+			// 仕入契約情報を取得
+			$contracts[] = ORM::for_table(TBLCONTRACTINFO)->findOne($pay['contractInfoPid'])->asArray();
+			$isSetContracts = true;
+		}
+
+		if(!empty($payDetail['contractor'])) {
+			$contractor = $payDetail['contractor'];
+			$contractSellerInfoPids = [];
+			$explode1st = [];
+			$explode2nd = [];
+			// |で分割されている場合
+			if(strpos($contractor, '|') !== false) {
+				$explode1st = explode('|', $contractor);
+			}
+			else $explode1st[] = $contractor;
+
+			foreach($explode1st as $explode1) {
+				// ,で分割されている場合
+				if(strpos($explode1, ',') !== false) {
+					$temps = explode(',', $explode1);
+					foreach($temps as $temp) {
+						$explode2nd[] = $temp;
+					}
+				}
+				else $explode2nd[] = $explode1;
+			}
+			foreach($explode2nd as $explode2) {
+				$contractSellerInfoPids[] = $explode2;
+			}
+
+			// 仕入契約者情報を取得
+			$sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where_in('pid', $contractSellerInfoPids)->where_null('deleteDate')->findArray();
+			if(sizeof($sellers) > 0) {
+				$contractInfoPids = [];
+				foreach($sellers as $seller) {
+					$contractInfoPids[] = $seller['contractInfoPid'];
+				}
+
+				// 仕入契約情報を取得
+				if(!$isSetContracts){
+					$contracts = ORM::for_table(TBLCONTRACTINFO)->where_in('pid', $contractInfoPids)->where_null('deleteDate')->findArray();
+				}
+				$list_contractorNameComma = getContractorName($sellers, '、');// 複数契約者名（カンマ区切り）
+			}
+		}
+
+		$locs = [];
+		if(sizeof($contracts) > 0) {
+			$contractInfoPids = [];
+			foreach($contracts as $contract) {
+				$contractInfoPids[] = $contract['pid'];
+			}
+			// 所在地情報を取得
+			$locs = getLocations($contractInfoPids);
+		}
+		else if(!empty($payDetail['tempLandInfoPid'])) {
+			// 所在地情報を取得
+			$locs = ORM::for_table(TBLLOCATIONINFO)->where('tempLandInfoPid', $payDetail['tempLandInfoPid'])->where_null('deleteDate')->order_by_asc('displayOrder')->findArray();
+		}
+
+		// 所在地
+		$address = '';
+		if(sizeof($locs) > 0) {
+			$cntLandlocs = 0;
+			$cntNotLandlocs = 0;
+			$addressLand = '';
+			$addressNotLand = '';
+			foreach($locs as $loc) {
+				// 区分が01：土地の場合
+				if($loc['locationType'] == '01') {
+					$cntLandlocs++;
+					if($cntLandlocs == 1)
+					{
+						$addressLand = $loc['address'];
+					}
+				}
+				else {
+					$cntNotLandlocs++;
+					if($cntLandlocs == 0 && $cntNotLandlocs == 1)
+					{
+						$addressNotLand = $loc['address'];
+					}
+				}
+			}
+			if($addressLand != '') $address = $addressLand;
+			else $address = $addressNotLand;
+		}
+		addSlipData2($transferSlipDatas, $contracts, $payDetail, $pay, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $bukken['contractBukkenNo'], $list_contractorNameComma, '');
+	}
+
+	// 支払確定日
+	$cell = setCell(null, $sheet, 'contractFixDay', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($payDetail['contractFixDay']));
+
+	$cell = null;
+
+	$cell = searchCell($sheet, 'debtorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow);
+	if($cell != null) {
+		$currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+		$currentRow = $cell->getRow();
+		$pos = $currentRow;
+	}
+	$cell = null;
+
+	if(sizeof($transferSlipDatas) == 0) {
+		$transferSlipDatas[] = new stdClass();
+	}
+
+	if(sizeof($transferSlipDatas) > 1) {
+		$endRow += sizeof($transferSlipDatas) * 2;
+		copyBlockWithVal($sheet, $currentRow, 2, sizeof($transferSlipDatas) - 1, $endColumn);
+	}
+
+	// 20240806 S_Add
+	// 初期化: カウンタとプレースホルダー
+	$paymentCounts = [
+		'5002' => 0,// 弁護士報酬
+		'5005' => 0,// 司法書士報酬
+		'3015' => 0// 登録免許税及び印紙代
+	];
+
+	$creditorPayPrice3015 = null;
+	$paymentCodeProcess = null;
+
+	// transferSlipDatas を反復処理してカウントとフィルタリング
+	foreach ($transferSlipDatas as $slipData) {
+		if (isset($slipData->paymentCode)) {
+			switch ($slipData->paymentCode) {
+				case '5002':
+				case '5005':
+					// 支払コード '5002' または '5005' のカウント
+					$paymentCounts[$slipData->paymentCode]++;
+					break;
+				case '3015':
+					// 支払コード '3015' のカウントと価格の保存
+					$paymentCounts['3015']++;
+					$creditorPayPrice3015 = $slipData->creditorPayPrice;
+					break;
+			}
+		}
+	}
+
+	// カウントに基づいて処理する支払コードを決定
+	if ($paymentCounts['3015'] == 1) {
+		if ($paymentCounts['5002'] == 1 && $paymentCounts['5005'] == 0) {
+			$paymentCodeProcess = '5002';
+		} elseif ($paymentCounts['5002'] == 0 && $paymentCounts['5005'] == 1) {
+			$paymentCodeProcess = '5005';
+		}
+
+		// 一致する支払コードの処理
+		if ($paymentCodeProcess !== null && $creditorPayPrice3015 !== null) {
+			foreach ($transferSlipDatas as $slipData) {
+				if ($slipData->paymentCode == $paymentCodeProcess) {
+					// 支払コードが一致する場合、価格を加算
+					$slipData->creditorPayPrice += $creditorPayPrice3015;
+				} elseif ($slipData->paymentCode == '3015') {
+					// 支払コードが '3015' の場合、価格を null に設定
+					$slipData->creditorPayPrice = null;
+					$slipData->creditorKanjyoName = null;
+				}
+			}
+		}
+	}
+	// 20240806 E_Add
+
+	foreach($transferSlipDatas as $slipData) {
+		
+		//借方勘定科目
+		$cell = setCell($cell, $sheet, 'debtorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorKanjyoName);
+		//借方金額
+		$cell = setCell($cell, $sheet, 'debtorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorPayPrice);
+		//貸方勘定科目
+		$cell = setCell($cell, $sheet, 'creditorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorKanjyoName);
+		//貸方金額
+		$cell = setCell($cell, $sheet, 'creditorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayPrice);
+		//摘要
+		$cell = setCell($cell, $sheet, 'remark', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->remark);
+		//備考
+		$cell = setCell($cell, $sheet, 'note', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->note);
+		//借方補助科目
+		$cell = setCell($cell, $sheet, 'debtorKanjyoDetailName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorKanjyoDetailName);
+		//借方消費税
+		$cell = setCell($cell, $sheet, 'debtorPayTax', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorPayTax);
+		//貸方補助科目
+		$cell = setCell($cell, $sheet, 'creditorKanjyoDetailName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorKanjyoDetailName);
+		//貸方消費税
+		$cell = setCell($cell, $sheet, 'creditorPayTax', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayTax);
+	
+		$currentRow += 2;
+	}
+
+	$sheet->setCellValue('B' . $currentRow, '=SUM(B' . $pos . ':B' . ($currentRow - 1) . ')');
+	$sheet->setCellValue('D' . $currentRow, '=SUM(D' . $pos . ':D' . ($currentRow - 1) . ')');
+
+	$sheet->setSelectedCell('A1');// 初期選択セル設定
+}
+// 20240905 E_Add
 
 foreach ($targets as $key => $groups) {
 	// 20240213 S_Delete
@@ -580,7 +810,10 @@ foreach ($targets as $key => $groups) {
 
 		//20240213 E_Delete
 		// 領収証シートをコピー
-		$subSheet = clone $spreadsheet->getSheet(1);
+		// 20240905 S_Update
+		// $subSheet = clone $spreadsheet->getSheet(1);
+		$subSheet = clone $spreadsheet->getSheet(2);
+		// 20240905 E_Update
 		$subTitle = $subSheet->getTitle();
 		$subSheet->setTitle($subTitle . '_' . getCodeTitle($codeLists['paymentType'], $payDetail['paymentCode']) . '(' . $payDetail['pid'] . ')');
 		$spreadsheet->addSheet($subSheet);
@@ -602,7 +835,10 @@ foreach ($targets as $key => $groups) {
 	$sheet->setSelectedCell('A1');// 初期選択セル設定
 }
 
-for($i = 1 ; $i < 3; $i++) {
+// 20240528 E_Add
+// for($i = 1 ; $i < 3; $i++) {
+for($i = 1 ; $i < 4; $i++) {
+// 20240528 E_Add
 	$spreadsheet->removeSheetByIndex(0);
 }
 

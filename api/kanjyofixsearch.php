@@ -32,10 +32,16 @@ if(isset($param->creditorKanjyoDetailName_Like) && $param->creditorKanjyoDetailN
 	$query = $query->where_Like('creditorKanjyoDetailName', $param->creditorKanjyoDetailName_Like.'%');
 }
 
+// 20240802 S_Update
+// //振替フラグ
+// if(isset($param->transFlg) && $param->transFlg !== ''){
+// 	$query = $query->where('transFlg',$param->transFlg);
+// }
 //振替フラグ
-if(isset($param->transFlg) && $param->transFlg !== ''){
-	$query = $query->where('transFlg',$param->transFlg);
+if(isset($param->contractType) && $param->contractType !== ''){
+	$query = $query->where('contractType',$param->contractType);
 }
+// 20240802 E_Update
 
 $kanjyoFixs = $query->order_by_asc('pid')->find_array();
 echo json_encode($kanjyoFixs);

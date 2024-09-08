@@ -2872,4 +2872,424 @@ function isBeginDayInMonth($strDate){
 	return false;
 }
 // 20240426 E_Add
+
+// 20240528 S_Add
+// コードマスタを取得
+function getCodesCommon($code) {
+	$codes = ORM::for_table(TBLCODE)->where('code', $code)->order_by_asc('displayOrder')->findArray();
+	return $codes;
+}
+
+function getNameByCodeDetail($codes, $codeDetail) {
+
+    foreach ($codes as $code) {
+        if (isset($code['codeDetail']) && $code['codeDetail'] == $codeDetail) {
+            if (isset($code['name'])) {
+                return $code['name'];
+            }
+        }
+    }
+
+    return null;
+}
+
+function addSlipData(&$transferSlipDatas, $objData, $objDataType, $slipCodes, $paymentTypes, $slipRemarks, $address, $contractBukkenNo, $names, $priceType, $description, $bankName = '') {
+	$slipData = getSlipDataByCode($objData, $objDataType, $slipCodes, $paymentTypes, $priceType, $slipRemarks, $address, $contractBukkenNo, $names, $description, $bankName);
+    if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
+        $transferSlipDatas[] = $slipData;
+    }
+}
+
+function getSlipDataByCode($objData, $objDataType, $codes, $paymentTypes, $codeDetail, $note,$address, $contractBukkenNo, $names, $contentEx, $bankName = ''){
+	$isUseAfter = false;
+	$data = new stdClass();
+	$data->debtorPayPrice = null;// 借方金額
+	$data->debtorPayTax = null;// 借方消費税
+
+	$data->creditorPayPrice = null;// 貸方金額
+	$data->creditorPayTax = null;// 貸方消費税
+
+	//【売買代金（土地）】
+	if($codeDetail == 'tradingLandPrice'){
+		$data->debtorPayPrice = $objData[$codeDetail];
+		// 仕入契約情報.売買代金（土地）+ 仕入契約情報.売買代金（建物）+ 仕入契約情報.売買代金（借地権）＋ 固都税清算金（土地）＋ 固都税清算金（建物）+ 	仕入契約情報.建物分消費税 + 仕入契約情報.売買代金（消費税）"
+		$data->creditorPayPrice = $objData['tradingLandPrice'] + $objData['tradingBuildingPrice'] + $objData['tradingLeasePrice']  + $objData['fixedLandTax'] + $objData['fixedBuildingTax'] + $objData['fixedBuildingTaxOnlyTax'] + $objData['tradingTaxPrice'];
+	}
+	//【売買代金（建物）】
+	else if($codeDetail == 'tradingBuildingPrice'){
+		$data->debtorPayPrice = $objData[$codeDetail];
+		// $data->creditorPayPrice = $objData[$codeDetail];
+		$data->debtorPayTax = $objData['tradingTaxPrice'];
+		// $data->creditorPayTax = $objData['tradingTaxPrice'];
+	}		
+	//【売買代金（借地権）】
+	else if($codeDetail == 'tradingLeasePrice'){
+		$data->debtorPayPrice = $objData[$codeDetail];
+		// $data->creditorPayPrice = $objData[$codeDetail];
+
+		$codeDetail = 'tradingLandPrice';
+	}
+	//【固都税清算金（土地）】
+	else if($codeDetail == 'fixedLandTax'){
+		$data->debtorPayPrice = $objData[$codeDetail];
+		// $data->creditorPayPrice = $objData[$codeDetail];
+	}	
+	//【固都税清算金（建物）】
+	else if($codeDetail == 'fixedBuildingTax'){
+		$data->debtorPayPrice = $objData[$codeDetail];
+		// $data->creditorPayPrice = $objData[$codeDetail];
+
+		$data->debtorPayTax = $objData['fixedBuildingTaxOnlyTax'];
+		// $data->creditorPayTax = $objData['fixedBuildingTaxOnlyTax'];
+		$isUseAfter = $objData['fixedBuildingTaxOnlyTax'] > 0; 
+	}	
+	//【内金・手付金等合計】 預り金チェックなし
+	else if($codeDetail == 'deposit1NoCheck'){
+		$codeDetail = 'deposit1';
+		$data->debtorPayPrice = 0;
+
+		// 内金１～１０
+		if($objData['deposit1Chk'] != '1'){
+			$data->debtorPayPrice += $objData['deposit1'];
+		}
+		if($objData['deposit2Chk'] != '1'){
+			$data->debtorPayPrice += $objData['deposit2'];
+		}
+		if($objData['deposit3Chk'] != '1'){
+			$data->debtorPayPrice += $objData['deposit3'];
+		}
+		if($objData['deposit4Chk'] != '1'){
+			$data->debtorPayPrice += $objData['deposit4'];
+		}
+		if($objData['deposit5Chk'] != '1'){
+			$data->debtorPayPrice += $objData['deposit5'];
+		}
+		if($objData['deposit6Chk'] != '1'){
+			$data->debtorPayPrice += $objData['deposit6'];
+		}
+		if($objData['deposit7Chk'] != '1'){
+			$data->debtorPayPrice += $objData['deposit7'];
+		}
+		if($objData['deposit8Chk'] != '1'){
+			$data->debtorPayPrice += $objData['deposit8'];
+		}
+		if($objData['deposit9Chk'] != '1'){
+			$data->debtorPayPrice += $objData['deposit9'];
+		}
+		if($objData['deposit10Chk'] != '1'){
+			$data->debtorPayPrice += $objData['deposit10'];
+		}
+
+		// 手付金
+		$data->debtorPayPrice += $objData['earnestPrice'];
+		
+		$data->creditorPayPrice = $data->debtorPayPrice;
+	}
+	//【内金合計】 預り金チェック
+	else if($codeDetail == 'deposit1Checked'){
+		$codeDetail = 'deposit1';
+		$data->debtorPayPrice = 0;
+
+		// 内金１～１０
+		if($objData['deposit1Chk'] == '1'){
+			$data->debtorPayPrice += $objData['deposit1'];
+		}
+		if($objData['deposit2Chk'] == '1'){
+			$data->debtorPayPrice += $objData['deposit2'];
+		}
+		if($objData['deposit3Chk'] == '1'){
+			$data->debtorPayPrice += $objData['deposit3'];
+		}
+		if($objData['deposit4Chk'] == '1'){
+			$data->debtorPayPrice += $objData['deposit4'];
+		}
+		if($objData['deposit5Chk'] == '1'){
+			$data->debtorPayPrice += $objData['deposit5'];
+		}
+		if($objData['deposit6Chk'] == '1'){
+			$data->debtorPayPrice += $objData['deposit6'];
+		}
+		if($objData['deposit7Chk'] == '1'){
+			$data->debtorPayPrice += $objData['deposit7'];
+		}
+		if($objData['deposit8Chk'] == '1'){
+			$data->debtorPayPrice += $objData['deposit8'];
+		}
+		if($objData['deposit9Chk'] == '1'){
+			$data->debtorPayPrice += $objData['deposit9'];
+		}
+		if($objData['deposit10Chk'] == '1'){
+			$data->debtorPayPrice += $objData['deposit10'];
+		}
+		
+		$data->creditorPayPrice = $data->debtorPayPrice;
+
+		$isUseAfter = $data->debtorPayPrice > 0; 
+	}	
+
+	//【留保金】
+	else if($codeDetail == 'retainage'){
+		$data->debtorPayPrice = $objData[$codeDetail];
+		$data->creditorPayPrice = $objData[$codeDetail];
+	}	
+
+	// 売却決済案内 START
+	//「土地売買決済代金」
+	else if($codeDetail == 'salesTradingLandPrice'){
+		//（物件売契約情報.売買代金（土地）＋ 物件売契約情報.売買代金（建物）＋ 物件売契約情報.売買代金（借地権）+ 固都税清算金（土地）+ 固都税清算金（建物）+ 	物件売契約情報.建物分消費税 + 物件売契約情報.売買代金（消費税） ) - 留保金 -内金･手付金等合計
+		$data->debtorPayPrice = $objData['salesTradingLandPrice'] + $objData['salesTradingBuildingPrice'] + $objData['salesTradingLeasePrice'] + $objData['salesFixedLandTax'] + $objData['salesFixedBuildingTax'] + $objData['salesFixedBuildingTaxOnlyTax'] + $objData['salesTradingTaxPrice'] - ($objData['salesRetainage'] + $objData['salesDeposit1'] + $objData['salesDeposit2'] + $objData['salesEarnestPrice']);
+		$data->creditorPayPrice = $objData[$codeDetail];
+	}
+	//「建物売買決済代金」
+	else if($codeDetail == 'salesTradingBuildingPrice'){
+		$data->debtorPayPrice = null;
+		$data->creditorPayPrice = $objData[$codeDetail];
+		$data->debtorPayTax = null;
+		$data->creditorPayTax = $objData['salesTradingTaxPrice'];
+	}		
+	//「借地権売買決済代金」
+	else if($codeDetail == 'salesTradingLeasePrice'){
+		$data->debtorPayPrice = null;
+		$data->creditorPayPrice = $objData[$codeDetail];
+
+		$codeDetail = 'salesTradingLandPrice';
+	}
+	//「固都税清算金（土地）」
+	else if($codeDetail == 'salesFixedLandTax'){
+		$data->debtorPayPrice = null;
+		$data->creditorPayPrice = $objData[$codeDetail];
+	}	
+	//「固都税精算金（建物）」
+	else if($codeDetail == 'salesFixedBuildingTax'){
+		$data->debtorPayPrice = null;
+		$data->creditorPayPrice = $objData[$codeDetail];
+
+		$data->debtorPayTax = null;
+		$data->creditorPayTax = $objData['salesFixedBuildingTaxOnlyTax'];
+		$isUseAfter = $objData['salesFixedBuildingTaxOnlyTax'] > 0;
+	}	
+	//【内金・手付金等合計】
+	else if($codeDetail == 'salesDeposit1'){
+		$data->debtorPayPrice = 0;
+
+		// 内金１～２
+		$data->debtorPayPrice += $objData['salesDeposit1'];
+		$data->debtorPayPrice += $objData['salesDeposit2'];
+
+		// 手付金
+		$data->debtorPayPrice += $objData['salesEarnestPrice'];
+		
+		$data->creditorPayPrice = null;
+	}	
+	//【留保金】
+	else if($codeDetail == 'salesRetainage'){
+		$data->debtorPayPrice = $objData[$codeDetail];
+		$data->creditorPayPrice = null;
+	}	
+	// 売却決済案内 END
+
+	$paymentCode = getNameByCodeDetail($codes, $codeDetail);
+	$kanjyoNameData = getKanjyoNameData($paymentCode, $objDataType, $isUseAfter);
+
+	$data->debtorKanjyoName = $kanjyoNameData->debtorKanjyoName;
+	if($bankName != null && $bankName != ''){
+		$data->debtorKanjyoDetailName = $bankName;
+	}
+	else{
+		$data->debtorKanjyoDetailName = $kanjyoNameData->debtorKanjyoDetailName;
+	}
+
+	//【内金・手付金等合計】と【留保金】
+	if($codeDetail == 'salesDeposit1' || $codeDetail == 'salesRetainage'){
+		$data->debtorKanjyoDetailName = null;
+	}
+
+	$data->creditorKanjyoName = $kanjyoNameData->creditorKanjyoName;
+	$data->creditorKanjyoDetailName = $kanjyoNameData->creditorKanjyoDetailName;
+
+	if($contentEx == null || $contentEx == ''){
+		$contentEx = getCodeTitle($paymentTypes, $paymentCode);
+	}
+	$data->remark = $address . '　' . $contractBukkenNo . '　' . $names . '　' . $contentEx;// 摘要
+	$data->note = $note;// 備考
+	return $data;
+}
+
+
+function addSlipData2(&$transferSlipDatas, $contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $slipRemarks, $address, $contractBukkenNo, $names, $description) {
+	$slipData = getSlipDataByCode2($contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $address, $contractBukkenNo, $names, $description, true);
+    if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
+        $transferSlipDatas[] = $slipData;
+    }
+
+	if($slipData->isGetNext){
+		$slipData = getSlipDataByCode2($contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $address, $contractBukkenNo, $names, $description, false);
+		if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
+			$transferSlipDatas[] = $slipData;
+		}		
+	}
+}
+
+function getSlipDataByCode2($contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $address, $contractBukkenNo, $names, $contentEx, $isFirst){
+	$note = '';
+	$paymentCode = $objData['paymentCode'];
+
+	$isOtherCostSub = false;
+
+	$isUseAfter = false;
+
+	$data = new stdClass();
+	$data->paymentCode = $paymentCode;// 20240806 Add
+	$data->isGetNext = false;
+	$data->debtorPayPrice = $objData['payPrice'];// 借方金額
+	$data->debtorPayTax = $objData['payTax'];// 借方消費税
+
+	$data->creditorPayPrice = null;// 貸方金額
+	$data->creditorPayTax = null;// 貸方消費税
+
+	if($paymentCode == '4007'){// 留保金
+		$contentEx = $contentEx . '売買代金留保金';
+		$data->creditorPayPrice = $data->debtorPayPrice;// 貸方金額
+		$data->creditorPayTax = $data->debtorPayTax;// 貸方消費税
+	}
+	else if($paymentCode == '1103'){// 立退き費用
+		//???
+		// $data->debtorPayPrice = $objData['payPrice'];// 借方金額
+		// $data->debtorPayTax = $objData['payTax'];// 借方消費税
+		// $data->creditorPayPrice = $data->debtorPayPrice + $data->debtorPayTax;// 貸方金額
+		$data->debtorPayPrice = null;// 借方金額
+		$data->debtorPayTax = null;// 借方消費税
+		$data->creditorPayPrice = null;// 貸方金額
+	}	
+	else if($paymentCode == '4002' || $paymentCode == '4003' || $paymentCode == '4003' 
+		 || $paymentCode == '4005' || $paymentCode == '4006' || $paymentCode == '4010'
+		 || $paymentCode == '4011' || $paymentCode == '4012' || $paymentCode == '4013'
+		 || $paymentCode == '4014' || $paymentCode == '4015'
+		){// 内金
+		$names = $objDataParent['supplierName'];// 取引先名称
+		$data->creditorPayPrice = $data->debtorPayPrice + $data->debtorPayTax - $objData['withholdingTax'];// 貸方金額
+		$contentEx = $contentEx . '不動産売買内金';
+
+		if(sizeof($contracts) > 0) {
+			$depositName = null;
+
+			foreach ($slipCodes as $slipCode) {
+				if ($slipCode['name'] == $paymentCode) {
+					$depositName = $slipCode['codeDetail'];
+					break;
+				}
+			}
+			if($depositName != null){
+				$depositChk = $contracts[0][$depositName . 'Chk'];
+				if($depositChk == '1'){
+					$isUseAfter = $depositChk == '1';// 内金預り金チェック
+					$contentEx = $contentEx . '　' . '立退料資金として預り';
+				}
+			}
+		}
+	}	
+	else if($paymentCode == '4004'){// 手付金
+		$names = $objDataParent['supplierName'];// 取引先名称
+		$data->creditorPayPrice = $data->debtorPayPrice + $data->debtorPayTax - $objData['withholdingTax'];// 貸方金額
+		$contentEx = $contentEx . '不動産売買手付金';
+	}
+	else{// その他経費
+		$names = $objDataParent['supplierName'];// 取引先名称
+		if($isFirst){
+			$data->creditorPayPrice = $data->debtorPayPrice + $data->debtorPayTax - $objData['withholdingTax'];// 貸方金額
+			$contentEx = getCodeTitle($paymentTypes, $paymentCode);
+			$contentEx = $contentEx . '　' . $objData['detailRemarks'];
+			$data->isGetNext = true;
+		}
+		else{
+			$data->creditorPayPrice = $objData['withholdingTax'];// 源泉所得税
+			$contentEx = $contentEx . '源泉所得税';
+			$isOtherCostSub = true;
+		}
+	}
+
+	$kanjyoNameData = getKanjyoNameData($paymentCode, $objDataType, $isUseAfter, true);
+
+	$data->debtorKanjyoName = $kanjyoNameData->debtorKanjyoName;
+	$data->debtorKanjyoDetailName = $kanjyoNameData->debtorKanjyoDetailName;
+	$data->creditorKanjyoName = $kanjyoNameData->creditorKanjyoName;
+	$data->creditorKanjyoDetailName = $kanjyoNameData->creditorKanjyoDetailName;
+
+	if($isOtherCostSub){
+		$data->creditorKanjyoName = '源泉預り金';
+		$data->creditorKanjyoDetailName = '士業源泉';
+
+		$data->debtorKanjyoName = null;
+		$data->debtorKanjyoDetailName = null;
+	
+		$data->debtorPayPrice = null;// 借方金額
+		$data->debtorPayTax = null;// 借方消費税
+	}
+
+	if($contentEx == null || $contentEx == ''){
+		$contentEx = getCodeTitle($paymentTypes, $paymentCode);
+	}
+
+	$values = [$address, $contractBukkenNo, $names, $contentEx];
+
+	$filteredValues = array_filter($values, function($value) {
+		return !empty($value);
+	});
+
+	$remark = implode('　', $filteredValues);
+
+	$data->remark = $remark;
+	if($data->debtorPayTax == 0){
+		$data->debtorPayTax = null;
+	}
+	if($data->creditorPayTax == 0){
+		$data->creditorPayTax = null;
+	}
+
+	$data->note = '';// 備考
+	return $data;
+}
+
+function getKanjyoNameData($paymentCode, $contractType, $isUseAfter, $isPay = false){
+	$data = new stdClass();
+
+    $query = ORM::for_table(TBLKANJYOFIX)
+                ->where_null('deleteDate')
+                ->where('paymentCode', $paymentCode)// 支払コード
+                ->where('contractType', $contractType);// 入出金区分
+
+	$kanjyoFix = $query->find_one();
+
+	if ($kanjyoFix) {
+		// 101：振替　			
+		// 決済案内出力時は振替前の勘定科目で出力、			
+		// 支払依頼書での出力時は振替後の勘定科目を出力する。			
+
+		if($isUseAfter || ($isPay && $kanjyoFix->executionType == '101')){// 101：振替　
+			$data->debtorKanjyoName = getKanjyoNameCommon($kanjyoFix->transDebtorKanjyoCode);
+			$data->creditorKanjyoName = getKanjyoNameCommon($kanjyoFix->transCreditorKanjyoCode);
+		}
+		else{
+			$data->debtorKanjyoName = getKanjyoNameCommon($kanjyoFix->debtorKanjyoCode);
+			$data->creditorKanjyoName = getKanjyoNameCommon($kanjyoFix->creditorKanjyoCode);				
+		}
+        $data->debtorKanjyoDetailName = $kanjyoFix->debtorKanjyoDetailName;
+		$data->creditorKanjyoDetailName = $kanjyoFix->creditorKanjyoDetailName;
+    }
+	else{
+		$data->debtorKanjyoName = null;
+		$data->debtorKanjyoDetailName = null;
+		$data->creditorKanjyoName = null;
+		$data->creditorKanjyoDetailName = null;		
+	}
+
+	return $data;
+}
+
+function getKanjyoNameCommon($kanjyoCode){
+	return ORM::for_table(TBLKANJYO)->where(array(
+		'kanjyoCode' => $kanjyoCode
+	))->select('kanjyoName')->find_one()->kanjyoName;
+}
+// 20240528 E_Add
 ?>

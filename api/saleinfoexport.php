@@ -27,6 +27,12 @@ $codeLists = [];
 $depositTypeCodeList = ORM::for_table(TBLCODE)->select('codeDetail')->select('name')->where('code', '034')->where_null('deleteDate')->findArray();
 $codeLists['depositType'] = $depositTypeCodeList;
 
+// 20240528 S_Add
+// 支払種別List
+$paymentTypeList = ORM::for_table(TBLPAYMENTTYPE)->select('paymentCode', 'codeDetail')->select('paymentName', 'name')->where_null('deleteDate')->findArray();
+$codeLists['paymentType'] = $paymentTypeList;
+// 20240528 E_Add
+
 // 物件売契約情報を取得
 $sales = ORM::for_table(TBLBUKKENSALESINFO)->where_in('pid', $param->ids)->where_null('deleteDate')->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
 
@@ -92,6 +98,27 @@ foreach($sales as $sale) {
 		$addressAndBlockNumber .= '　外';
 	}
 
+	// 20240528 S_Add
+	// 振替伝票データ
+	$bankName = getBankName($sale['bankPid']);
+	$contractType = '1';// 入金
+	$slipRemarks = '売決済';
+	$contractBukkenNo = $bukken['contractBukkenNo'];
+	$slipCodes = getCodesCommon('SYS602');
+	$transferSlipDatas = array();
+
+	addSlipData($transferSlipDatas, $sale, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $sale['salesName'], 'salesTradingLandPrice', '土地売買決済代金', $bankName);
+	addSlipData($transferSlipDatas, $sale, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $sale['salesName'], 'salesTradingBuildingPrice', '建物売買決済代金', $bankName);
+	addSlipData($transferSlipDatas, $sale, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $sale['salesName'], 'salesTradingLeasePrice', '借地権売買決済代金', $bankName);
+	addSlipData($transferSlipDatas, $sale, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $sale['salesName'], 'salesFixedLandTax', '固都税清算金（土地）', $bankName);
+	addSlipData($transferSlipDatas, $sale, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $sale['salesName'], 'salesFixedBuildingTax', '固都税精算金（建物）', $bankName);
+	addSlipData($transferSlipDatas, $sale, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $sale['salesName'], 'salesDeposit1', '受領済内金（手付金）を売買代金に充当');
+	addSlipData($transferSlipDatas, $sale, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $sale['salesName'], 'salesRetainage', '留保金', $bankName);
+	if(sizeof($transferSlipDatas) == 0) {
+		$transferSlipDatas[] = new stdClass();
+	}
+	// 20240528 E_Add
+		
 	$endColumn = 12;// 最終列数
 	$endRow = 34;   // 最終行数
 
@@ -127,7 +154,10 @@ foreach($sales as $sale) {
 	$sheet->setSelectedCell('A1');// 初期選択セル設定
 	// 20220707 E_Add
 
-	for($i = 1 ; $i < 4; $i++) {
+	// 20240528 S_Update
+	// for($i = 1 ; $i < 4; $i++) {
+	for($i = 1 ; $i < 5; $i++) {
+	// 20240528 E_Update
 		// シートをコピー
 		$sheet = clone $spreadsheet->getSheet($i);
 		$title = $sheet->getTitle();
@@ -252,12 +282,70 @@ foreach($sales as $sale) {
 			copyMergeCellStyleWithVal($sheet, 3, $setRow, 3, $setRow + 1, 12, 5);
 			*/
 		}
+
+		// 20240528 S_Add
+		// 振替伝票シート
+		if($i == 4) {
+			$endRow = 10;   // 最終行数
+			$currentRow = 3;
+			$currentColumn = 2;
+			$cell = null;
+			//決済日
+			$cell = setCell($cell, $sheet, 'salesDecisionDay', $currentColumn, $endColumn, $currentRow, $endRow, convert_jpdt_kanji($sale['salesDecisionDay']));
+			
+			$cell = null;
+			$cell = searchCell($sheet, 'debtorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow);
+			if($cell != null) {
+				$currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+				$currentRow = $cell->getRow();
+				$pos = $currentRow;
+			}
+
+			if(sizeof($transferSlipDatas) > 1) {
+				$endRow += sizeof($transferSlipDatas) * 2;
+				copyBlockWithVal($sheet, $currentRow, 2, sizeof($transferSlipDatas) - 1, $endColumn);
+			}
+			$cell = null;
+
+			foreach($transferSlipDatas as $slipData) {
+			
+				//借方勘定科目
+				$cell = setCell($cell, $sheet, 'debtorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorKanjyoName);
+				//借方金額
+				$cell = setCell($cell, $sheet, 'debtorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorPayPrice);
+				//貸方勘定科目
+				$cell = setCell($cell, $sheet, 'creditorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorKanjyoName);
+				//貸方金額
+				$cell = setCell($cell, $sheet, 'creditorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayPrice);
+				//摘要
+				$cell = setCell($cell, $sheet, 'remark', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->remark);
+				//備考
+				$cell = setCell($cell, $sheet, 'note', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->note);
+				//借方補助科目
+				$cell = setCell($cell, $sheet, 'debtorKanjyoDetailName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorKanjyoDetailName);
+				//借方消費税
+				$cell = setCell($cell, $sheet, 'debtorPayTax', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorPayTax);
+				//貸方補助科目
+				$cell = setCell($cell, $sheet, 'creditorKanjyoDetailName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorKanjyoDetailName);
+				//貸方消費税
+				$cell = setCell($cell, $sheet, 'creditorPayTax', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayTax);
+			
+				$currentRow += 2;
+			}
+
+			$sheet->setCellValue('B' . $currentRow, '=SUM(B' . $pos . ':B' . ($currentRow - 1) . ')');
+			$sheet->setCellValue('D' . $currentRow, '=SUM(D' . $pos . ':D' . ($currentRow - 1) . ')');
+		}
+		// 20240528 E_Add
 		$sheet->setSelectedCell('A1');// 初期選択セル設定
 	}
 }
 
 // コピー元シート削除
-for($i = 1 ; $i < 4; $i++) {
+// 20240528 S_Update
+// for($i = 1 ; $i < 4; $i++) {
+for($i = 1 ; $i < 5; $i++) {
+// 20240528 E_Update
 	$spreadsheet->removeSheetByIndex(1);
 }
 
@@ -334,4 +422,17 @@ function copyMergeCellStyleWithVal($sheet, $startColumn, $startRow, $endColumn, 
 	}
 }
 
+// 20240528 S_Add
+/**
+ * 行と値コピー
+ */
+function copyBlockWithVal($sheet, $startPos, $blockRowCount, $copyCount, $colums) {
+	$sheet->insertNewRowBefore($startPos, $blockRowCount * $copyCount);
+	$lastPos = $startPos + ($blockRowCount * $copyCount);
+	for($cursor = 0 ; $cursor < $copyCount ; $cursor++) {
+		$copyPos = $startPos  + $blockRowCount * $cursor;
+		copyRowsWithValue($sheet, $lastPos, $copyPos, $blockRowCount, $colums);
+	}
+}
+// 20240528 E_Add
 ?>

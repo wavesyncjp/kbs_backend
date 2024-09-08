@@ -111,6 +111,9 @@ foreach($contracts as $contract) {
 	$list_contractorNameDot = getContractorName($sellers, '・');// 複数契約者名（・区切り）
 	$cnt_contractorName = sizeof(explode(chr(10), $list_contractorName));
 	// 20220529 E_Update
+	// 20240528 S_Add
+	$list_contractorNameComma = getContractorName($sellers, '、');// 複数契約者名（カンマ区切り）
+	// 20240528 E_Add
 
 	// 支払契約情報を取得
 	$payContracts = ORM::for_table(TBLPAYCONTRACT)->where('tempLandInfoPid', $contract['tempLandInfoPid'])->where('contractInfoPid', $contract['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
@@ -313,6 +316,27 @@ foreach($contracts as $contract) {
 	$payPriceTaxPlusFixedTax = $payPriceTax + $fixedTax;
 	// 20220529 E_Add
 
+	// 20240528 S_Add
+	// 振替伝票データ
+	$contractType = '0';// 支払
+	$slipRemarks = '買決済';
+	$contractBukkenNo = $bukken['contractBukkenNo'];
+	$slipCodes = getCodesCommon('SYS601');
+	$transferSlipDatas = array();
+
+	addSlipData($transferSlipDatas, $contract, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $list_contractorNameComma, 'tradingLandPrice', '売買代金（土地）');
+	addSlipData($transferSlipDatas, $contract, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $list_contractorNameComma, 'tradingBuildingPrice', '');
+	addSlipData($transferSlipDatas, $contract, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $list_contractorNameComma, 'tradingLeasePrice', '');
+	addSlipData($transferSlipDatas, $contract, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $list_contractorNameComma, 'fixedLandTax', '');
+	addSlipData($transferSlipDatas, $contract, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $list_contractorNameComma, 'fixedBuildingTax', '');
+	addSlipData($transferSlipDatas, $contract, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $list_contractorNameComma, 'deposit1NoCheck', '支払済内金（手付金）を売買代金に充当');
+	addSlipData($transferSlipDatas, $contract, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $list_contractorNameComma, 'deposit1Checked', '支払済内金を売買代金に充当');
+	addSlipData($transferSlipDatas, $contract, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $list_contractorNameComma, 'retainage', '');
+	if(sizeof($transferSlipDatas) == 0) {
+		$transferSlipDatas[] = new stdClass();
+	}
+	// 20240528 E_Add
+
 	// 20220703 S_Update
 	// $endColumn = 13;// 最終列数
 	$endColumn = 16;// 最終列数
@@ -374,7 +398,10 @@ foreach($contracts as $contract) {
 
 	// 20240207 S_Update
 	// for($i = 1 ; $i < 6; $i++) {
-	for($i = 1 ; $i <= 6; $i++) {
+	// 20240528 S_Update
+	// for($i = 1 ; $i <= 6; $i++) {
+	for($i = 1 ; $i <= 7; $i++) {
+	// 20240528 E_Update
 	// 20240207 E_Update
 
 		// 20220703 S_Add
@@ -697,6 +724,61 @@ foreach($contracts as $contract) {
 
 		}
 		//20240207 E_Add
+
+		// 20240528 S_Add
+		// 振替伝票シート
+		if($i == 7) {
+			$endRow = 10;   // 最終行数
+			$currentRow = 3;
+			$currentColumn = 2;
+			$cell = null;
+			//決済日
+			$cell = setCell($cell, $sheet, 'decisionDay', $currentColumn, $endColumn, $currentRow, $endRow, convert_jpdt_kanji($contract['decisionDay']));
+			
+			$cell = null;
+			$cell = searchCell($sheet, 'debtorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow);
+			if($cell != null) {
+				$currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+				$currentRow = $cell->getRow();
+				$pos = $currentRow;
+			}
+
+			if(sizeof($transferSlipDatas) > 1) {
+				$endRow += sizeof($transferSlipDatas) * 2;
+				copyBlockWithVal($sheet, $currentRow, 2, sizeof($transferSlipDatas) - 1, $endColumn);
+			}
+			$cell = null;
+
+			foreach($transferSlipDatas as $slipData) {
+			
+				//借方勘定科目
+				$cell = setCell($cell, $sheet, 'debtorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorKanjyoName);
+				//借方金額
+				$cell = setCell($cell, $sheet, 'debtorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorPayPrice);
+				//貸方勘定科目
+				$cell = setCell($cell, $sheet, 'creditorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorKanjyoName);
+				//貸方金額
+				$cell = setCell($cell, $sheet, 'creditorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayPrice);
+				//摘要
+				$cell = setCell($cell, $sheet, 'remark', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->remark);
+				//備考
+				$cell = setCell($cell, $sheet, 'note', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->note);
+				//借方補助科目
+				$cell = setCell($cell, $sheet, 'debtorKanjyoDetailName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorKanjyoDetailName);
+				//借方消費税
+				$cell = setCell($cell, $sheet, 'debtorPayTax', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorPayTax);
+				//貸方補助科目
+				$cell = setCell($cell, $sheet, 'creditorKanjyoDetailName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorKanjyoDetailName);
+				//貸方消費税
+				$cell = setCell($cell, $sheet, 'creditorPayTax', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayTax);
+			
+				$currentRow += 2;
+			}
+
+			$sheet->setCellValue('B' . $currentRow, '=SUM(B' . $pos . ':B' . ($currentRow - 1) . ')');
+			$sheet->setCellValue('D' . $currentRow, '=SUM(D' . $pos . ':D' . ($currentRow - 1) . ')');
+		}
+		// 20240528 E_Add
 		$sheet->setSelectedCell('A1');// 初期選択セル設定
 	}
 }
@@ -723,7 +805,10 @@ for($i = 0 ; $i < 7; $i++) {
 	$spreadsheet->removeSheetByIndex(0);
 }
 */
-for($i = 1 ; $i < 7; $i++) {
+// 20240528 S_Update
+// for($i = 1 ; $i < 7; $i++) {
+for($i = 1 ; $i < 8; $i++) {
+// 20240528 E_Update
 	$spreadsheet->removeSheetByIndex(1);
 }
 // 20220529 E_Update

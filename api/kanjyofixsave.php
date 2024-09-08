@@ -18,6 +18,7 @@ if($param->updateUserId > 0){
 //登録
 else {
 	$info = ORM::for_table(TBLKANJYOFIX)->create();
+	$info->executionType = '000';// 20240802 Add
 	setInsert($info, $param->createUserId);
 }
 
