@@ -2895,14 +2895,23 @@ function getNameByCodeDetail($codes, $codeDetail) {
 
 function addSlipData(&$transferSlipDatas, $objData, $objDataType, $slipCodes, $paymentTypes, $slipRemarks, $address, $contractBukkenNo, $names, $priceType, $description, $bankName = '') {
 	$slipData = getSlipDataByCode($objData, $objDataType, $slipCodes, $paymentTypes, $priceType, $slipRemarks, $address, $contractBukkenNo, $names, $description, $bankName);
-    if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
-        $transferSlipDatas[] = $slipData;
+    // 20240912 S_Update
+	// if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
+	if ((isset($slipData->debtorKanjyoName) || isset($slipData->creditorKanjyoName)) && (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0))) {
+    // 20240912 E_Update
+		$transferSlipDatas[] = $slipData;
     }
 }
 
 function getSlipDataByCode($objData, $objDataType, $codes, $paymentTypes, $codeDetail, $note,$address, $contractBukkenNo, $names, $contentEx, $bankName = ''){
 	$isUseAfter = false;
 	$data = new stdClass();
+	// 20240912 S_Add
+	$isSales = false;// 売却決済案内
+	$isSales = strpos($codeDetail, 'sales') === 0;
+
+	$data->priceType = $codeDetail;
+	// 20240912 E_Add
 	$data->debtorPayPrice = null;// 借方金額
 	$data->debtorPayTax = null;// 借方消費税
 
@@ -3089,7 +3098,10 @@ function getSlipDataByCode($objData, $objDataType, $codes, $paymentTypes, $codeD
 	// 売却決済案内 END
 
 	$paymentCode = getNameByCodeDetail($codes, $codeDetail);
-	$kanjyoNameData = getKanjyoNameData($paymentCode, $objDataType, $isUseAfter);
+	// 20240912 S_Update
+	// $kanjyoNameData = getKanjyoNameData($paymentCode, $objDataType, $isUseAfter);
+	$kanjyoNameData = getKanjyoNameData($paymentCode, $objDataType, $isUseAfter, false, $isSales);
+	// 20240912 E_Update
 
 	$data->debtorKanjyoName = $kanjyoNameData->debtorKanjyoName;
 	if($bankName != null && $bankName != ''){
@@ -3112,19 +3124,26 @@ function getSlipDataByCode($objData, $objDataType, $codes, $paymentTypes, $codeD
 	}
 	$data->remark = $address . '　' . $contractBukkenNo . '　' . $names . '　' . $contentEx;// 摘要
 	$data->note = $note;// 備考
+	$data->executionType = $kanjyoNameData->executionType;// 20240912 Add
 	return $data;
 }
 
 
 function addSlipData2(&$transferSlipDatas, $contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $slipRemarks, $address, $contractBukkenNo, $names, $description) {
 	$slipData = getSlipDataByCode2($contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $address, $contractBukkenNo, $names, $description, true);
-    if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
-        $transferSlipDatas[] = $slipData;
+    // 20240912 S_Update
+	// if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
+	if ((isset($slipData->debtorKanjyoName) || isset($slipData->creditorKanjyoName)) && (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0))) {
+    // 20240912 E_Update
+		$transferSlipDatas[] = $slipData;
     }
 
 	if($slipData->isGetNext){
 		$slipData = getSlipDataByCode2($contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $address, $contractBukkenNo, $names, $description, false);
-		if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
+    	// 20240912 S_Update
+		// if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
+		if ((isset($slipData->debtorKanjyoName) || isset($slipData->creditorKanjyoName)) && (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0))) {
+    	// 20240912 E_Update
 			$transferSlipDatas[] = $slipData;
 		}		
 	}
@@ -3152,15 +3171,17 @@ function getSlipDataByCode2($contracts, $objData, $objDataParent, $objDataType, 
 		$data->creditorPayPrice = $data->debtorPayPrice;// 貸方金額
 		$data->creditorPayTax = $data->debtorPayTax;// 貸方消費税
 	}
-	else if($paymentCode == '1103'){// 立退き費用
-		//???
-		// $data->debtorPayPrice = $objData['payPrice'];// 借方金額
-		// $data->debtorPayTax = $objData['payTax'];// 借方消費税
-		// $data->creditorPayPrice = $data->debtorPayPrice + $data->debtorPayTax;// 貸方金額
-		$data->debtorPayPrice = null;// 借方金額
-		$data->debtorPayTax = null;// 借方消費税
-		$data->creditorPayPrice = null;// 貸方金額
-	}	
+	// 20240912 S_Delete
+	// else if($paymentCode == '1103'){// 立退き費用
+	// 	//???
+	// 	// $data->debtorPayPrice = $objData['payPrice'];// 借方金額
+	// 	// $data->debtorPayTax = $objData['payTax'];// 借方消費税
+	// 	// $data->creditorPayPrice = $data->debtorPayPrice + $data->debtorPayTax;// 貸方金額
+	// 	$data->debtorPayPrice = null;// 借方金額
+	// 	$data->debtorPayTax = null;// 借方消費税
+	// 	$data->creditorPayPrice = null;// 貸方金額
+	// }	
+	// 20240912 E_Delete
 	else if($paymentCode == '4002' || $paymentCode == '4003' || $paymentCode == '4003' 
 		 || $paymentCode == '4005' || $paymentCode == '4006' || $paymentCode == '4010'
 		 || $paymentCode == '4011' || $paymentCode == '4012' || $paymentCode == '4013'
@@ -3208,7 +3229,10 @@ function getSlipDataByCode2($contracts, $objData, $objDataParent, $objDataType, 
 		}
 	}
 
-	$kanjyoNameData = getKanjyoNameData($paymentCode, $objDataType, $isUseAfter, true);
+	// 20240912 S_Update
+	// $kanjyoNameData = getKanjyoNameData($paymentCode, $objDataType, $isUseAfter, true);
+	$kanjyoNameData = getKanjyoNameData($paymentCode, $objDataType, $isUseAfter, true, false);
+	// 20240912 E_Update
 
 	$data->debtorKanjyoName = $kanjyoNameData->debtorKanjyoName;
 	$data->debtorKanjyoDetailName = $kanjyoNameData->debtorKanjyoDetailName;
@@ -3250,7 +3274,10 @@ function getSlipDataByCode2($contracts, $objData, $objDataParent, $objDataType, 
 	return $data;
 }
 
-function getKanjyoNameData($paymentCode, $contractType, $isUseAfter, $isPay = false){
+// 20240912 S_Update
+// function getKanjyoNameData($paymentCode, $contractType, $isUseAfter, $isPay = false){
+function getKanjyoNameData($paymentCode, $contractType, $isUseAfter, $isPay = false, $isSales = false){
+// 20240912 E_Update
 	$data = new stdClass();
 
     $query = ORM::for_table(TBLKANJYOFIX)
@@ -3261,11 +3288,30 @@ function getKanjyoNameData($paymentCode, $contractType, $isUseAfter, $isPay = fa
 	$kanjyoFix = $query->find_one();
 
 	if ($kanjyoFix) {
+		// 20240912 S_Update
+		// if($isUseAfter || ($isPay && $kanjyoFix->executionType == '101')){// 101：振替　
+		$data->executionType = $kanjyoFix->executionType;
+		// 諸経費等の時
+		if($isPay && $kanjyoFix->executionType == '301'){// 301：預り金時貸方勘定科目振替
+			if($isUseAfter){//預り金チェックが入っていたら
+				$data->debtorKanjyoName = getKanjyoNameCommon($kanjyoFix->transDebtorKanjyoCode);
+				$data->creditorKanjyoName = getKanjyoNameCommon('0500');// 0500：預り金
+			}
+			else{
+				$data->debtorKanjyoName = getKanjyoNameCommon($kanjyoFix->transDebtorKanjyoCode);
+				$data->creditorKanjyoName = getKanjyoNameCommon($kanjyoFix->transCreditorKanjyoCode);
+			}
+		}
+		// 決済案内（買取決済）の時
+		else if(!$isSales && $kanjyoFix->executionType == '301'){// 301：預り金時貸方勘定科目振替
+			$data->debtorKanjyoName = getKanjyoNameCommon($kanjyoFix->debtorKanjyoCode);
+			$data->creditorKanjyoName = getKanjyoNameCommon($kanjyoFix->creditorKanjyoCode);				
+		}
 		// 101：振替　			
 		// 決済案内出力時は振替前の勘定科目で出力、			
 		// 支払依頼書での出力時は振替後の勘定科目を出力する。			
-
-		if($isUseAfter || ($isPay && $kanjyoFix->executionType == '101')){// 101：振替　
+		else if($isUseAfter || ($isPay && $kanjyoFix->executionType == '101')){// 101：振替　
+		// 20240912 E_Update
 			$data->debtorKanjyoName = getKanjyoNameCommon($kanjyoFix->transDebtorKanjyoCode);
 			$data->creditorKanjyoName = getKanjyoNameCommon($kanjyoFix->transCreditorKanjyoCode);
 		}
@@ -3280,7 +3326,8 @@ function getKanjyoNameData($paymentCode, $contractType, $isUseAfter, $isPay = fa
 		$data->debtorKanjyoName = null;
 		$data->debtorKanjyoDetailName = null;
 		$data->creditorKanjyoName = null;
-		$data->creditorKanjyoDetailName = null;		
+		$data->creditorKanjyoDetailName = null;	
+		$data->executionType = null;// 20240912 Add
 	}
 
 	return $data;

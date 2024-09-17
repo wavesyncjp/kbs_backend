@@ -337,6 +337,31 @@ foreach($contracts as $contract) {
 	}
 	// 20240528 E_Add
 
+	// 20240912 S_Add
+	// 貸方借方決定マスタの借方勘定科目が空の時に、借方金額を空にする
+	// 貸方金額を 決済案内_振替伝票の売買代金（土地）貸方金額から引き算する。
+	$debtReduction = 0;
+
+	foreach ($transferSlipDatas as $data) {
+		if (isset($data->executionType) && strpos($data->executionType, '3') === 0 && empty($data->debtorKanjyoName) && isset($data->debtorPayPrice) && $data->debtorPayPrice > 0) {
+			$debtReduction += $data->debtorPayPrice;
+			$data->debtorPayPrice = null;
+		}
+	}
+
+	if($debtReduction > 0){
+		foreach ($transferSlipDatas as &$landData) {
+			if ($landData->priceType === 'tradingLandPrice') {
+				if(isset($landData->creditorPayPrice)){
+					$landData->creditorPayPrice -= $debtReduction;
+				}
+				break; 
+			}
+		}
+		unset($landData); 
+	}
+	// 20240912 E_Add
+
 	// 20220703 S_Update
 	// $endColumn = 13;// 最終列数
 	$endColumn = 16;// 最終列数
