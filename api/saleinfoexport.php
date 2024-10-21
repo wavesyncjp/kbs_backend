@@ -29,7 +29,10 @@ $codeLists['depositType'] = $depositTypeCodeList;
 
 // 20240528 S_Add
 // 支払種別List
-$paymentTypeList = ORM::for_table(TBLPAYMENTTYPE)->select('paymentCode', 'codeDetail')->select('paymentName', 'name')->where_null('deleteDate')->findArray();
+// 20240930 S_Update
+// $paymentTypeList = ORM::for_table(TBLPAYMENTTYPE)->select('paymentCode', 'codeDetail')->select('paymentName', 'name')->where_null('deleteDate')->findArray();
+$paymentTypeList = ORM::for_table(TBLRECEIVETYPE)->select('receiveCode', 'codeDetail')->select('receiveName', 'name')->where_null('deleteDate')->findArray();
+// 20240930 E_Update
 $codeLists['paymentType'] = $paymentTypeList;
 // 20240528 E_Add
 

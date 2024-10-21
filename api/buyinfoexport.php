@@ -29,6 +29,17 @@ $codeLists['seller'] = $sellerCodeList;
 // 口座種別List
 $accountTypeCodeList = ORM::for_table(TBLCODE)->select('codeDetail')->select('name')->where('code', '026')->where_null('deleteDate')->findArray();
 $codeLists['accountType'] = $accountTypeCodeList;
+
+// 20240930 S_Add 
+// 契約方法
+$contractMethodCodeList = ORM::for_table(TBLCODE)->select('codeDetail')->select('name')->where('code', '043')->where_null('deleteDate')->findArray();
+// 契約方法選択しない対応のため、空白データも追加
+$contractMethodCodeList[] = [
+    'codeDetail' => '', 
+    'name' => ''
+];;
+// 20240930 E_Add 
+
 // 20220331 S_Add
 // 支払種別List
 $paymentTypeList = ORM::for_table(TBLPAYMENTTYPE)->select('paymentCode', 'codeDetail')->select('paymentName', 'name')->where_null('deleteDate')->findArray();
@@ -179,6 +190,8 @@ foreach($contracts as $contract) {
 	// 20240207 S_Add
 	$renCons = getRentalContractsForCalc($contract['pid']);
 	// 20240207 E_Add
+
+	$rens = getRentalsForContract($contract['pid']);// 20240930 Add
 
 	// 20240221 S_Add
 	if(!empty($renCons)){
@@ -332,6 +345,133 @@ foreach($contracts as $contract) {
 	addSlipData($transferSlipDatas, $contract, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $list_contractorNameComma, 'deposit1NoCheck', '支払済内金（手付金）を売買代金に充当');
 	addSlipData($transferSlipDatas, $contract, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $list_contractorNameComma, 'deposit1Checked', '支払済内金を売買代金に充当');
 	addSlipData($transferSlipDatas, $contract, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $list_contractorNameComma, 'retainage', '');
+	
+	// 20240930 S_Add
+	$contractTypeRen = '1';// 入金
+	$slipCodesRen = getCodesCommon('SYS611');
+	if(!empty($rens)){
+
+
+		$buyerRevenueMonth = substr($contract['buyerRevenueStartDay'], 4, 2); // の月
+		if($buyerRevenueMonth != ''){
+			$buyerRevenueMonth = $buyerRevenueMonth . '月日割り賃料';
+		}
+
+		foreach ($rens as $ren) {
+			// 各contractMethodと$renの組み合わせに基づいて$renConsをフィルタリング
+			foreach ($contractMethodCodeList as $contractMethodCode) {
+				$contractMethod = $contractMethodCode['codeDetail'];
+				$contractName = $contractMethodCode['name'];
+				$roomNos = '';
+
+				// rentalInfoPidとcontractMethodの条件でフィルタリング
+				$filteredRenConsForMethod = array_filter($renCons, function($renCon) use ($ren, $contractMethod) {
+					return $renCon['rentalInfoPid'] == $ren['pid'] && $renCon['contractMethod'] == $contractMethod;
+				});
+		
+				$objRentPrice = calculateRentPrices($contract, $filteredRenConsForMethod);
+				
+				foreach ($slipCodesRen as $codeRen) {
+
+					$codeDetail = $codeRen['codeDetail'];
+
+					$debtorPayPrice = null;// 借方金額
+					$debtorPayTax = null;// 借方消費税
+					$creditorPayPrice = null;// 貸方金額
+					$creditorPayTax = null;// 貸方消費税
+
+					$remarks = [];// 摘要
+
+					// 賃料精算金（非課税）
+					if($codeDetail == 'rentalSettlementNoPayTax'){
+						$creditorPayPrice = $objRentPrice->rentPriceNoPayTaxMap;
+						$debtorPayPrice = $creditorPayPrice;
+
+						// 賃料清算金（非課税）の部屋番号
+						$filteredRoomNos = array_filter($filteredRenConsForMethod, function($renConSub) {
+							return (int) $renConSub['rentPriceTax'] + (int) $renConSub['managementFeeTax'] + (int) $renConSub['condoFeeTax'] == 0;
+						});
+						$roomNos = implode(',', array_column($filteredRoomNos, 'roomNo'));
+						
+						$remarks = [$address, $contractBukkenNo, $list_contractorNameComma, $contractName, $buyerRevenueMonth];
+					}
+					// 賃料精算金（課税）
+					else if($codeDetail == 'rentalSettlementPayTax'){
+						$creditorPayPrice = $objRentPrice->rentPricePayTaxMap;
+						$creditorPayTax = $objRentPrice->rentPriceTaxMap;
+						$debtorPayPrice = $creditorPayPrice + $creditorPayTax;
+
+						// 賃料清算金（課税）の部屋番号
+						$filteredRoomNos = array_filter($filteredRenConsForMethod, function($renConSub) {
+							return (int) $renConSub['rentPriceTax'] + (int) $renConSub['managementFeeTax'] + (int) $renConSub['condoFeeTax'] > 0;
+						});
+						$roomNos = implode(',', array_column($filteredRoomNos, 'roomNo'));
+
+						$remarks = [$address, $contractBukkenNo, $list_contractorNameComma, $contractName, $buyerRevenueMonth];
+					}
+					// 継承敷金
+					else if($codeDetail == 'successionDeposit'){
+						$creditorPayPrice = array_reduce($filteredRenConsForMethod, function($carry, $renCon) {
+							return $carry + (int) $renCon['deposit'];
+						}, 0);
+						$debtorPayPrice = $creditorPayPrice;
+						
+						// 継承敷金の部屋番号
+						$filteredRoomNos = array_filter($filteredRenConsForMethod, function($renConSub) {
+							return $renConSub['deposit'] > 0;
+						});
+						$roomNos = implode(',', array_column($filteredRoomNos, 'roomNo'));
+					
+						$remarks = [$address, $contractBukkenNo, $contractName, $ren['apartmentName'], '敷金'];
+					}
+					// 保証金
+					else if($codeDetail == 'successionSecurityDeposit'){
+						$creditorPayPrice = array_reduce($filteredRenConsForMethod, function($carry, $renCon) {
+							return $carry + (int) $renCon['securityDeposit'];
+						}, 0);
+						$debtorPayPrice = $creditorPayPrice;
+
+						// 承継保証金の部屋番号
+						$filteredRoomNos = array_filter($filteredRenConsForMethod, function($renConSub) {
+							return $renConSub['securityDeposit'] > 0;
+						});
+						$roomNos = implode(',', array_column($filteredRoomNos, 'roomNo'));
+					
+						$remarks = [$address, $contractBukkenNo, $contractName, $ren['apartmentName'], '保証金'];
+					}
+					// 償却
+					else if($codeDetail == 'amortization'){
+						$creditorPayPrice = array_reduce($filteredRenConsForMethod, function($carry, $renCon) {
+							return $carry + $renCon['amortization'];
+						}, 0);
+						$debtorPayPrice = $creditorPayPrice;
+
+						// 償却の部屋番号
+						$filteredRoomNos = array_filter($filteredRenConsForMethod, function($renConSub) {
+							return (int) $renConSub['amortization'] > 0;
+						});
+						$roomNos = implode(',', array_column($filteredRoomNos, 'roomNo'));
+					
+						$remarks = [$address, $contractBukkenNo, $contractName, $ren['apartmentName'], '保証金償却相当額'];
+					}
+					
+					if($roomNos != ''){
+						$roomNos = $roomNos . '号室';
+					}
+					array_push($remarks, $roomNos);
+
+					$filteredRemarks = array_filter($remarks, function($value) {
+						return !empty($value);
+					});
+				
+					$remark = implode('　', $filteredRemarks);
+				
+					addSlipDataValue($transferSlipDatas, $debtorPayPrice, $debtorPayTax, $creditorPayPrice, $creditorPayTax, $contractTypeRen, $slipCodesRen, $codeRen['codeDetail'], $remark, $slipRemarks);
+				}
+			}
+		}
+	}
+	// 20240930 E_Add
 	if(sizeof($transferSlipDatas) == 0) {
 		$transferSlipDatas[] = new stdClass();
 	}

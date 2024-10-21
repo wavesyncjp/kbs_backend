@@ -3273,6 +3273,39 @@ function getSlipDataByCode2($contracts, $objData, $objDataParent, $objDataType, 
 	$data->note = '';// 備考
 	return $data;
 }
+// 20240930 S_Add
+function addSlipDataValue(&$transferSlipDatas, $debtorPayPrice, $debtorPayTax, $creditorPayPrice, $creditorPayTax, $objDataType, $slipCodes, $priceType, $remark, $note) {
+	$slipData = getSlipDataValueByCode($debtorPayPrice, $debtorPayTax, $creditorPayPrice, $creditorPayTax, $objDataType, $slipCodes, $priceType, $remark, $note);
+	if ((isset($slipData->debtorKanjyoName) || isset($slipData->creditorKanjyoName)) && (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0))) {
+		$transferSlipDatas[] = $slipData;
+    }
+}
+
+function getSlipDataValueByCode($debtorPayPrice, $debtorPayTax, $creditorPayPrice, $creditorPayTax, $objDataType, $codes, $codeDetail, $remark, $note){
+	$data = new stdClass();
+
+	$data->priceType = $codeDetail;
+	$data->debtorPayPrice = $debtorPayPrice;// 借方金額
+	$data->debtorPayTax = $debtorPayTax;// 借方消費税
+
+	$data->creditorPayPrice = $creditorPayPrice;// 貸方金額
+	$data->creditorPayTax = $creditorPayTax;// 貸方消費税
+
+	$paymentCode = getNameByCodeDetail($codes, $codeDetail);
+	$kanjyoNameData = getKanjyoNameData($paymentCode, $objDataType, false, false, false);
+
+	$data->debtorKanjyoName = $kanjyoNameData->debtorKanjyoName;
+	$data->debtorKanjyoDetailName = $kanjyoNameData->debtorKanjyoDetailName;
+
+	$data->creditorKanjyoName = $kanjyoNameData->creditorKanjyoName;
+	$data->creditorKanjyoDetailName = $kanjyoNameData->creditorKanjyoDetailName;
+
+	$data->remark = $remark;// 摘要
+	$data->note = $note;// 備考
+	$data->executionType = $kanjyoNameData->executionType;
+	return $data;
+}
+// 20240930 E_Add
 
 // 20240912 S_Update
 // function getKanjyoNameData($paymentCode, $contractType, $isUseAfter, $isPay = false){
@@ -3339,4 +3372,114 @@ function getKanjyoNameCommon($kanjyoCode){
 	))->select('kanjyoName')->find_one()->kanjyoName;
 }
 // 20240528 E_Add
+
+// 20240930 S_Add
+function calculateRentPrices($contract, $renContracts) {
+    // 契約の日付の差を計算
+    $days = differenceInDays($contract['buyerRevenueStartDay'], $contract['buyerRevenueEndDay']);
+    
+    // 開始日の月末を取得
+    $decisionDayEndMonthMap = getEndOfMonth($contract['buyerRevenueStartDay']);
+    
+    // 結果用のオブジェクトを作成
+    $result = new stdClass();
+    
+    if ($decisionDayEndMonthMap !== null) {
+        // 月末の日付を取得
+        $day = (int)$decisionDayEndMonthMap->format('d');
+        
+        // 賃料精算金（非課税分）
+        $result->rentPriceNoPayTaxMap = round(
+            array_reduce($renContracts, function($sum, $currentValue) {
+                // 消費税欄が0
+                if ((int) $currentValue['rentPriceTax'] + (int) $currentValue['managementFeeTax'] + (int) $currentValue['condoFeeTax'] == 0) {
+                	return $sum + (int) $currentValue['rentPrice'] + (int) $currentValue['managementFee'] + (int) $currentValue['condoFee'];
+				}
+            }, 0) / $day * $days
+        );
+
+        // 賃料精算金（課税分）
+        $result->rentPricePayTaxMap = round(
+            array_reduce($renContracts, function($sum, $currentValue) {
+                if ((int) $currentValue['rentPriceTax'] + (int) $currentValue['managementFeeTax'] + (int) $currentValue['condoFeeTax'] > 0) {
+                    return $sum + (int) $currentValue['rentPrice'] + (int) $currentValue['managementFee'] + (int) $currentValue['condoFee'];
+                }
+                return $sum;
+            }, 0) / $day * $days
+        );
+
+        // 賃料精算金（消費税）
+        $result->rentPriceTaxMap = round(
+            array_reduce($renContracts, function($sum, $currentValue) {
+                // 管理費とコンド費用が0より大きい場合に合計
+				if ((int) $currentValue['rentPriceTax'] + (int) $currentValue['managementFeeTax'] + (int) $currentValue['condoFeeTax'] > 0) {
+                    return $sum + (int) $currentValue['rentPriceTax'] + (int) $currentValue['managementFeeTax'] + (int) $currentValue['condoFeeTax'];
+                }
+                return $sum;
+            }, 0) / $day * $days
+        );
+    } else {
+        // 月末の日付がない場合は0を設定
+        $result->rentPriceNoPayTaxMap = 0; // 空の値を0に変更
+        $result->rentPricePayTaxMap = 0; // 空の値を0に変更
+        $result->rentPriceTaxMap = 0; // 空の値を0に変更
+    }
+
+    // 結果のオブジェクトを返す
+    return $result; // 新しいオブジェクトを返す
+}
+
+function differenceInDays($date1, $date2) {
+    // 日付がnullの場合は0を返す
+    if ($date1 === null || $date2 === null) {
+        return 0;
+    }
+
+    // 'yyyyMMdd' 形式の文字列を DateTime オブジェクトに変換
+    $date1 = DateTime::createFromFormat('Ymd', $date1);
+    $date2 = DateTime::createFromFormat('Ymd', $date2);
+
+    // 変換が失敗した場合、0を返す
+    if ($date1 === false || $date2 === false) {
+        return 0;
+    }
+
+    // UTC タイムスタンプに変換
+    $utcDate1 = strtotime($date1->format('Y-m-d'));
+    $utcDate2 = strtotime($date2->format('Y-m-d'));
+
+    // 開始日が終了日より大きい場合は0を返す
+    if ($utcDate1 > $utcDate2) {
+        return 0;
+    }
+
+    // 2つの日付の差を計算
+    $diffInSeconds = abs($utcDate2 - $utcDate1);
+
+    // 日数を返す
+    return floor($diffInSeconds / (60 * 60 * 24)) + 1;
+}
+
+function getEndOfMonth($date) {
+    // 日付がnullでない場合
+    if ($date !== null) {
+        // 'yyyyMMdd' 形式の文字列を DateTime オブジェクトに変換
+        $dateTime = DateTime::createFromFormat('Ymd', $date);
+
+        // 変換が失敗した場合はnullを返す
+        if ($dateTime === false) {
+            return null;
+        }
+
+        // 月の最終日を取得
+        $dateTime->modify('last day of this month');
+
+        return $dateTime; // 月末の日付を返す
+    }
+    
+    // 日付がnullの場合はnullを返す
+    return null;
+}
+// 20240930 E_Add
+
 ?>

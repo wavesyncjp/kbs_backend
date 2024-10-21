@@ -17,6 +17,19 @@ if($param->updateUserId > 0){
 }
 //登録
 else {
+	// 20240930 S_Add
+	$query = ORM::for_table(TBLKANJYOFIX)
+    ->where_null('deleteDate')
+    ->where('paymentCode', $param->paymentCode)
+    ->where('contractType', $param->contractType);
+
+	$exists = $query->count() > 0;
+	if($exists){
+		echo json_encode(array('statusMap' => 'NG', 'msgMap' => '入出金区分とコードの組み合わせが既に登録されています。別の組み合わせを指定してください。'));
+		exit;
+	}
+	// 20240930 E_Add
+
 	$info = ORM::for_table(TBLKANJYOFIX)->create();
 	$info->executionType = '000';// 20240802 Add
 	setInsert($info, $param->createUserId);

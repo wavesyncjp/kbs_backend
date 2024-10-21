@@ -1,4 +1,6 @@
 <?php
+ini_set('memory_limit', '512M');// 20241004 Add
+
 require("../vendor/autoload.php");
 require '../header.php';
 require '../util.php';
@@ -24,6 +26,14 @@ $spreadsheet = $reader->load($filePath);
 
 // 買主シート
 $sheet = $spreadsheet->getSheet(0);
+
+// 20241004 S_Add
+// シートをスプレッドシートに追加する前に保持する配列を作成する
+$sheetsToAdd = [];
+
+// タイトルを追跡するための配列
+$sheetTitles = []; 
+// 20241004 E_Add
 
 // 最終列数
 $endColumn = 58;
@@ -98,8 +108,25 @@ foreach($renCons as $renCon) {
     
     // シートをコピー
     $sheet = clone $spreadsheet->getSheet(0);
-    $sheet->setTitle($renCon['borrowerName'] . '様');
-    $spreadsheet->addSheet($sheet);
+    // 20241004 S_Update
+    // $sheet->setTitle($renCon['borrowerName'] . '様');
+    // $spreadsheet->addSheet($sheet);
+    $baseTitle = $renCon['borrowerName'] . '様';
+    $sheetTitle = $baseTitle;
+
+    // タイトルがすでに存在するかチェックし、存在する場合は番号を追加
+    $index = 1;
+    while (in_array($sheetTitle, $sheetTitles)) {
+        $sheetTitle = $baseTitle . ' ' . $index;
+        $index++;
+    }
+
+    // シートのユニークなタイトルを設定
+    $sheet->setTitle($sheetTitle);
+
+    // 重複を避けるためにタイトルを追跡
+    $sheetTitles[] = $sheetTitle;
+    // 20241004 E_Add
 
     // 列・行の位置を初期化
     $currentColumn = 1;
@@ -317,7 +344,15 @@ foreach($renCons as $renCon) {
     $cell = setCell($cell, $sheet, 'successionDeposit', $currentColumn, $endColumn, $currentRow, $endRow, "【承継敷金、保証金】{$newline}"  . number_format($evic->successionDeposit));
 
     $sheet->setSelectedCell('A1');// 初期選択セル設定
+    $sheetsToAdd[] = $sheet;// 20241004 Add
 }
+
+// 20241004 S_Add
+foreach ($sheetsToAdd as $sheet) {
+    $spreadsheet->addSheet($sheet);
+}
+// 20241004 E_Add
+
 // コピー元買主シート削除
 $spreadsheet->removeSheetByIndex(0);
 
