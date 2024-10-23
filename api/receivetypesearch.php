@@ -5,7 +5,14 @@ require '../header.php';
 $postdata = file_get_contents("php://input");
 $param = json_decode($postdata);
 
-$query = ORM::for_table(TBLRECEIVETYPE)->where_null('deleteDate');
+// 20241022 S_Update
+// $query = ORM::for_table(TBLRECEIVETYPE)->where_null('deleteDate');
+$query = ORM::for_table(TBLRECEIVETYPE);
+
+if(!isset($param->isAllData)){
+	$query = $query->where_null('deleteDate');
+}
+// 20241022 E_Update
 
 // 支払コード
 if(isset($param->receiveCode) && $param->receiveCode !== ''){
