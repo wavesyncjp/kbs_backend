@@ -47,7 +47,15 @@ if(isset($param->payContractEntryFlg)  && $param->payContractEntryFlg !== ''){
 	$query = $query->where('payContractEntryFlg', $param->payContractEntryFlg)->order_by_asc('displayOrder');
 }
 
-$ret = $query->order_by_asc('paymentCode')->find_array();
+// 20241024 S_Update
+// $ret = $query->order_by_asc('paymentCode')->find_array();
+if(!isset($param->payContractEntryFlg) && isset($param->isAllData)){
+	$ret = $query->order_by_asc('displayOrder')->order_by_asc('paymentCode')->find_array();
+}
+else{
+	$ret = $query->order_by_asc('paymentCode')->find_array();
+}
+// 20241024 E_Update
 echo json_encode($ret);
 
 ?>
