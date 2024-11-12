@@ -136,6 +136,9 @@ foreach($renCons as $renCon) {
     //出力日
     $sysDate = date('Ymd');
 
+    // 20241028 S_Add
+    $cell = setCell($cell, $sheet, 'jpEra', $currentColumn, $endColumn, $currentRow, $endRow, convert_jpdt_kanji($sysDate, 'name'));
+    // 20241028 E_Add
     $cell = setCell($cell, $sheet, 'outPutDate_YY', $currentColumn, $endColumn, $currentRow, $endRow, convert_jpdt($sysDate, 'year'));
     $cell = setCell($cell, $sheet, 'outPutDate_MM', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($sysDate, 'm'));
     $cell = setCell($cell, $sheet, 'outPutDate_DD', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($sysDate, 'd'));
@@ -194,8 +197,29 @@ foreach($renCons as $renCon) {
     //物件の表示 用途					
     $cell = setCell($cell, $sheet, 'usePurpose', $currentColumn, $endColumn, $currentRow, $endRow, getCodeTitle($usePurposeList, $renCon['usePurpose']));
 
-    //火災保険料				
-    $cell = setCell($cell, $sheet, 'InsuranceFee', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['InsuranceFee']);
+    // 20241028 S_Delete
+    // //火災保険料				
+    // $cell = setCell($cell, $sheet, 'InsuranceFee', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['InsuranceFee']);
+    // 20241028 E_Delete
+    
+    // 20241028 S_Add
+    //賃料タイプ
+    $rentPriceTaxType = '月額（税込）';
+    if(!isset($renCon['rentPriceTax']) || $renCon['rentPriceTax'] == 0){
+        $rentPriceTaxType = '月額';
+    }
+    $cell = setCell($cell, $sheet, 'rentPriceTaxType', $currentColumn, $endColumn, $currentRow, $endRow, $rentPriceTaxType);
+    
+    // 敷金・保証金種別
+    $depositType = '';
+    if(isset($renCon['deposit']) && $renCon['deposit'] != 0){
+        $depositType = '敷　金';
+    }
+    else if(isset($renCon['securityDeposit']) && $renCon['securityDeposit'] != 0){
+        $depositType = '保証金';
+    }
+    $cell = setCell($cell, $sheet, 'depositType', $currentColumn, $endColumn, $currentRow, $endRow, $depositType );
+    // 20241028 E_Add
     
     //賃  料					
     $cell = setCell($cell, $sheet, 'rentPrice', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['rentPrice']);
@@ -207,11 +231,30 @@ foreach($renCons as $renCon) {
     //保証金						
     $cell = setCell($cell, $sheet, 'securityDeposit', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['securityDeposit']);
 
+    // 20241028 S_Add
+    $managementCondoType = '';
+    if((isset($renCon['condoFee']) && $renCon['condoFee'] != 0) || (isset($renCon['condoFeeTax']) && $renCon['condoFeeTax'] != 0)){
+        $managementCondoType = '共益費';
+    }
+    else if((isset($renCon['managementFee']) && $renCon['managementFee'] != 0) || (isset($renCon['managementFeeTax']) && $renCon['managementFeeTax'] != 0)){
+        $managementCondoType = '管理費';
+    }
+    $cell = setCell($cell, $sheet, 'managementCondoType', $currentColumn, $endColumn, $currentRow, $endRow, $managementCondoType );
+
+    //共益費・管理費タイプ
+    $managementCondoTaxType = '月額（税込）';
+    if((!isset($renCon['condoFeeTax']) || $renCon['condoFeeTax'] == 0) && (!isset($renCon['managementFeeTax']) || $renCon['managementFeeTax'] == 0)){
+        $managementCondoTaxType = '月額';
+    }
+    $cell = setCell($cell, $sheet, 'managementCondoTaxType', $currentColumn, $endColumn, $currentRow, $endRow, $managementCondoTaxType);
+    // 20241028 E_Add
+
     //償  却						
     $cell = setCell($cell, $sheet, 'amortization', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['amortization']);
-    //鍵交換費用						
-    $cell = setCell($cell, $sheet, 'keyExchangeFee', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['keyExchangeFee']);
-
+    // 20241028 S_Delete
+    // //鍵交換費用						
+    // $cell = setCell($cell, $sheet, 'keyExchangeFee', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['keyExchangeFee']);
+    // 20241028 E_Delete
 
     //共益費 月額					
     $cell = setCell($cell, $sheet, 'condoFee', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['condoFee']);
@@ -223,16 +266,23 @@ foreach($renCons as $renCon) {
     //管理費 月額（税込）					
     $cell = setCell($cell, $sheet, 'managementFeeInTax', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['managementFee'] + $renCon['managementFeeTax']);
     
-    //礼  金				
-    $cell = setCell($cell, $sheet, 'keyMoney', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['keyMoney']);
-    //その他費用				
-    $cell = setCell($cell, $sheet, 'otherExpenses', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['otherExpenses']);
+    // 20241028 S_Delete
+    // //礼  金				
+    // $cell = setCell($cell, $sheet, 'keyMoney', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['keyMoney']);
+    // //その他費用				
+    // $cell = setCell($cell, $sheet, 'otherExpenses', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['otherExpenses']);
+    // 20241028 E_Delete
    
     //駐車場賃料（税込）				
     $cell = setCell($cell, $sheet, 'parkingFee', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['parkingFee']);
     //駐車場敷金・礼金			
     $cell = setCell($cell, $sheet, 'parkingDeposit', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['parkingDeposit']);
-            
+
+    // 20241028 S_Add
+    //その他費用		
+    $cell = setCell($cell, $sheet, 'otherExpenses', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['otherExpenses']);
+    // 20241028 E_Add
+    
     // 契約期間開始日
     $cell = setCell($cell, $sheet, 'loanPeriodStartDate_YYYY', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($renCon['loanPeriodStartDate'], 'Y'));
     $cell = setCell($cell, $sheet, 'loanPeriodStartDate_MM', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($renCon['loanPeriodStartDate'], 'm'));
@@ -267,12 +317,20 @@ foreach($renCons as $renCon) {
     if($diffDate->y > 0){
         $loanPeriod = $loanPeriod . $diffDate->y . "年";
     }
-    if($diffDate->m > 0){
+    // 20241028 S_Update
+    // if($diffDate->m > 0){
+    //     $loanPeriod = $loanPeriod . $diffDate->m . "ヶ月";
+    // }
+    // if($diffDate->d > 0){
+    //     $loanPeriod = $loanPeriod . $diffDate->d . "日";
+    // }
+    if($diffDate->m >= 0){
         $loanPeriod = $loanPeriod . $diffDate->m . "ヶ月";
     }
-    if($diffDate->d > 0){
+    if($diffDate->d >= 0){
         $loanPeriod = $loanPeriod . $diffDate->d . "日";
     }
+    // 20241028 E_Update
     $cell = setCell($cell, $sheet, 'loanPeriod', $currentColumn, $endColumn, $currentRow, $endRow, $loanPeriod);
 
     //更新料				
@@ -286,7 +344,10 @@ foreach($renCons as $renCon) {
     $cell = setCell($cell, $sheet, 'bank_displayName', $currentColumn, $endColumn, $currentRow, $endRow, $bankName);
 
     //支払期限
-    $cell = setCell($cell, $sheet, 'usance', $currentColumn, $endColumn, $currentRow, $endRow, getCodeTitle($usanceList, $renCon['usance']) . "分を毎月" .$renCon['paymentDay'] ."までに支払う");
+    // 20241028 S_Update
+    // $cell = setCell($cell, $sheet, 'usance', $currentColumn, $endColumn, $currentRow, $endRow, getCodeTitle($usanceList, $renCon['usance']) . "分を毎月" .$renCon['paymentDay'] ."日までに支払う");
+    $cell = setCell($cell, $sheet, 'usance', $currentColumn, $endColumn, $currentRow, $endRow, getCodeTitle($usanceList, $renCon['usance']) . "分を毎月" .($renCon['paymentDay'] == 0 ? '末' : $renCon['paymentDay']) ."日までに支払う");
+    // 20241028 E_Update
     
     //管理の委託先 名称
     $cell = setCell($cell, $sheet, 'manageCompanyName', $currentColumn, $endColumn, $currentRow, $endRow, $ren['manageCompanyName']);
@@ -341,8 +402,24 @@ foreach($renCons as $renCon) {
     $cell = setCell($cell, $sheet, 'returnDepositDate_DD', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($evic->returnDepositDate, 'd'));
 
     // 備  考
-    $cell = setCell($cell, $sheet, 'successionDeposit', $currentColumn, $endColumn, $currentRow, $endRow, "【承継敷金、保証金】{$newline}"  . number_format($evic->successionDeposit));
-
+    // 20241028 S_Update
+    // $cell = setCell($cell, $sheet, 'successionDeposit', $currentColumn, $endColumn, $currentRow, $endRow, "【承継敷金、保証金】{$newline}"  . number_format($evic->successionDeposit));
+    // 　チェックボックスにチェックが入っているかつ、立退き.返還敷金(保証金) が1円以上の場合、立退き.返還敷金(保証金) - 賃貸契約.償却 の値を出す。
+    $successionDeposit = 0;
+    if($renCon['subtractionAmortizationFlg'] == '1' && $evic->returnDeposit >= 1){
+        if(isset($renCon['amortization'])){
+            $successionDeposit = $evic->returnDeposit - $renCon['amortization'];
+        }
+        else{
+            $successionDeposit = $evic->returnDeposit;
+        }
+        if($successionDeposit < 1){
+            $successionDeposit = 0;
+        }
+    }
+    $cell = setCell($cell, $sheet, 'successionDeposit', $currentColumn, $endColumn, $currentRow, $endRow, "【承継敷金、保証金】{$newline}"  . number_format($successionDeposit) . '円');
+    // 20241028 E_Update
+    
     $sheet->setSelectedCell('A1');// 初期選択セル設定
     $sheetsToAdd[] = $sheet;// 20241004 Add
 }

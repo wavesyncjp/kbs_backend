@@ -312,7 +312,10 @@ function getRentalContractsForExport2($rentalInfoPid) {
 	->where_null('p2.deleteDate');
 	
 	$queryRC = $queryRC->where('p1.rentalInfoPid', $rentalInfoPid);
-	$results = $queryRC->order_by_expr('p5.displayOrder asc, LENGTH(p2.roomNo) asc, p2.roomNo asc')->findArray();
+    // 20241008 S_Update
+	// $results = $queryRC->order_by_expr('p5.displayOrder asc, LENGTH(p2.roomNo) asc, p2.roomNo asc')->findArray();
+    $results = $queryRC->order_by_asc('p1.pid')->findArray();
+    // 20241008 S_Update
 	return $results;
 }
 
@@ -340,12 +343,19 @@ function getRentalReceiveForExport($rentalInfoPid) {
 	->where_null('p1.deleteDate');
 	
 	$queryRC = $queryRC->where('p1.rentalInfoPid', $rentalInfoPid);
-	$rentalReceives = $queryRC->order_by_expr('p4.receiveMonth asc, LENGTH(p2.roomNo) asc, p2.roomNo asc, p4.rentalContractPid asc')->findArray();
+	// 20241028 S_Update
+    // $rentalReceives = $queryRC->order_by_expr('p4.receiveMonth asc, LENGTH(p2.roomNo) asc, p2.roomNo asc, p4.rentalContractPid asc')->findArray();
+    $rentalReceives = $queryRC->order_by_asc('p1.pid')->findArray();
+    // 20241028 E_Update
 	
     $results = array();
 
 	$receiveYears = array();
 	if (isset($rentalReceives)) {
+        // 20241008 S_Add
+        // 入金開始年月
+        $minYYMMGroups = array();
+        // 20241008 E_Add
 		foreach ($rentalReceives as $rev) {
             $year = substr($rev['receiveMonth'], 0, 4);
 			if (in_array($year, $receiveYears) == false) {
@@ -363,7 +373,10 @@ function getRentalReceiveForExport($rentalInfoPid) {
 
                     $evic = getEvic($rev);
 
-                    $roomRentExemptionStartDate = isset($evic) ? $evic->roomRentExemptionStartDate : '';
+                    // 20241008 S_Update
+                    // $roomRentExemptionStartDate = isset($evic) ? $evic->roomRentExemptionStartDate : '';
+                    $initLoanPeriodEndDate = getInitLoanPeriodEndDate($evic, true);
+                    // 20241008 E_Update
                     
                     // 20240426 S_Delete
                     // $isDisable = isset($roomRentExemptionStartDate) && !empty($roomRentExemptionStartDate) && substr($roomRentExemptionStartDate, 0, 6) <= $rev['receiveMonth'];
@@ -371,6 +384,13 @@ function getRentalReceiveForExport($rentalInfoPid) {
 
                     $key = $y.'_'.$rev['roomNo'].'_'.$rev['rentalContractPid'];
 					
+                    // 20241008 S_Add
+                    $keyMinGroup = $rev['roomNo'].'_'.$rev['rentalContractPid'];
+                    if (!isset($minYYMMGroups[$keyMinGroup])) {
+                        $minYYMMGroups[$keyMinGroup] = substr($rev['receiveMonth'], 0, 6);
+                    }
+                    // 20241008 E_Add
+
                     if (!isset($obj->groups[$key])) {
                         $data = new stdClass();
                         $data->baseInfo = $rev;
@@ -383,19 +403,37 @@ function getRentalReceiveForExport($rentalInfoPid) {
                             $objDay->receivePrice = null;
                             // 20240426 S_Update
                             // $objDay->isDisable = false;
-                            if(isset($roomRentExemptionStartDate) && !empty($roomRentExemptionStartDate)){
+                            // 20241008 S_Update
+                            // if(isset($roomRentExemptionStartDate) && !empty($roomRentExemptionStartDate)){
+                            //     $ym = $y . ($i < 10 ? '0' : '') . $i;
+                            //     if(isBeginDayInMonth($roomRentExemptionStartDate)){
+                            //         $objDay->isDisable = substr($roomRentExemptionStartDate, 0, 6) <= $ym;
+                            //     }
+                            //     else {
+                            //         $objDay->isDisable = substr($roomRentExemptionStartDate, 0, 6) < $ym;
+                            //     }
+                            // }
+                            // else{
+                            //     $objDay->isDisable = false;
+                            // }
+                            if(isset($initLoanPeriodEndDate) && !empty($initLoanPeriodEndDate)){
                                 $ym = $y . ($i < 10 ? '0' : '') . $i;
-                                if(isBeginDayInMonth($roomRentExemptionStartDate)){
-                                    $objDay->isDisable = substr($roomRentExemptionStartDate, 0, 6) <= $ym;
-                                }
-                                else {
-                                    $objDay->isDisable = substr($roomRentExemptionStartDate, 0, 6) < $ym;
-                                }
+                                $objDay->isDisable = substr($initLoanPeriodEndDate, 0, 6) < $ym;
                             }
                             else{
                                 $objDay->isDisable = false;
                             }
+                            // 20241008 E_Update
                             // 20240426 E_Update
+
+                            // 20241008 S_Add
+                            if(!$objDay->isDisable){
+                                $ym = $y . ($i < 10 ? '0' : '') . $i;
+                                if($ym < $minYYMMGroups[$keyMinGroup]){
+                                    $objDay->isDisable = true;
+                                }
+                            }
+                            // 20241008 E_Add
 
                             $details[$i] = $objDay;
                         }

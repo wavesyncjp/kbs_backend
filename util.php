@@ -927,6 +927,7 @@ function convert_jpdt_kanji($date, $format = 'm月d日') {
 	} else {
 		$name = '西暦';
 	}
+	if($format == 'name') return $name;// 20241028 Add
 	$day = new DateTime($date);
 	// 20211021 S_Update
 //	return $name.$year.'年'.date_format($day, 'm月d日');
@@ -1908,30 +1909,35 @@ function createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $
 		// 	$loanPeriodEndDate = calcAdjustDate("-1 months", $evic->surrenderDate);
 		// 	// 2024404 E_Update
 		// }
-		$loanPeriodEndDateTemp = '';
-		// 賃貸免除開始日
-		if(isset($evic->roomRentExemptionStartDate) && !empty($evic->roomRentExemptionStartDate)){
-			$loanPeriodEndDateTemp = $evic->roomRentExemptionStartDate;
-		}
-		// 合意解除日
-		else if(isset($evic->agreementCancellationDate) && !empty($evic->agreementCancellationDate)){
-			$loanPeriodEndDateTemp = $evic->agreementCancellationDate;
-		}
-		// 明渡日
-		else if(isset($evic->surrenderDate) && !empty($evic->surrenderDate)){
-			$loanPeriodEndDateTemp = $evic->surrenderDate;
-		}
+
+		// 20241008 S_Update
+		// $loanPeriodEndDateTemp = '';
+		// // 賃貸免除開始日
+		// if(isset($evic->roomRentExemptionStartDate) && !empty($evic->roomRentExemptionStartDate)){
+		// 	$loanPeriodEndDateTemp = $evic->roomRentExemptionStartDate;
+		// }
+		// // 合意解除日
+		// else if(isset($evic->agreementCancellationDate) && !empty($evic->agreementCancellationDate)){
+		// 	$loanPeriodEndDateTemp = $evic->agreementCancellationDate;
+		// }
+		// // 明渡日
+		// else if(isset($evic->surrenderDate) && !empty($evic->surrenderDate)){
+		// 	$loanPeriodEndDateTemp = $evic->surrenderDate;
+		// }
 		
-		if(!empty($loanPeriodEndDateTemp)){
-			// 各日付が「X月1日」の場合はその所属する月以降非表示
-			if(isBeginDayInMonth($loanPeriodEndDateTemp)){
-				$loanPeriodEndDate = calcAdjustDate("-1 months", $loanPeriodEndDateTemp);
-			}
-			// 各日付が「X月2日～末日」だった場合、翌月から非表示とする
-			else{
-				$loanPeriodEndDate = $loanPeriodEndDateTemp;
-			}
-		}
+		// if(!empty($loanPeriodEndDateTemp)){
+		// 	// 各日付が「X月1日」の場合はその所属する月以降非表示
+		// 	if(isBeginDayInMonth($loanPeriodEndDateTemp)){
+		// 		$loanPeriodEndDate = calcAdjustDate("-1 months", $loanPeriodEndDateTemp);
+		// 	}
+		// 	// 各日付が「X月2日～末日」だった場合、翌月から非表示とする
+		// 	else{
+		// 		$loanPeriodEndDate = $loanPeriodEndDateTemp;
+		// 	}
+		// }
+		$loanPeriodEndDate = getInitLoanPeriodEndDate($evic);
+		// 20241008 E_Update
+
 		// 20240426 E_Update
 		// 20240229 E_Update
 	}	
@@ -3482,4 +3488,52 @@ function getEndOfMonth($date) {
 }
 // 20240930 E_Add
 
+// 20241008 S_Add
+/**
+ * 入金最終日を取得
+ */
+function getInitLoanPeriodEndDate($evic, $forReport = false){
+	$loanPeriodEndDate = null;
+
+	if(isset($evic)){
+		$loanPeriodEndDateTemp = '';
+		// 賃貸免除開始日
+		if(isset($evic->roomRentExemptionStartDate) && !empty($evic->roomRentExemptionStartDate)){
+			$loanPeriodEndDateTemp = $evic->roomRentExemptionStartDate;
+		}
+		else if($forReport){
+			// 明渡日
+			if(isset($evic->surrenderDate) && !empty($evic->surrenderDate)){
+				$loanPeriodEndDateTemp = $evic->surrenderDate;
+			}
+			// 合意解除日
+			else if(isset($evic->agreementCancellationDate) && !empty($evic->agreementCancellationDate)){
+				$loanPeriodEndDateTemp = $evic->agreementCancellationDate;
+			}
+		}
+		else{
+			// 合意解除日
+			if(isset($evic->agreementCancellationDate) && !empty($evic->agreementCancellationDate)){
+				$loanPeriodEndDateTemp = $evic->agreementCancellationDate;
+			}
+			// 明渡日
+			else if(isset($evic->surrenderDate) && !empty($evic->surrenderDate)){
+				$loanPeriodEndDateTemp = $evic->surrenderDate;
+			}
+		}
+		
+		if(!empty($loanPeriodEndDateTemp)){
+			// 各日付が「X月1日」の場合はその所属する月以降非表示
+			if(isBeginDayInMonth($loanPeriodEndDateTemp)){
+				$loanPeriodEndDate = calcAdjustDate("-1 months", $loanPeriodEndDateTemp);
+			}
+			// 各日付が「X月2日～末日」だった場合、翌月から非表示とする
+			else{
+				$loanPeriodEndDate = $loanPeriodEndDateTemp;
+			}
+		}
+	}
+	return $loanPeriodEndDate;
+}
+// 20241008 E_Add
 ?>
