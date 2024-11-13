@@ -343,10 +343,13 @@ function getRentalReceiveForExport($rentalInfoPid) {
 	->where_null('p1.deleteDate');
 	
 	$queryRC = $queryRC->where('p1.rentalInfoPid', $rentalInfoPid);
-	// 20241028 S_Update
-    // $rentalReceives = $queryRC->order_by_expr('p4.receiveMonth asc, LENGTH(p2.roomNo) asc, p2.roomNo asc, p4.rentalContractPid asc')->findArray();
-    $rentalReceives = $queryRC->order_by_asc('p1.pid')->findArray();
-    // 20241028 E_Update
+    // 20241113 S_Update
+	// // 20241028 S_Update
+    // // $rentalReceives = $queryRC->order_by_expr('p4.receiveMonth asc, LENGTH(p2.roomNo) asc, p2.roomNo asc, p4.rentalContractPid asc')->findArray();
+    // $rentalReceives = $queryRC->order_by_asc('p1.pid')->findArray();
+    // // 20241028 E_Update
+    $rentalReceives = $queryRC->order_by_expr('p4.receiveMonth asc, p1.pid asc')->findArray();
+    // 20241113 E_Update
 	
     $results = array();
 
