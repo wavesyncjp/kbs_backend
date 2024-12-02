@@ -502,6 +502,56 @@ foreach($contracts as $contract) {
 	}
 	// 20240912 E_Add
 
+	// 20241125 S_Add
+	// 契約情報詳細にて売買代金（土地）に金額が入っていない場合に売買代金（土地）の行を出力しない
+	$creditorPayPrice = 0;
+	foreach ($transferSlipDatas as &$landData) {
+		if ($landData->priceType === 'tradingLandPrice') {
+			if(!isset($landData->debtorPayPrice) || $landData->debtorPayPrice == 0){
+				$creditorPayPrice = $landData->creditorPayPrice;
+				$landData->creditorPayPrice = null;
+			}
+			break; 
+		}
+	}
+	unset($landData); 
+
+	if(isset($creditorPayPrice) && $creditorPayPrice > 0){
+	
+		$priceType = '';
+		foreach ($transferSlipDatas as $landData) {
+			if(isset($landData->debtorPayPrice) && $landData->debtorPayPrice > 0){
+				$priceType = $landData->priceType;
+				break; 
+			}
+		}
+
+		if(isset($priceType)){
+			foreach ($transferSlipDatas as &$landData) {
+				if ($landData->priceType === $priceType) {
+					if(isset($landData->creditorPayPrice)){
+						$landData->creditorPayPrice += $creditorPayPrice;
+					}
+					else{
+						$landData->creditorPayPrice = $creditorPayPrice;
+					}
+					break; 
+				}
+			}
+			unset($landData);
+		}
+		
+		 $transferSlipDatasNew = array_filter($transferSlipDatas, function($slipData) {
+			return ($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || 
+				   ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0);
+		});
+	
+		$transferSlipDatasNew = array_values($transferSlipDatasNew);
+	
+		$transferSlipDatas = $transferSlipDatasNew;
+	}
+	// 20241125 E_Add
+
 	// 20220703 S_Update
 	// $endColumn = 13;// 最終列数
 	$endColumn = 16;// 最終列数
