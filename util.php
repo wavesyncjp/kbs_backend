@@ -3331,7 +3331,10 @@ function getKanjyoNameData($paymentCode, $contractType, $isUseAfter, $isPay = fa
 		// if($isUseAfter || ($isPay && $kanjyoFix->executionType == '101')){// 101：振替　
 		$data->executionType = $kanjyoFix->executionType;
 		// 諸経費等の時
-		if($isPay && $kanjyoFix->executionType == '301'){// 301：預り金時貸方勘定科目振替
+		// 20250219 S_Update
+		// if($isPay && $kanjyoFix->executionType == '301'){// 301：預り金時貸方勘定科目振替
+		if($isPay && isIncludeWith($kanjyoFix->executionType, '301')){// 301：預り金時貸方勘定科目振替
+		// 20250219 E_Update
 			if($isUseAfter){//預り金チェックが入っていたら
 				$data->debtorKanjyoName = getKanjyoNameCommon($kanjyoFix->transDebtorKanjyoCode);
 				$data->creditorKanjyoName = getKanjyoNameCommon('0500');// 0500：預り金
@@ -3342,14 +3345,20 @@ function getKanjyoNameData($paymentCode, $contractType, $isUseAfter, $isPay = fa
 			}
 		}
 		// 決済案内（買取決済）の時
-		else if(!$isSales && $kanjyoFix->executionType == '301'){// 301：預り金時貸方勘定科目振替
+		// 20250219 S_Update
+		// else if(!$isSales && $kanjyoFix->executionType == '301'){// 301：預り金時貸方勘定科目振替
+		else if(!$isSales && isIncludeWith($kanjyoFix->executionType, '301')){// 301：預り金時貸方勘定科目振替
+		// 20250219 E_Update
 			$data->debtorKanjyoName = getKanjyoNameCommon($kanjyoFix->debtorKanjyoCode);
 			$data->creditorKanjyoName = getKanjyoNameCommon($kanjyoFix->creditorKanjyoCode);				
 		}
 		// 101：振替　			
 		// 決済案内出力時は振替前の勘定科目で出力、			
 		// 支払依頼書での出力時は振替後の勘定科目を出力する。			
-		else if($isUseAfter || ($isPay && $kanjyoFix->executionType == '101')){// 101：振替　
+		// 20250219 S_Update
+		// else if($isUseAfter || ($isPay && $kanjyoFix->executionType == '101')){// 101：振替　
+		else if($isUseAfter || ($isPay && isIncludeWith($kanjyoFix->executionType, '101'))){// 101：振替　
+		// 20250219 E_Update
 		// 20240912 E_Update
 			$data->debtorKanjyoName = getKanjyoNameCommon($kanjyoFix->transDebtorKanjyoCode);
 			$data->creditorKanjyoName = getKanjyoNameCommon($kanjyoFix->transCreditorKanjyoCode);
@@ -3536,4 +3545,34 @@ function getInitLoanPeriodEndDate($evic, $forReport = false){
 	return $loanPeriodEndDate;
 }
 // 20241008 E_Add
+
+// 20250219 S_Add
+function isBeginWith($value, $valueCheck = '3'){
+	$values = explode(',', $value);
+    $result = false;
+    
+    foreach ($values as $val) {
+        if (strpos($val, $valueCheck) === 0) {
+            $result = true;
+            break; 
+        }
+    }
+
+	return $result;
+}
+
+function isIncludeWith($value, $valueCheck){
+	$values = explode(',', $value);
+    $result = false;
+    
+    foreach ($values as $val) {
+        if ($val == $valueCheck) {
+            $result = true;
+            break; 
+        }
+    }
+
+	return $result;
+}
+// 20250219 E_Add
 ?>

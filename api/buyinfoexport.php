@@ -483,7 +483,10 @@ foreach($contracts as $contract) {
 	$debtReduction = 0;
 
 	foreach ($transferSlipDatas as $data) {
-		if (isset($data->executionType) && strpos($data->executionType, '3') === 0 && empty($data->debtorKanjyoName) && isset($data->debtorPayPrice) && $data->debtorPayPrice > 0) {
+		// 20250219 S_Update
+		// if (isset($data->executionType) && strpos($data->executionType, '3') === 0 && empty($data->debtorKanjyoName) && isset($data->debtorPayPrice) && $data->debtorPayPrice > 0) {
+		if (isset($data->executionType) && isBeginWith($data->executionType, '3') && empty($data->debtorKanjyoName) && isset($data->debtorPayPrice) && $data->debtorPayPrice > 0) {
+		// 20250219 E_Update
 			$debtReduction += $data->debtorPayPrice;
 			$data->debtorPayPrice = null;
 		}

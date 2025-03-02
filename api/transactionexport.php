@@ -572,6 +572,15 @@ foreach($sales as $sale) {
     }
     // 20230510 E_Update
 
+    // 20250219 S_Add
+    // 留保金 の出力用
+    $salesRetainageDay = $sale['salesRetainageDay'];
+    $salesRetainage = $sale['salesRetainage'];
+    if(($salesRetainageDay != null && $salesRetainageDay != '') && ($salesRetainage != null && $salesRetainage != '')){
+        array_push($arrayDayChk, array(convert_jpdt_kanji($salesRetainageDay), '留保金', $salesRetainage));
+    }
+    // 20250219 E_Add
+
     // （内消費税相当額<-固都税清算金（消費税）
     // 20220608 S_Update
     // $cell = setCell($cell, $sheet, 'salesFixedConsumptionTax', $tradingColumn, $endColumn, $tradingRow, $endRow, formatNumber($sale['salesFixedConsumptionTax'], false));
