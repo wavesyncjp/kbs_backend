@@ -3150,6 +3150,7 @@ function addSlipData2(&$transferSlipDatas, $contracts, $objData, $objDataParent,
 		// if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
 		if ((isset($slipData->debtorKanjyoName) || isset($slipData->creditorKanjyoName)) && (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0))) {
     	// 20240912 E_Update
+			$slipData->paymentCode = $slipData->paymentCode . '_';// 20250402 Add
 			$transferSlipDatas[] = $slipData;
 		}		
 	}
@@ -3575,4 +3576,57 @@ function isIncludeWith($value, $valueCheck){
 	return $result;
 }
 // 20250219 E_Add
+
+// 20250402 S_Add
+// 和暦（例：令和6年10月28日）を西暦（例：2024-10-28）に変換する関数
+function convert_kanji_to_date($jp_date) {
+    // 元号と対応する基準年のマップ（元年の前年）
+    $era_map = [
+        '令和' => 2018, // 令和元年 = 2019年
+        '平成' => 1988, // 平成元年 = 1989年
+        '昭和' => 1925, // 昭和元年 = 1926年
+        '大正' => 1911, // 大正元年 = 1912年
+        '明治' => 1867, // 明治元年 = 1868年
+    ];
+
+    // 入力文字列に含まれる元号を判定
+    foreach ($era_map as $era => $baseYear) {
+        if (strpos($jp_date, $era) !== false) {
+            // 「〇〇6年10月28日」のような形式を抽出
+            if (preg_match('/'.$era.'(\d+)年(\d+)月(\d+)日/', $jp_date, $matches)) {
+                $year = $baseYear + intval($matches[1]); // 和暦年 + 基準年
+                $month = str_pad($matches[2], 2, '0', STR_PAD_LEFT); // 月を2桁に補完
+                $day = str_pad($matches[3], 2, '0', STR_PAD_LEFT);   // 日を2桁に補完
+                return "$year-$month-$day"; // 西暦形式で返す（例：2024-10-28）
+            }
+        }
+    }
+
+    return null; // 正しい和暦形式でない場合は null を返す
+}
+
+// 配列を日付（和暦）で昇順に、「留保金」は後ろにソートする関数
+function sortArrayDayChk($arrayDayChk){
+    usort($arrayDayChk, function ($a, $b) {
+        // ① 和暦を西暦に変換して日付で比較
+        $dateA = strtotime(convert_kanji_to_date($a[0]));
+        $dateB = strtotime(convert_kanji_to_date($b[0]));
+
+        // ② 同一日付の場合、「留保金」は後ろに配置
+        if ($a[1] === '留保金' && $b[1] !== '留保金') {
+            return 1; // $aは後ろに
+        } elseif ($a[1] !== '留保金' && $b[1] === '留保金') {
+            return -1; // $aは前に
+        }
+		else if ($dateA !== $dateB) {
+            return $dateA - $dateB; // 昇順ソート
+        } 
+		else {
+            return 0; // 並び順を変更しない
+        }
+    });
+
+    return $arrayDayChk; // ソートされた配列を返す
+}
+// 20250402 E_Add
 ?>

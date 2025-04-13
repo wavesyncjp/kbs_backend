@@ -485,58 +485,81 @@ foreach ($targets as $key => $groups) {
 		copyBlockWithVal($sheet, $currentRow, 2, sizeof($transferSlipDatas) - 1, $endColumn);
 	}
 
-	// 20240806 S_Add
-	// 初期化: カウンタとプレースホルダー
-	$paymentCounts = [
-		'5002' => 0,// 弁護士報酬
-		'5005' => 0,// 司法書士報酬
-		'3015' => 0// 登録免許税及び印紙代
-	];
+	// 20250402 S_Update
+	// // 20240806 S_Add
+	// // 初期化: カウンタとプレースホルダー
+	// $paymentCounts = [
+	// 	'5002' => 0,// 弁護士報酬
+	// 	'5005' => 0,// 司法書士報酬
+	// 	'3015' => 0// 登録免許税及び印紙代
+	// ];
 
-	$creditorPayPrice3015 = null;
-	$paymentCodeProcess = null;
+	// $creditorPayPrice3015 = null;
+	// $paymentCodeProcess = null;
 
-	// transferSlipDatas を反復処理してカウントとフィルタリング
-	foreach ($transferSlipDatas as $slipData) {
-		if (isset($slipData->paymentCode)) {
-			switch ($slipData->paymentCode) {
-				case '5002':
-				case '5005':
-					// 支払コード '5002' または '5005' のカウント
-					$paymentCounts[$slipData->paymentCode]++;
-					break;
-				case '3015':
-					// 支払コード '3015' のカウントと価格の保存
-					$paymentCounts['3015']++;
-					$creditorPayPrice3015 = $slipData->creditorPayPrice;
-					break;
-			}
-		}
+	// // transferSlipDatas を反復処理してカウントとフィルタリング
+	// foreach ($transferSlipDatas as $slipData) {
+	// 	if (isset($slipData->paymentCode)) {
+	// 		switch ($slipData->paymentCode) {
+	// 			case '5002':
+	// 			case '5005':
+	// 				// 支払コード '5002' または '5005' のカウント
+	// 				$paymentCounts[$slipData->paymentCode]++;
+	// 				break;
+	// 			case '3015':
+	// 				// 支払コード '3015' のカウントと価格の保存
+	// 				$paymentCounts['3015']++;
+	// 				$creditorPayPrice3015 = $slipData->creditorPayPrice;
+	// 				break;
+	// 		}
+	// 	}
+	// }
+
+	// // カウントに基づいて処理する支払コードを決定
+	// if ($paymentCounts['3015'] == 1) {
+	// 	if ($paymentCounts['5002'] == 1 && $paymentCounts['5005'] == 0) {
+	// 		$paymentCodeProcess = '5002';
+	// 	} elseif ($paymentCounts['5002'] == 0 && $paymentCounts['5005'] == 1) {
+	// 		$paymentCodeProcess = '5005';
+	// 	}
+
+	// 	// 一致する支払コードの処理
+	// 	if ($paymentCodeProcess !== null && $creditorPayPrice3015 !== null) {
+	// 		foreach ($transferSlipDatas as $slipData) {
+	// 			if ($slipData->paymentCode == $paymentCodeProcess) {
+	// 				// 支払コードが一致する場合、価格を加算
+	// 				$slipData->creditorPayPrice += $creditorPayPrice3015;
+	// 			} elseif ($slipData->paymentCode == '3015') {
+	// 				// 支払コードが '3015' の場合、価格を null に設定
+	// 				$slipData->creditorPayPrice = null;
+	// 				$slipData->creditorKanjyoName = null;
+	// 			}
+	// 		}
+	// 	}
+	// }
+	// // 20240806 E_Add
+
+	$totalCreditorPayPrice = 0;
+
+	// $codeMstから'codeDetail'の値を取り出し、$codeDetailsに格納
+	$codeDetails = array_column($patternCodeList, 'codeDetail');
+
+	foreach ($transferSlipDatas as &$data) {
+		// paymentCodeが$codeDetails配列の中にあるかを確認
+		if (in_array($data->paymentCode, $codeDetails) && isset($data->creditorPayPrice)) {
+			$totalCreditorPayPrice += $data->creditorPayPrice;
+			$data->creditorPayPrice = null;
+		} 
 	}
-
-	// カウントに基づいて処理する支払コードを決定
-	if ($paymentCounts['3015'] == 1) {
-		if ($paymentCounts['5002'] == 1 && $paymentCounts['5005'] == 0) {
-			$paymentCodeProcess = '5002';
-		} elseif ($paymentCounts['5002'] == 0 && $paymentCounts['5005'] == 1) {
-			$paymentCodeProcess = '5005';
-		}
-
-		// 一致する支払コードの処理
-		if ($paymentCodeProcess !== null && $creditorPayPrice3015 !== null) {
-			foreach ($transferSlipDatas as $slipData) {
-				if ($slipData->paymentCode == $paymentCodeProcess) {
-					// 支払コードが一致する場合、価格を加算
-					$slipData->creditorPayPrice += $creditorPayPrice3015;
-				} elseif ($slipData->paymentCode == '3015') {
-					// 支払コードが '3015' の場合、価格を null に設定
-					$slipData->creditorPayPrice = null;
-					$slipData->creditorKanjyoName = null;
-				}
+	foreach ($transferSlipDatas as &$data) {
+		if (in_array($data->paymentCode, $codeDetails)) {
+			if(isset($totalCreditorPayPrice)){
+				$data->creditorPayPrice = $totalCreditorPayPrice;
 			}
-		}
+			break;
+		} 
 	}
-	// 20240806 E_Add
+	// 20250402 E_Update
 
 	foreach($transferSlipDatas as $slipData) {
 		

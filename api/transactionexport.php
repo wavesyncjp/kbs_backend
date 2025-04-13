@@ -393,6 +393,12 @@ foreach($contracts as $contract) {
         array_push($arrayDayChk, array('', '', ''));
         $lengthArrayDayChk = 1;
     }
+    // 20250402 S_Add
+    else{
+        $arrayDayChk = sortArrayDayChk($arrayDayChk);
+    }
+    // 20250402 E_Add
+
     for($i = 0; $i < $lengthArrayDayChk; $i++) {
         $cell = setCell(null, $sheet, 'historyDay', $currentColumn, $endColumn, $currentRow, $endRow, $arrayDayChk[$i][0]);
         $cell = setCell($cell, $sheet, 'historyName', $currentColumn, $endColumn, $currentRow, $endRow, $arrayDayChk[$i][1]);
@@ -671,6 +677,12 @@ foreach($sales as $sale) {
         array_push($arrayDayChk, array('', '', ''));
         $lengthArrayDayChk = 1;
     }
+    // 20250402 S_Add
+    else{
+        $arrayDayChk = sortArrayDayChk($arrayDayChk);
+    }
+    // 20250402 E_Add
+
     for($i = 0; $i < $lengthArrayDayChk; $i++) {
         $cell = setCell(null, $sheet, 'historyDay', $currentColumn, $endColumn, $currentRow, $endRow, $arrayDayChk[$i][0]);
         $cell = setCell($cell, $sheet, 'historyName', $currentColumn, $endColumn, $currentRow, $endRow, $arrayDayChk[$i][1]);
