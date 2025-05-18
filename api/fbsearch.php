@@ -61,6 +61,8 @@ if(isset($param->fbOutPutFlg)  && $param->fbOutPutFlg !== ''){
 if(isset($param->fbApprovalFlg)  && $param->fbApprovalFlg !== ''){
 	$query = $query->where('p1.fbApprovalFlg', $param->fbApprovalFlg);
 }
+$query = getQueryExpertTempland($param, $query, 'p3.pid');// 20250502 Add
+
 $detail = $query->order_by_desc('p1.pid')->find_array();
 echo json_encode($detail);
 

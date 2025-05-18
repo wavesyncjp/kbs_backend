@@ -92,6 +92,8 @@ if(isset($param->canncellDay_To) && $param->canncellDay_To != ''){
 }
 // 20221122 E_Add
 
+$query = getQueryExpertTempland($param, $query, 'p1.pid');// 20250502 Add
+
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();
 foreach($lands as $land){

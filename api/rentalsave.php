@@ -17,7 +17,7 @@ $rentalReceivesChanged = $param->rentalReceivesChanged;
 
 // 20231010 S_Add
 $isChangedReceive = isset($rentalReceivesChanged);
-$isChangedOwnerDate = false;// 所有権移転日変更フラグ
+// $isChangedOwnerDate = false;// 所有権移転日変更フラグ // 20250509 Delete
 $rentalReceiveAllDeleteObj = array();// 全部賃貸入金削除データ
 $rentalReceiveAllDeletePid = array();// 全部賃貸入金削除Pid
 $rentalReceiveAllNewObj = array();// 全部賃貸入金（新規）
@@ -41,9 +41,11 @@ if (isset($param->pid) && $param->pid > 0) {
 	setUpdate($rental, $param->updateUserId);
 	$userId = $param->updateUserId;
 
-	// 20231010 S_Add
-	$isChangedOwnerDate = $param->ownershipRelocationDate != $rental->ownershipRelocationDate;
-	// 20231010 E_Add
+	// 20250509 S_Delete
+	// // 20231010 S_Add
+	// $isChangedOwnerDate = $param->ownershipRelocationDate != $rental->ownershipRelocationDate;
+	// // 20231010 E_Add
+	// 20250509 E_Delete
 
 	//所在地情報PID変更チェック
 	if ($rental->locationInfoPid != $param->locationInfoPid) {
@@ -54,19 +56,21 @@ if (isset($param->pid) && $param->pid > 0) {
 		//賃貸入金
 		$rentalReceives = ORM::for_table(TBLRENTALRECEIVE)->where('rentalInfoPid', $rental->pid)->where_null('deleteDate')->find_many();
 	}
-	// 20231010 S_Add
-	else if($isChangedOwnerDate){
-		//賃貸契約
-		$rentalContracts = ORM::for_table(TBLRENTALCONTRACT)->where('rentalInfoPid', $rental->pid)->where_null('deleteDate')->find_many();
-		//賃貸入金
-		$rentalReceives = ORM::for_table(TBLRENTALRECEIVE)->where('rentalInfoPid', $rental->pid)->where_null('deleteDate')->find_many();
+	// 20250509 S_Delete
+	// // 20231010 S_Add
+	// else if($isChangedOwnerDate){
+	// 	//賃貸契約
+	// 	$rentalContracts = ORM::for_table(TBLRENTALCONTRACT)->where('rentalInfoPid', $rental->pid)->where_null('deleteDate')->find_many();
+	// 	//賃貸入金
+	// 	$rentalReceives = ORM::for_table(TBLRENTALRECEIVE)->where('rentalInfoPid', $rental->pid)->where_null('deleteDate')->find_many();
 		
-		// 賃貸契約未登録の場合、所有権移転日変更処理をスキップ
-		if($rentalContracts == null || count($rentalContracts) == 0){
-			$isChangedOwnerDate = false;
-		}
-	}
-	// 20231010 E_Add
+	// 	// 賃貸契約未登録の場合、所有権移転日変更処理をスキップ
+	// 	if($rentalContracts == null || count($rentalContracts) == 0){
+	// 		$isChangedOwnerDate = false;
+	// 	}
+	// }
+	// // 20231010 E_Add
+	// 20250509 E_Delete
 }
 // 登録
 else {
@@ -75,123 +79,124 @@ else {
 	$userId = $param->createUserId;
 }
 
+// 20250509 S_Delete
+// // 20231010 S_Add
+// // 所有権移転日変更した場合、既存賃貸入金をチェック
+// if($isChangedOwnerDate){
 
-// 20231010 S_Add
-// 所有権移転日変更した場合、既存賃貸入金をチェック
-if($isChangedOwnerDate){
+// 	$ownershipRelocationDate = $param->ownershipRelocationDate;
+// 	$paids = array();
 
-	$ownershipRelocationDate = $param->ownershipRelocationDate;
-	$paids = array();
-
-	foreach ($rentalContracts as $rentalCT) {
-		$rentPrice = getRentPrice($rentalCT->residentInfoPid);
-		// 20231027 S_Update
-		// $objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $rentalCT->loanPeriodEndDate);
-		$evic = getEvic($rentalCT);
+// 	foreach ($rentalContracts as $rentalCT) {
+// 		$rentPrice = getRentPrice($rentalCT->residentInfoPid);
+// 		// 20231027 S_Update
+// 		// $objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $rentalCT->loanPeriodEndDate);
+// 		$evic = getEvic($rentalCT);
 		
-		$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $evic);
-		// 20231027 E_Update
+// 		$objs = createRentalReceives($rentalCT, $rentPrice, $ownershipRelocationDate, $evic);
+// 		// 20231027 E_Update
 	
-		// 20240311 S_Add
-		$minReceiveMonth = getMinReceiveMonth($objs);
-		$maxReceiveMonth = getMaxReceiveMonth($evic);
-		// 20240311 E_Add
+// 		// 20240311 S_Add
+// 		$minReceiveMonth = getMinReceiveMonth($objs);
+// 		$maxReceiveMonth = getMaxReceiveMonth($evic);
+// 		// 20240311 E_Add
 
-		$receives = array();
-		$existedRePids = array();
+// 		$receives = array();
+// 		$existedRePids = array();
 
-		foreach ($rentalReceives as $rev) {
-			if($rev->rentalContractPid == $rentalCT->pid){
-				$receives[] = $rev;
-			}
-		}
+// 		foreach ($rentalReceives as $rev) {
+// 			if($rev->rentalContractPid == $rentalCT->pid){
+// 				$receives[] = $rev;
+// 			}
+// 		}
 
-		foreach ($objs as $obj) {
+// 		foreach ($objs as $obj) {
 			
-			$isExists = false;
+// 			$isExists = false;
 
-			// 既存賃貸入金をチェック
-			foreach ($receives as $rev) {
-				// 入金月日同じ
-				if (in_array($rev->pid, $existedRePids) == false) {
-					// 20240312 S_Update
-					// if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
-					if ($rev->receiveMonth == $obj->receiveMonth) {
-						//未入金　かつ　入金日変更 かつ　画面で変更した入金リストが含まない
-						if($rev->receiveFlg != '1' && $rev->receiveDay != $obj->receiveDay){
-							if(!$isChangedReceive || ($isChangedReceive && !in_array($rev->pid, $rentalReceivesChangedPid))){
-								$rev->receiveDay = $obj->receiveDay;
-								$rentalReceiveAllUpdateObj[] = $rev;
-							}
-						}
-					// 20240312 E_Update
-						$existedRePids[] = $rev->pid;
-						$isExists = true;
-					}
-				}
-			}
+// 			// 既存賃貸入金をチェック
+// 			foreach ($receives as $rev) {
+// 				// 入金月日同じ
+// 				if (in_array($rev->pid, $existedRePids) == false) {
+// 					// 20240312 S_Update
+// 					// if ($rev->receiveMonth == $obj->receiveMonth && $rev->receiveDay == $obj->receiveDay) {
+// 					if ($rev->receiveMonth == $obj->receiveMonth) {
+// 						//未入金　かつ　入金日変更 かつ　画面で変更した入金リストが含まない
+// 						if($rev->receiveFlg != '1' && $rev->receiveDay != $obj->receiveDay){
+// 							if(!$isChangedReceive || ($isChangedReceive && !in_array($rev->pid, $rentalReceivesChangedPid))){
+// 								$rev->receiveDay = $obj->receiveDay;
+// 								$rentalReceiveAllUpdateObj[] = $rev;
+// 							}
+// 						}
+// 					// 20240312 E_Update
+// 						$existedRePids[] = $rev->pid;
+// 						$isExists = true;
+// 					}
+// 				}
+// 			}
 
-			if(!$isExists){
-				$rentalReceiveAllNewObj[] =$obj;
-			}
-		}
+// 			if(!$isExists){
+// 				$rentalReceiveAllNewObj[] =$obj;
+// 			}
+// 		}
 
-		//入金済をチェック
-		foreach ($receives as $rev) {
-			// 存在しないデータを削除
-			if (in_array($rev->pid, $existedRePids) == false) {
-				if ($rev->receiveFlg == '1') { //入金済み
-					$isSkip = false;
+// 		//入金済をチェック
+// 		foreach ($receives as $rev) {
+// 			// 存在しないデータを削除
+// 			if (in_array($rev->pid, $existedRePids) == false) {
+// 				if ($rev->receiveFlg == '1') { //入金済み
+// 					$isSkip = false;
 
-					//画面で賃貸入金更新ある
-					if($isChangedReceive){
-						foreach ($rentalReceivesChanged as $revChanged) {
-							if($revChanged->pid == $rev->pid){
-								//画面で入金済を未入金に変更
-								$isSkip = $revChanged->receiveFlg == '0';
-								break;
-							}
-						}
-					}
+// 					//画面で賃貸入金更新ある
+// 					if($isChangedReceive){
+// 						foreach ($rentalReceivesChanged as $revChanged) {
+// 							if($revChanged->pid == $rev->pid){
+// 								//画面で入金済を未入金に変更
+// 								$isSkip = $revChanged->receiveFlg == '0';
+// 								break;
+// 							}
+// 						}
+// 					}
 
-					// 20240312 S_Update
-					// if(!$isSkip){
-					// 	$tmp = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
-					// 	if (in_array($tmp, $paids) == false) {
-					// 		$paids[] = $tmp;
-					// 	}
-					// }
-					if(isOutOfRangeReceiveMonth($rev->receiveMonth, $minReceiveMonth, $maxReceiveMonth)){
-						// 入金済を未入金に変更の場合、削除
-						if($isSkip){
-							$rentalReceiveAllDeleteObj[] = $rev;
-							$rentalReceiveAllDeletePid[] = $rev->pid;
-						}
-						else{// 登録できない
-							$tmp = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
-							if (in_array($tmp, $paids) == false) {
-								$paids[] = $tmp;
-							}	
-						}
-					}
-					// 20240312 E_Update
-				}
-				else{
-					if(isOutOfRangeReceiveMonth($rev->receiveMonth, $minReceiveMonth, $maxReceiveMonth)){// 20240307 Add
-						$rentalReceiveAllDeleteObj[] = $rev;
-						$rentalReceiveAllDeletePid[] = $rev->pid;
-					}// 20240307 Add
-				}
-			}
-		}
-	}
-	//入金済の場合、何もしない
-	if (count($paids) > 0) {
-		echo json_encode(array('statusMap' => 'NG', 'msgMap' => '契約期間に指定されている範囲外に、既に入金済の賃料があります。（' . join(',', $paids) . '）'));
-		exit;
-	}
-}
-// 20231010 E_Add
+// 					// 20240312 S_Update
+// 					// if(!$isSkip){
+// 					// 	$tmp = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
+// 					// 	if (in_array($tmp, $paids) == false) {
+// 					// 		$paids[] = $tmp;
+// 					// 	}
+// 					// }
+// 					if(isOutOfRangeReceiveMonth($rev->receiveMonth, $minReceiveMonth, $maxReceiveMonth)){
+// 						// 入金済を未入金に変更の場合、削除
+// 						if($isSkip){
+// 							$rentalReceiveAllDeleteObj[] = $rev;
+// 							$rentalReceiveAllDeletePid[] = $rev->pid;
+// 						}
+// 						else{// 登録できない
+// 							$tmp = substr($rev->receiveMonth, 0, 4) . '年' . substr($rev->receiveMonth, 4, 2) . '月';
+// 							if (in_array($tmp, $paids) == false) {
+// 								$paids[] = $tmp;
+// 							}	
+// 						}
+// 					}
+// 					// 20240312 E_Update
+// 				}
+// 				else{
+// 					if(isOutOfRangeReceiveMonth($rev->receiveMonth, $minReceiveMonth, $maxReceiveMonth)){// 20240307 Add
+// 						$rentalReceiveAllDeleteObj[] = $rev;
+// 						$rentalReceiveAllDeletePid[] = $rev->pid;
+// 					}// 20240307 Add
+// 				}
+// 			}
+// 		}
+// 	}
+// 	//入金済の場合、何もしない
+// 	if (count($paids) > 0) {
+// 		echo json_encode(array('statusMap' => 'NG', 'msgMap' => '契約期間に指定されている範囲外に、既に入金済の賃料があります。（' . join(',', $paids) . '）'));
+// 		exit;
+// 	}
+// }
+// // 20231010 E_Add
+// 20250509 E_Delete
 
 copyData($param, $rental, array('pid', 'rentalContracts', 'rentalReceives', 'rentalContractsChanged', 'rentalReceivesChanged', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
 $rental->save();
@@ -369,34 +374,36 @@ if (!$isChangedLocPid && $isChangedReceive) {
 	}
 }
 
-// 20231010 S_Add
-// 所有権移転日変更の処理
-if (!$isChangedLocPid && $isChangedOwnerDate) {
+// 20250509 S_Delete
+// // 20231010 S_Add
+// // 所有権移転日変更の処理
+// if (!$isChangedLocPid && $isChangedOwnerDate) {
 
-	// 範囲外データを削除
-	foreach ($rentalReceiveAllDeleteObj as $rev) {
-		setDelete($rev, $userId);
-		$rev->save();
-	}
+// 	// 範囲外データを削除
+// 	foreach ($rentalReceiveAllDeleteObj as $rev) {
+// 		setDelete($rev, $userId);
+// 		$rev->save();
+// 	}
 
-	// 20240311 S_Update
-	// 範囲内データを更新
-	foreach ($rentalReceiveAllUpdateObj as $rev) {
-		setUpdate($rev, $userId);
-		$rev->save();
-	}
-	// 20240311 E_Update
+// 	// 20240311 S_Update
+// 	// 範囲内データを更新
+// 	foreach ($rentalReceiveAllUpdateObj as $rev) {
+// 		setUpdate($rev, $userId);
+// 		$rev->save();
+// 	}
+// 	// 20240311 E_Update
 
-	// 範囲内データを登録
-	foreach ($rentalReceiveAllNewObj as $obj) {
-		$receiveSave = ORM::for_table(TBLRENTALRECEIVE)->create();
-		setInsert($receiveSave, $userId);
+// 	// 範囲内データを登録
+// 	foreach ($rentalReceiveAllNewObj as $obj) {
+// 		$receiveSave = ORM::for_table(TBLRENTALRECEIVE)->create();
+// 		setInsert($receiveSave, $userId);
 
-		copyData($obj, $receiveSave, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
-		$receiveSave->save();
-	}
-}
-// 20231010 E_Add
+// 		copyData($obj, $receiveSave, array('pid', 'updateUserId', 'updateDate', 'createUserId', 'createDate'));
+// 		$receiveSave->save();
+// 	}
+// }
+// // 20231010 E_Add
+// 20250509 E_Delete
 
 ORM::get_db()->commit();
 

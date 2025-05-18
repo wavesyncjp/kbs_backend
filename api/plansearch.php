@@ -1,6 +1,7 @@
 <?php
 
 require '../header.php';
+require '../util.php';// 20250502 Add
 
 $postdata = file_get_contents("php://input");
 $param = json_decode($postdata);
@@ -38,6 +39,8 @@ if(isset($param->createDay) && $param->createDay != ''){
 if(isset($param->clctResult) && $param->clctResult != ''){
 	$query = $query->where_in('p1.result', $param->clctResult);
 }
+
+$query = getQueryExpertTempland($param, $query, 'p1.pid');// 20250502 Add
 
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();

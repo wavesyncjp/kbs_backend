@@ -79,6 +79,8 @@ if(isset($param->payFixDay_To) && $param->payFixDay_To != ''){
 }
 // 20200913 E_Add
 
+$query = getQueryExpertTempland($param, $query, 'p3.pid');// 20250502 Add
+
 $contracts = $query->order_by_desc('p3.bukkenNo')->find_array();
 
 // 20230314 S_Add

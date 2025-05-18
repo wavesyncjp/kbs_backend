@@ -89,6 +89,8 @@ if (isset($param->banktransferNameKana) && $param->banktransferNameKana != '') {
 }
 // 20230928 E_Add
 
+$query = getQueryExpertTempland($param, $query, 'p3.pid');// 20250502 Add
+
 $contracts = $query->order_by_desc('p3.bukkenNo')->find_array();
 
 $ret = [];

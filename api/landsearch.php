@@ -1,5 +1,6 @@
 <?php
 require '../header.php';
+require '../util.php';// 20250502 Add
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 	echo 'NOT SUPPORT';
@@ -163,6 +164,8 @@ if(isset($param->surveyDeliveryDayChk) && $param->surveyDeliveryDayChk == '1'){
 	$query = $query->where('p1.surveyDeliveryDayChk', $param->surveyDeliveryDayChk);
 }
 // 20240201 E_Add
+
+$query = getQueryExpertTempland($param, $query, 'p1.pid');// 20250502 Add
 
 $lands = $query->order_by_desc('pid')->find_array();
 $ret = array();

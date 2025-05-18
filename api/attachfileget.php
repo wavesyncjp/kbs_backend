@@ -29,6 +29,34 @@ function getFiles($pid,$fileType,$attachFileType){
 	else if($fileType == 2) {
 		$files = ORM::for_table(TBLBUKKENSALESATTACH)->where('bukkenSalesInfoPid', $pid)->where_in('attachFileType', explode(',', $attachFileType))->where_null('deleteDate')->order_by_desc('updateDate')->findArray();
 	}
+	// 20250418 S_Add
+	// 賃貸契約添付ファイル
+	else if($fileType == 3) {
+		$files = array_map(function($file) {
+			return [
+				'attachFileName' => $file['rentalContractFileName'],
+				'attachFilePath' => $file['rentalContractFilePath'],
+			];
+		}, ORM::for_table(TBLRENTALCONTRACTATTACH)
+			->where('rentalContractPid', $pid)
+			->where_null('deleteDate')
+			->order_by_desc('updateDate')
+			->findArray());
+	}
+	// 立退き情報添付ファイル
+	else if($fileType == 4) {
+		$files = array_map(function($file) {
+			return [
+				'attachFileName' => $file['evictionInfoFileName'],
+				'attachFilePath' => $file['eictionInfoFilePath'],
+			];
+		}, ORM::for_table(TBLEVICTIONINFOATTACH)
+			->where('evictionInfoPid', $pid)
+			->where_null('deleteDate')
+			->order_by_desc('updateDate')
+			->findArray());
+	}
+	// 20250418 E_Add
 	return $files;
 }
 

@@ -56,6 +56,8 @@ if(isset($param->bankPid) && $param->bankPid !== '') {
 	$query = $query->where('p1.bankPid', $param->bankPid);
 }
 
+$query = getQueryExpertTempland($param, $query, 'p3.pid');// 20250502 Add
+
 $results = $query->order_by_desc('pid')->find_array();
 
 echo json_encode($results);

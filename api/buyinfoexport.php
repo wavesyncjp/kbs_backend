@@ -137,7 +137,11 @@ foreach($contracts as $contract) {
 	$payDetail_outsourcing = null; // 支払契約詳細情報（業務委託料）
 	// 20220331 E_Add
 	$cntIntermediaryOrOutsourcing = 0;// 20220703 Add
-	$payDetailInOuts = array();// 20250402 Add
+	// 20250402 S_Add
+	$cntIntermediary = 0;
+	$cntOutsourcing = 0;
+	$payDetailInOuts = array();
+	// 20250402 E_Add
 
 	foreach($payContracts as $pay) {
 		$details = ORM::for_table(TBLPAYCONTRACTDETAIL)->where('payContractPid', $pay['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
@@ -170,6 +174,7 @@ foreach($contracts as $contract) {
 					$pay = ORM::for_table(TBLPAYCONTRACT)->findOne($payDetail_intermediary['payContractPid'])->asArray();
 					$payDetail_intermediary = array_merge($pay, $payDetail_intermediary);
 					$cntIntermediaryOrOutsourcing++;// 20220703 Add
+					$cntIntermediary++;// 20250402 Add
 				}
 				// 支払コードが業務委託料の場合
 				else if($detail['paymentCode'] == $paymentCodeByOutsourcingPrice) {
@@ -183,6 +188,7 @@ foreach($contracts as $contract) {
 					$pay = ORM::for_table(TBLPAYCONTRACT)->findOne($payDetail_outsourcing['payContractPid'])->asArray();
 					$payDetail_outsourcing = array_merge($pay, $payDetail_outsourcing);
 					$cntIntermediaryOrOutsourcing++;// 20220703 Add
+					$cntOutsourcing++;// 20250402 Add
 				}
 				// 20220331 E_Add
 			}
@@ -630,8 +636,10 @@ foreach($contracts as $contract) {
 
 	// 20250402 S_Update
 	// for($i = 1 ; $i <= 7; $i++) {
-	$numberOfSheet = 9;
-	$sheetIndexInOut = 8;
+	$numberOfSheet = 10;
+	$sheetIndexInOut = 9;// 振替伝票 (仲介・業務委託)
+	$sheetIndexReceiptOutsourcing = 5;// 領収証 (業務委託料)
+	$sheetIndexReceiptIntermediary = 6;// 領収証 (仲介手数料)
 	for($i = 1 ; $i < $numberOfSheet; $i++) {
 	// 20250402 E_Update		
 
@@ -643,6 +651,8 @@ foreach($contracts as $contract) {
 		// 20250402 S_Add
 		// 仲介料と業務委託料が未登録の場合、振替伝票 (仲介・業務委託)シートは作成しない
 		if($i == $sheetIndexInOut && $cntIntermediaryOrOutsourcing == 0) continue;
+		if($i == $sheetIndexReceiptOutsourcing && $cntOutsourcing == 0) continue;
+		if($i == $sheetIndexReceiptIntermediary && $cntIntermediary == 0) continue;
 		// 20250402 E_Add
 
 		// シートをコピー
@@ -664,6 +674,17 @@ foreach($contracts as $contract) {
 			$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji_intermediary', 1, $endColumn, 1, $endRow, convert_dt($payDetail_intermediary['contractFixDay'], 'Y年n月j日'));
 			// 契約担当者
 			$cell = setCell(null, $sheet, 'contractStaffName', 1, $endColumn, 1, $endRow, $contractStaffName);
+
+			// 20250402 S_Add
+			if ($cntIntermediary == 0) {
+				$payDetail_intermediary = $payDetail_outsourcing;
+				$payDetail_outsourcing = []; // clear array
+			}
+
+			if ($cntOutsourcing == 0) {
+				$payDetail_outsourcing = []; // clear array
+			}
+			// 20250402 E_Add
 
 			// 仲介料
 			// 日時
@@ -703,9 +724,15 @@ foreach($contracts as $contract) {
 			if(!empty($payDetail_outsourcing['contractFixTime'])) $contractFixDateTime .= $payDetail_outsourcing['contractFixTime'] . '～';
 			$cell = setCell(null, $sheet, 'contractFixDateTime_outsourcing', 1, $endColumn, 1, $endRow, $contractFixDateTime);
 			// 契約書番号
-			$cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contract['contractFormNumber']);
+			// 20250402 S_Update
+			// $cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contract['contractFormNumber']);
+			$cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $contract['contractFormNumber']);
+			// 20250402 E_Update
 			// 複数地番/複数家屋番号
-			$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
+			// 20250402 S_Update
+			// $cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
+			$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $list_blockOrBuildingNumber);
+			// 20250402 E_Update
 			// 支払先<-取引先名称
 			$cell = setCell(null, $sheet, 'supplierName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['supplierName']);
 			/*
@@ -853,7 +880,13 @@ foreach($contracts as $contract) {
 		}
 
 		// ・領収証シート
-		if($i == 5) {
+		// 20250402 S_Update
+		// if($i == 5) {
+		if($i == $sheetIndexReceiptOutsourcing) {
+			if ($cntIntermediary == 0) {
+				$payDetail_outsourcing = $payDetail_intermediary;
+			}
+		// 20250402 E_Update
 			// 物件所在地
 			$cell = setCell(null, $sheet, 'addressAndBlockOrBuildingNumber', 1, $endColumn, 1, $endRow, $addressAndBlockOrBuildingNumber);
 			// 代金（業務委託料）
@@ -862,9 +895,23 @@ foreach($contracts as $contract) {
 			$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji_outsourcing', 1, $endColumn, 1, $endRow, convert_dt($payDetail_outsourcing['contractFixDay'], 'Y年n月j日'));
 		}
 
+		// 20250402 S_Update
+		if($i == $sheetIndexReceiptIntermediary) {
+			// 物件所在地
+			$cell = setCell(null, $sheet, 'addressAndBlockOrBuildingNumber', 1, $endColumn, 1, $endRow, $addressAndBlockOrBuildingNumber);
+			// 代金（業務委託料）
+			$cell = setCell(null, $sheet, 'payPriceTax_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['payPriceTax']);
+			// 支払確定日（業務委託料）
+			$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji_intermediary', 1, $endColumn, 1, $endRow, convert_dt($payDetail_intermediary['contractFixDay'], 'Y年n月j日'));
+		}
+		// 20250402 E_Add
+
 		//20240207 S_Add
 		// ・R-A　PK精算シート
-		if($i == 6) {
+		// 20250402 S_Update
+		// if($i == 6) {
+		if($i == $sheetIndexReceiptIntermediary + 1) {
+		// 20250402 E_Update
 			if (empty($renCons)) {
 				$renCons[] = []; 
 			}
@@ -965,7 +1012,10 @@ foreach($contracts as $contract) {
 
 		// 20240528 S_Add
 		// 振替伝票シート
-		if($i == 7) {
+		// 20250402 S_Update
+		// if($i == 7) {
+		if($i == $sheetIndexReceiptIntermediary + 2) {
+		// 20250402 E_Update
 			$endRow = 10;   // 最終行数
 			$currentRow = 3;
 			$currentColumn = 2;

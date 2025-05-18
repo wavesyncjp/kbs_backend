@@ -1,6 +1,7 @@
 <?php
 
 require '../header.php';
+require '../util.php';// 20250502 Add
 
 $postdata = file_get_contents("php://input");
 $param = json_decode($postdata);
@@ -62,6 +63,13 @@ if(isset($param->infoDetail_Like) && $param->infoDetail_Like != ''){
 	$query = $query->where_like('infoDetail', '%'. $param->infoDetail_Like . '%');
 }
 // 20230306 E_Add
+
+// 20250502 S_Add
+if(isset($param->infoType) && $param->infoType != '0')
+{
+	$query = getQueryExpertTempland($param, $query, 'p1.templandInfoPid');
+}
+// 20250502 E_Add
 
 // 20230308 S_Update
 // $query = $query->order_by_desc('infoDate')->order_by_desc('updateDate');
