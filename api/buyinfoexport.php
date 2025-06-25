@@ -696,6 +696,12 @@ foreach($contracts as $contract) {
 			$cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contract['contractFormNumber']);
 			// 複数地番/複数家屋番号
 			$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
+			
+			// 20250616 S_Add
+			// 複数地権者（売主）<-契約者名
+			$cell = setCell(null, $sheet, 'list_contractorName', 1, $endColumn, 1, $endRow, $list_contractorName);
+			// 20250616 E_Add
+
 			// 支払先<-取引先名称
 			$cell = setCell(null, $sheet, 'supplierName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['supplierName']);
 			/*
@@ -733,6 +739,12 @@ foreach($contracts as $contract) {
 			// $cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
 			$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $list_blockOrBuildingNumber);
 			// 20250402 E_Update
+
+			// 20250616 S_Add
+			// 複数地権者（売主）<-契約者名
+			$cell = setCell(null, $sheet, 'list_contractorName', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $list_contractorName);
+			// 20250616 E_Add
+
 			// 支払先<-取引先名称
 			$cell = setCell(null, $sheet, 'supplierName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['supplierName']);
 			/*
@@ -753,6 +765,14 @@ foreach($contracts as $contract) {
 			$cell = setCell(null, $sheet, 'payPriceTax_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['payPriceTax']);
 			// 備考<-支払名称+備考
 			$cell = setCell(null, $sheet, 'paymentName_outsourcing', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail_outsourcing['paymentCode']) . $payDetail_outsourcing['detailRemarks']);
+			// 20250616 S_Add
+			if($cntIntermediary == 0 || $cntOutsourcing == 0){
+				$sheet->removeRow(5,1);
+				$sheet->getCell('J5')->setValue('=SUM(J4:J4)');
+				$sheet->getCell('K5')->setValue('=SUM(K4:K4)');
+				$sheet->getCell('M5')->setValue('=SUM(M4:M4)');
+			}
+			// 20250616 E_Add
 		}
 
 		// ・決済案内シート

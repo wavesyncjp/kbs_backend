@@ -3174,10 +3174,17 @@ function getSlipDataByCode($objData, $objDataType, $codes, $paymentTypes, $codeD
 	return $data;
 }
 
-
-function addSlipData2(&$transferSlipDatas, $contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $slipRemarks, $address, $contractBukkenNo, $names, $description) {
+// 20250616 S_Update
+// function addSlipData2(&$transferSlipDatas, $contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $slipRemarks, $address, $contractBukkenNo, $names, $description) {
+function addSlipData2(&$transferSlipDatas, $contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $slipRemarks, $address, $contractBukkenNo, $names, $description, $isSetNote = false) {
+// 20250616 E_Update
 	$slipData = getSlipDataByCode2($contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $address, $contractBukkenNo, $names, $description, true);
-    // 20240912 S_Update
+	// 20250616 S_Add
+	if($isSetNote){
+		$slipData->note = $slipRemarks;
+	}
+	// 20250616 E_Add
+	// 20240912 S_Update
 	// if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
 	if ((isset($slipData->debtorKanjyoName) || isset($slipData->creditorKanjyoName)) && (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0))) {
     // 20240912 E_Update
@@ -3186,7 +3193,12 @@ function addSlipData2(&$transferSlipDatas, $contracts, $objData, $objDataParent,
 
 	if($slipData->isGetNext){
 		$slipData = getSlipDataByCode2($contracts, $objData, $objDataParent, $objDataType, $slipCodes, $paymentTypes, $address, $contractBukkenNo, $names, $description, false);
-    	// 20240912 S_Update
+    	// 20250616 S_Add
+		if($isSetNote){
+			$slipData->note = $slipRemarks;
+		}
+		// 20250616 E_Add
+		// 20240912 S_Update
 		// if (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0)) {
 		if ((isset($slipData->debtorKanjyoName) || isset($slipData->creditorKanjyoName)) && (($slipData->debtorPayPrice != null && $slipData->debtorPayPrice != 0) || ($slipData->creditorPayPrice != null && $slipData->creditorPayPrice != 0))) {
     	// 20240912 E_Update

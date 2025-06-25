@@ -50,7 +50,15 @@ $codeLists['dependType'] = $dependTypeCodeList;
 $cntContracts = 0;
 
 // 仕入契約情報を取得
-$contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_not_null('contractNow')->where_not_equal('contractNow', '')->where_null('deleteDate')->order_by_asc('pid')->findArray();
+// 20250616 S_Update
+// $contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_not_null('contractNow')->where_not_equal('contractNow', '')->where_null('deleteDate')->order_by_asc('pid')->findArray();
+if(isset($param->contractinfoPid) && $param->contractinfoPid > 0){
+    $contracts = ORM::for_table(TBLCONTRACTINFO)->where('pid', $param->contractinfoPid)->where_null('deleteDate')->findArray();
+}
+else{
+    $contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_not_null('contractNow')->where_not_equal('contractNow', '')->where_null('deleteDate')->order_by_asc('pid')->findArray();
+}
+// 20250616 E_Update
 foreach($contracts as $contract) {
     $cntContracts++;
 
@@ -124,7 +132,14 @@ foreach($contracts as $contract) {
     // 謄本情報を設定する
     // 20220615 S_Update
     // setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $detailIds, $codeLists);
-    setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $detailIds, $codeLists, true);
+    // 20250616 S_Update
+    // setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $detailIds, $codeLists, true);
+    $detailsLeaseholdLand = ORM::for_table(TBLCONTRACTDETAILINFO)->select('locationInfoPid')->where('contractInfoPid', $contract['pid'])->where('contractDataType', '03')->where_null('deleteDate')->order_by_asc('pid')->findArray();
+    foreach($detailsLeaseholdLand as $detail) {
+        $detailIds[] = $detail['locationInfoPid'];
+    }
+    setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $detailIds, $codeLists, true, $detailsLeaseholdLand);
+    // 20250616 E_Update
     // 20220615 E_Update
 
     // 【ノート】
@@ -427,7 +442,13 @@ $cntSales = 0;
 // 物件売契約情報を取得
 // 20220329 S_Update
 // $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('pid')->findArray();
-$sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
+// 20250616 S_Update
+// $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
+$sales = [];
+if (!isset($param->contractinfoPid) || $param->contractinfoPid <= 0) {
+    $sales = ORM::for_table(TBLBUKKENSALESINFO)->where('tempLandInfoPid', $param->pid)->where_null('deleteDate')->order_by_asc('displayOrder')->order_by_asc('pid')->findArray();
+}
+// 20250616 E_Update
 // 20220329 E_Update
 foreach($sales as $sale) {
     $cntSales++;
@@ -768,7 +789,10 @@ function setCell($cell, $sheet, $keyWord, $startColumn, $endColumn, $startRow, $
  */
 // 20220615 S_Update
 // function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists) {
-function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists, $getBottom = false) {
+// 20250616 S_Update
+// function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists, $getBottom = false) {
+function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists, $getBottom = false, $detailsLeaseholdLand = null) {
+// 20250616 E_Update
 // 20220615 E_Update
     $locsLand = [];     // 土地
     $locsBuilding = []; // 建物
@@ -1018,6 +1042,21 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         // 権利の種類
         $rightsForm = getCodeTitle($codeLists['rightsForm'], $loc['rightsForm']);
         if($rightsForm === '') $rightsForm = '所有権';
+        // 20250616 S_Add
+        $matchedDetail = null;
+        if(isset($detailsLeaseholdLand)){
+            foreach ($detailsLeaseholdLand as $detail) {
+                if ($detail['locationInfoPid'] == $loc['pid']) {
+                    $matchedDetail = $detail;
+                    break; 
+                }
+            }
+        }
+
+        if ($matchedDetail) {
+           $rightsForm = '借地権';
+        }
+        // 20250616 E_Add
         $cell = setCell($cell, $sheet, 'l_rightsForm', $currentColumn, $endColumn, $currentRow, $endRow, $rightsForm);
     }
     // 所在地情報（土地）が存在しない場合、Emptyを設定

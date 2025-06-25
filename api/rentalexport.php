@@ -183,8 +183,11 @@ foreach($renCons as $renCon) {
     $cell = setCell($cell, $sheet, 'apartmentName', $currentColumn, $endColumn, $currentRow, $endRow, $ren['apartmentName']);
     //物件の表示 階				
     $cell = setCell($cell, $sheet, 'floorNumber', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['floorNumber']);
-    //物件の表示 号室				
-    $cell = setCell($cell, $sheet, 'roomNo', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['roomNo']);
+    //物件の表示 号室	
+    // 20250616 S_Update			
+    // $cell = setCell($cell, $sheet, 'roomNo', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['roomNo']);
+    $cell = setCell($cell, $sheet, 'roomNo', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['roomType'] == '01' ? '' : $renCon['roomNo']);
+    // 20250616 E_Update			
     //物件の表示 構  造				
     // 20231019 S_Update
     // $cell = setCell($cell, $sheet, 'structure', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['l_structureMap']);

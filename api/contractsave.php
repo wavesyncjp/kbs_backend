@@ -219,6 +219,20 @@ if(isset($param->contractAttaches)){
 }
 // 20230511 E_Add
 
+// 20250616 S_Add
+//所有地 相続未登記保存のため
+if(isset($param->locationsChangedMap)){
+	foreach ($param->locationsChangedMap as $loc){
+		if(isset($loc->pid) && $loc->pid > 0){
+			$locSave = ORM::for_table(TBLLOCATIONINFO)->find_one($loc->pid);
+			setUpdate($locSave, $param->updateUserId);
+			$locSave->inheritanceNotyet = $loc->inheritanceNotyet;
+		}
+		$locSave->save();
+	}
+}
+// 20250616 E_Add
+
 echo json_encode(getContractInfo($contract->pid));
 
 ?>

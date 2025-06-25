@@ -145,7 +145,10 @@ if(isset($param->delResidents)) {
 // 20220614 E_Add
 
 // 20240123 S_Add
-if($loc->locationType == '02' && $loc->apartmentName != null && $loc->apartmentName != ''){//建物
+// 20250616 S_Update
+// if($loc->locationType == '02' && $loc->apartmentName != null && $loc->apartmentName != ''){//建物
+if(($loc->locationType == '01' || $loc->locationType == '02') && $loc->apartmentName != null && $loc->apartmentName != ''){// 土地と建物
+// 20250616 E_Update
     $userPid = $param->createUserId > 0 ? $param->createUserId : $param->updateUserId;
 
     //賃貸情報登録
