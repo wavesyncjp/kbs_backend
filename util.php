@@ -3168,7 +3168,19 @@ function getSlipDataByCode($objData, $objDataType, $codes, $paymentTypes, $codeD
 	if($contentEx == null || $contentEx == ''){
 		$contentEx = getCodeTitle($paymentTypes, $paymentCode);
 	}
-	$data->remark = $address . '　' . $contractBukkenNo . '　' . $names . '　' . $contentEx;// 摘要
+	
+	// 20250723 S_Update
+	// $data->remark = $address . '　' . $contractBukkenNo . '　' . $names . '　' . $contentEx;// 摘要
+	$values = [$address, $contractBukkenNo, $names, $contentEx];
+
+	$filteredValues = array_filter($values, function($value) {
+		return !empty($value);
+	});
+
+	$remark = implode('　', $filteredValues);
+	$data->remark = $remark;// 摘要
+	// 20250723 E_Update
+
 	$data->note = $note;// 備考
 	$data->executionType = $kanjyoNameData->executionType;// 20240912 Add
 	return $data;

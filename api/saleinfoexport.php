@@ -234,6 +234,14 @@ foreach($sales as $sale) {
 	addSlipData($transferSlipDatas, $sale, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $sale['salesName'], 'salesFixedBuildingTax', '固都税精算金（建物）', $bankName);
 	addSlipData($transferSlipDatas, $sale, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $sale['salesName'], 'salesDeposit1', '受領済内金（手付金）を売買代金に充当');
 	addSlipData($transferSlipDatas, $sale, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $contractBukkenNo, $sale['salesName'], 'salesRetainage', '留保金', $bankName);
+	
+	// 20250723 S_Add
+	$transferSlipDatasExpert = getExpertDataExportInOut($sale, $payDetailInOuts, $slipCodes, $codeLists, $locs);
+	foreach ($transferSlipDatasExpert as $data) {
+		$transferSlipDatas[] = $data;
+	}
+	// 20250723 E_Add
+
 	if(sizeof($transferSlipDatas) == 0) {
 		$transferSlipDatas[] = new stdClass();
 	}
@@ -755,6 +763,8 @@ function sanitizeSheetTitle($title) {
 	return mb_substr($title, 0, 31);
 }
 function createExportInOut($spreadsheet, $sale, $payDetails, $sheetIndex, $slipCodes, $codeLists, $locs){
+	$isHasBrokerageDate = isset($sale['salesBrokerageFeePayDay']);// 20250723 Add
+
 	usort($payDetails, function ($a, $b) {
 		return strcmp($a["contractFixDay"], $b["contractFixDay"]);
 	});
@@ -779,13 +789,15 @@ function createExportInOut($spreadsheet, $sale, $payDetails, $sheetIndex, $slipC
 	}
 
 	foreach ($targets as $key => $groups) {
-		// 振替伝票シートをコピー
-		$sheet = clone $spreadsheet->getSheet($sheetIndex);
-		$title = $sheet->getTitle();
-		// $sheet->setTitle($title . '_' . $contract['contractNumber'] . '_' . $key);
-		$sheet->setTitle(sanitizeSheetTitle($title . '_' . $sale['pid'] . '_' . $key));
+		// 20250723 S_Delete
+		// // 振替伝票シートをコピー
+		// $sheet = clone $spreadsheet->getSheet($sheetIndex);
+		// $title = $sheet->getTitle();
+		// // $sheet->setTitle($title . '_' . $contract['contractNumber'] . '_' . $key);
+		// $sheet->setTitle(sanitizeSheetTitle($title . '_' . $sale['pid'] . '_' . $key));
 		
-		$spreadsheet->addSheet($sheet);
+		// $spreadsheet->addSheet($sheet);
+		// 20250723 E_Delete
 		
 		// 開始セル行
 		$endColumn = 11; // 最終列数 
@@ -887,61 +899,200 @@ function createExportInOut($spreadsheet, $sale, $payDetails, $sheetIndex, $slipC
 			addSlipData2($transferSlipDatas, null, $payDetail, $pay, $contractType, $slipCodes, $codeLists['paymentType2'], $slipRemarks, $address, $payDetail['contractBukkenNo'], $list_contractorNameComma, '', true);
 		}
 	
-		// 支払確定日
-		$cell = setCell(null, $sheet, 'contractFixDay', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($payDetail['contractFixDay']));
+		// 20250723 S_Add
+		if(!$isHasBrokerageDate){
+			$transferSlipDatasNew = array();
+			foreach ($transferSlipDatas as $data) {
+				if ($data->paymentCode != '1003') {// 仲介手数料
+					$data->creditorKanjyoName = '買掛金';
+					$transferSlipDatasNew[] = $data;
+				}
+			}
+			$transferSlipDatas = $transferSlipDatasNew;
+		}
 
-		$cell = null;
-
-		$cell = searchCell($sheet, 'debtorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow);
-		if($cell != null) {
-			$currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
-			$currentRow = $cell->getRow();
-			$pos = $currentRow;
-		}
-		$cell = null;
-	
-		if(sizeof($transferSlipDatas) == 0) {
-			$transferSlipDatas[] = new stdClass();
-		}
-	
-		if(sizeof($transferSlipDatas) > 1) {
-			$endRow += sizeof($transferSlipDatas) * 2;
-			copyBlockWithVal($sheet, $currentRow, 2, sizeof($transferSlipDatas) - 1, $endColumn);
-		}
-	
-		foreach($transferSlipDatas as $slipData) {
+		if(sizeof($transferSlipDatas) > 0) {
+			// 振替伝票シートをコピー
+			$sheet = clone $spreadsheet->getSheet($sheetIndex);
+			$title = $sheet->getTitle();
+			// $sheet->setTitle($title . '_' . $contract['contractNumber'] . '_' . $key);
+			$sheet->setTitle(sanitizeSheetTitle($title . '_' . $sale['pid'] . '_' . $key));
 			
-			//借方勘定科目
-			$cell = setCell($cell, $sheet, 'debtorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorKanjyoName);
-			//借方金額
-			$cell = setCell($cell, $sheet, 'debtorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorPayPrice);
-			//貸方勘定科目
-			$cell = setCell($cell, $sheet, 'creditorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorKanjyoName);
-			//貸方金額
-			$cell = setCell($cell, $sheet, 'creditorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayPrice);
-			//摘要
-			$cell = setCell($cell, $sheet, 'remark', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->remark);
-			//備考
-			$cell = setCell($cell, $sheet, 'note', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->note);
-			//借方補助科目
-			$cell = setCell($cell, $sheet, 'debtorKanjyoDetailName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorKanjyoDetailName);
-			//借方消費税
-			$cell = setCell($cell, $sheet, 'debtorPayTax', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorPayTax);
-			//貸方補助科目
-			$cell = setCell($cell, $sheet, 'creditorKanjyoDetailName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorKanjyoDetailName);
-			//貸方消費税
-			$cell = setCell($cell, $sheet, 'creditorPayTax', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayTax);
+			$spreadsheet->addSheet($sheet);
+			// 20250723 E_Add
+
+			// 支払確定日
+			$cell = setCell(null, $sheet, 'contractFixDay', 1, $endColumn, 1, $endRow, convert_jpdt_kanji($payDetail['contractFixDay']));
+
+			$cell = null;
+
+			$cell = searchCell($sheet, 'debtorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow);
+			if($cell != null) {
+				$currentColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
+				$currentRow = $cell->getRow();
+				$pos = $currentRow;
+			}
+			$cell = null;
 		
-			$currentRow += 2;
-		}
-	
-		$sheet->setCellValue('B' . $currentRow, '=SUM(B' . $pos . ':B' . ($currentRow - 1) . ')');
-		$sheet->setCellValue('D' . $currentRow, '=SUM(D' . $pos . ':D' . ($currentRow - 1) . ')');
-	
-		$sheet->setSelectedCell('A1');// 初期選択セル設定
+			if(sizeof($transferSlipDatas) == 0) {
+				$transferSlipDatas[] = new stdClass();
+			}
+		
+			if(sizeof($transferSlipDatas) > 1) {
+				$endRow += sizeof($transferSlipDatas) * 2;
+				copyBlockWithVal($sheet, $currentRow, 2, sizeof($transferSlipDatas) - 1, $endColumn);
+			}
+		
+			foreach($transferSlipDatas as $slipData) {
+				
+				//借方勘定科目
+				$cell = setCell($cell, $sheet, 'debtorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorKanjyoName);
+				//借方金額
+				$cell = setCell($cell, $sheet, 'debtorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorPayPrice);
+				//貸方勘定科目
+				$cell = setCell($cell, $sheet, 'creditorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorKanjyoName);
+				//貸方金額
+				$cell = setCell($cell, $sheet, 'creditorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayPrice);
+				//摘要
+				$cell = setCell($cell, $sheet, 'remark', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->remark);
+				//備考
+				$cell = setCell($cell, $sheet, 'note', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->note);
+				//借方補助科目
+				$cell = setCell($cell, $sheet, 'debtorKanjyoDetailName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorKanjyoDetailName);
+				//借方消費税
+				$cell = setCell($cell, $sheet, 'debtorPayTax', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorPayTax);
+				//貸方補助科目
+				$cell = setCell($cell, $sheet, 'creditorKanjyoDetailName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorKanjyoDetailName);
+				//貸方消費税
+				$cell = setCell($cell, $sheet, 'creditorPayTax', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayTax);
+			
+				$currentRow += 2;
+			}
+		
+			$sheet->setCellValue('B' . $currentRow, '=SUM(B' . $pos . ':B' . ($currentRow - 1) . ')');
+			$sheet->setCellValue('D' . $currentRow, '=SUM(D' . $pos . ':D' . ($currentRow - 1) . ')');
+		
+			$sheet->setSelectedCell('A1');// 初期選択セル設定
+		}// 20250723 Add
 	}
 }
 
+// 20250723 S_Add
+function getExpertDataExportInOut($sale, $payDetails, $slipCodes, $codeLists, $locs){
+	$transferSlipDatasExpert = array();
+	if(!isset($sale['salesBrokerageFeePayDay'])){
+		usort($payDetails, function ($a, $b) {
+			return strcmp($a["contractFixDay"], $b["contractFixDay"]);
+		});
+		
+		$contractType = '0';
+		$targets = [];
+
+		foreach($payDetails as $payDetail) {
+			
+			// key=物件番号+支払確定日
+			$key = $payDetail['bukkenNo'] . '-' . $payDetail['contractFixDay'];
+			// グルーピングを行う
+			if(!isset($targets[$key])) {
+				$groups = [];
+				$groups[] = $payDetail;
+				$targets[$key] = $groups;
+			} else {
+				$groups = $targets[$key];
+				$groups[] = $payDetail;
+				$targets[$key] = $groups;
+			}
+		}
+
+		foreach ($targets as $key => $groups) {
+		
+			$transferSlipDatas = array();
+		
+			foreach($groups as $payDetail) {
+				// 支払契約情報を取得
+				$pay = ORM::for_table(TBLPAYCONTRACT)->findOne($payDetail['payContractPid'])->asArray();
+				
+				// 仕入契約情報を取得
+		
+				if(!empty($payDetail['contractor'])) {
+					$contractor = $payDetail['contractor'];
+					$contractSellerInfoPids = [];
+					$explode1st = [];
+					$explode2nd = [];
+					// |で分割されている場合
+					if(strpos($contractor, '|') !== false) {
+						$explode1st = explode('|', $contractor);
+					}
+					else $explode1st[] = $contractor;
+		
+					foreach($explode1st as $explode1) {
+						// ,で分割されている場合
+						if(strpos($explode1, ',') !== false) {
+							$temps = explode(',', $explode1);
+							foreach($temps as $temp) {
+								$explode2nd[] = $temp;
+							}
+						}
+						else $explode2nd[] = $explode1;
+					}
+					foreach($explode2nd as $explode2) {
+						$contractSellerInfoPids[] = $explode2;
+					}
+		
+					// 仕入契約者情報を取得
+					$sellers = ORM::for_table(TBLCONTRACTSELLERINFO)->where_in('pid', $contractSellerInfoPids)->where_null('deleteDate')->findArray();
+					if(sizeof($sellers) > 0) {
+						$contractInfoPids = [];
+						foreach($sellers as $seller) {
+							$contractInfoPids[] = $seller['contractInfoPid'];
+						}
+		
+						$list_contractorNameComma = getContractorName($sellers, '、');// 複数契約者名（カンマ区切り）
+					}
+				}
+		
+				// 所在地
+				$address = '';
+				if(sizeof($locs) > 0) {
+					$cntLandlocs = 0;
+					$cntNotLandlocs = 0;
+					$addressLand = '';
+					$addressNotLand = '';
+					foreach($locs as $loc) {
+						// 区分が01：土地の場合
+						if($loc['locationType'] == '01') {
+							$cntLandlocs++;
+							if($cntLandlocs == 1)
+							{
+								$addressLand = $loc['address'];
+							}
+						}
+						else {
+							$cntNotLandlocs++;
+							if($cntLandlocs == 0 && $cntNotLandlocs == 1)
+							{
+								$addressNotLand = $loc['address'];
+							}
+						}
+					}
+					if($addressLand != '') $address = $addressLand;
+					else $address = $addressNotLand;
+				}
+				$slipRemarks = isset($payDetail['contractFixDay']) ? '売決済' : '買掛計上';
+				addSlipData2($transferSlipDatas, null, $payDetail, $pay, $contractType, $slipCodes, $codeLists['paymentType2'], $slipRemarks, $address, $payDetail['contractBukkenNo'], $list_contractorNameComma, '', true);
+			}
+
+			foreach ($transferSlipDatas as $data) {
+				if ($data->paymentCode == '1003') {
+					$data->creditorKanjyoName = '買掛金';
+					$transferSlipDatasExpert[] = $data;
+				}
+			}
+		}
+	}
+	return $transferSlipDatasExpert;
+}
+// 20250723 E_Add
 
 /**
  * 所在地情報取得

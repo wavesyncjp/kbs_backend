@@ -83,6 +83,13 @@ if(sizeof($codes) > 0) {
 //$contract = ORM::for_table(TBLCONTRACTINFO)->findOne($param->pid)->asArray();
 $contracts = ORM::for_table(TBLCONTRACTINFO)->where_in('pid', $param->ids)->where_null('deleteDate')->findArray();
 
+// 20250723 S_Add
+$haveIntermediaryOrOutsourcing = false;
+$posMergeBegin = 4; 
+$posMerge = $posMergeBegin; 
+$totalRows = 0;
+// 20250723 E_Add
+
 // 20220529 S_Add
 // 開始セル行
 $pos = 4;
@@ -94,6 +101,13 @@ if(sizeof($contracts) > 1) {
 //	copyBlockWithVal($sheet, $pos, 1, sizeof($contracts) - 1, 14);
 	copyBlockWithVal($sheet, $pos, 1, sizeof($contracts) - 1, 17);
 	// 20220712 E_Update
+
+	// 20250723 S_Add
+	$sheet->mergeCells('A' . $posMergeBegin . ':A' . ($posMergeBegin + sizeof($contracts) - 1));
+
+	$sheet2 = $spreadsheet->getSheet(1);
+	copyBlockWithVal($sheet2, $pos, 2, sizeof($contracts) - 1, 17);
+	// 20250723 E_Add
 }
 // 合計の計算式
 $sheet->setCellValue('J' . ($pos + sizeof($contracts)), '=SUM(J' . $pos . ':J' . ($pos + sizeof($contracts) - 1) . ')');
@@ -634,19 +648,139 @@ foreach($contracts as $contract) {
 	$sheet->setSelectedCell('A1');// 初期選択セル設定
 	// 20220529 E_Add
 
+	// 20250723 S_Add
+	// 仲介料と業務委託料が未登録の場合、支払依頼書帳票シートは作成しない
+	if($cntIntermediaryOrOutsourcing != 0){
+		$haveIntermediaryOrOutsourcing = true;
+		$sheet = $spreadsheet->getSheet(1);
+
+		// 居住表示
+		$cell = setCell(null, $sheet, 'address', 1, $endColumn, 1, $endRow, $address);
+		// 契約物件番号
+		$cell = setCell(null, $sheet, 'contractBukkenNo', 1, $endColumn, 1, $endRow, $bukken['contractBukkenNo']);
+		// 支払確定日
+		$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji_intermediary', 1, $endColumn, 1, $endRow, convert_dt($payDetail_intermediary['contractFixDay'], 'Y年n月j日'));
+		 
+		// 契約担当者
+		$cell = setCell(null, $sheet, 'contractStaffName', 1, $endColumn, 1, $endRow, $contractStaffName);
+
+		if ($cntIntermediary == 0) {
+			$payDetail_intermediary = $payDetail_outsourcing;
+			$payDetail_outsourcing = []; // clear array
+		}
+
+		if ($cntOutsourcing == 0) {
+			$payDetail_outsourcing = []; // clear array
+		}
+
+		// 仲介料
+		// 日時
+		$contractFixDateTime = convert_dt($payDetail_intermediary['contractFixDay'], 'Y/n/j');
+		if(!empty($contractFixDateTime)) $contractFixDateTime .= '  ';
+		if(!empty($payDetail_intermediary['contractFixTime'])) $contractFixDateTime .= $payDetail_intermediary['contractFixTime'] . '～';
+		$cell = setCell(null, $sheet, 'contractFixDateTime_intermediary', 1, $endColumn, 1, $endRow, $contractFixDateTime);
+		// 契約書番号
+		$cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contract['contractFormNumber']);
+		// 複数地番/複数家屋番号
+		$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
+		
+		// 複数地権者（売主）<-契約者名
+		$cell = setCell(null, $sheet, 'list_contractorName', 1, $endColumn, 1, $endRow, $list_contractorName);
+
+		// 支払先<-取引先名称
+		$cell = setCell(null, $sheet, 'supplierName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['supplierName']);
+		
+		// 振込口座名義<-名義
+		$cell = setCell(null, $sheet, 'bankName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['bankName']);
+		// 銀行・信用金庫等<-銀行名
+		$cell = setCell(null, $sheet, 'bank_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['bank']);
+		// 支店
+		$cell = setCell(null, $sheet, 'branchName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['branchName']);
+		// 口座種類<-口座種別
+		$cell = setCell(null, $sheet, 'accountTypeName_intermediary', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['accountType'], $payDetail_intermediary['accountType']));
+		// 口座番号<-口座
+		$cell = setCell(null, $sheet, 'accountName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['accountName']);
+		// 代金
+		$cell = setCell(null, $sheet, 'payPriceTax_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['payPriceTax']);
+		// 備考<-支払名称+備考
+		$cell = setCell(null, $sheet, 'paymentName_intermediary', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail_intermediary['paymentCode']) . $payDetail_intermediary['detailRemarks']);
+
+		// 業務委託料
+		// 日時
+		$contractFixDateTime = convert_dt($payDetail_outsourcing['contractFixDay'], 'Y/m/d');
+		if(!empty($contractFixDateTime)) $contractFixDateTime .= '  ';
+		if(!empty($payDetail_outsourcing['contractFixTime'])) $contractFixDateTime .= $payDetail_outsourcing['contractFixTime'] . '～';
+		$cell = setCell(null, $sheet, 'contractFixDateTime_outsourcing', 1, $endColumn, 1, $endRow, $contractFixDateTime);
+
+		// 契約書番号
+		$cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $contract['contractFormNumber']);
+		
+		// 複数地番/複数家屋番号
+		$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $list_blockOrBuildingNumber);
+
+		// 複数地権者（売主）<-契約者名
+		$cell = setCell(null, $sheet, 'list_contractorName', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $list_contractorName);
+
+		// 支払先<-取引先名称
+		$cell = setCell(null, $sheet, 'supplierName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['supplierName']);
+		
+		// 振込口座名義<-名義
+		$cell = setCell(null, $sheet, 'bankName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['bankName']);
+		// 銀行・信用金庫等<-銀行名
+		$cell = setCell(null, $sheet, 'bank_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['bank']);
+		// 支店
+		$cell = setCell(null, $sheet, 'branchName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['branchName']);
+		// 口座種類<-口座種別
+		$cell = setCell(null, $sheet, 'accountTypeName_outsourcing', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['accountType'], $payDetail_outsourcing['accountType']));
+		// 口座番号<-口座
+		$cell = setCell(null, $sheet, 'accountName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['accountName']);
+		// 代金
+		$cell = setCell(null, $sheet, 'payPriceTax_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['payPriceTax']);
+		// 備考<-支払名称+備考
+		$cell = setCell(null, $sheet, 'paymentName_outsourcing', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail_outsourcing['paymentCode']) . $payDetail_outsourcing['detailRemarks']);
+		// // 20250616 S_Add
+		if($cntIntermediary == 0 || $cntOutsourcing == 0){
+			$totalRows += 1;
+			$sheet->removeRow($totalRows + $posMergeBegin,1);
+			// $sheet->getCell('J5')->setValue('=SUM(J4:J4)');
+			// $sheet->getCell('K5')->setValue('=SUM(K4:K4)');
+			// $sheet->getCell('M5')->setValue('=SUM(M4:M4)');
+			$posMerge += 1;
+		}
+		else{
+			$totalRows += 2;
+				
+			$sheet->mergeCells('A' . $posMerge . ':A' . ($posMerge + 1));
+			$sheet->mergeCells('B' . $posMerge . ':B' . ($posMerge + 1));
+			$sheet->mergeCells('C' . $posMerge . ':C' . ($posMerge + 1));
+			$sheet->mergeCells('D' . $posMerge . ':D' . ($posMerge + 1));
+			$posMerge += 2;
+		}
+	}
+	else {
+		$sheet = $spreadsheet->getSheet(1);
+		$sheet->removeRow($totalRows + $posMergeBegin,2);
+	}
+	// 20250723 E_Add
+
 	// 20250402 S_Update
 	// for($i = 1 ; $i <= 7; $i++) {
 	$numberOfSheet = 10;
 	$sheetIndexInOut = 9;// 振替伝票 (仲介・業務委託)
 	$sheetIndexReceiptOutsourcing = 5;// 領収証 (業務委託料)
 	$sheetIndexReceiptIntermediary = 6;// 領収証 (仲介手数料)
-	for($i = 1 ; $i < $numberOfSheet; $i++) {
+	// 20250723 S_Update
+	// for($i = 1 ; $i < $numberOfSheet; $i++) {
+	for($i = 2 ; $i < $numberOfSheet; $i++) {
+	// 20250723 E_Update
 	// 20250402 E_Update		
 
-		// 20220703 S_Add
-		// 仲介料と業務委託料が未登録の場合、支払依頼書帳票シートは作成しない
-		if($i == 1 && $cntIntermediaryOrOutsourcing == 0) continue;
-		// 20220703 E_Add
+		// 20250723 S_Delete
+		// // 20220703 S_Add
+		// // 仲介料と業務委託料が未登録の場合、支払依頼書帳票シートは作成しない
+		// if($i == 1 && $cntIntermediaryOrOutsourcing == 0) continue;
+		// // 20220703 E_Add
+		// 20250723 E_Delete
 		
 		// 20250402 S_Add
 		// 仲介料と業務委託料が未登録の場合、振替伝票 (仲介・業務委託)シートは作成しない
@@ -664,116 +798,118 @@ foreach($contracts as $contract) {
 			$spreadsheet->addSheet($sheet);
 		}// 20250402 Add
 
-		// ・支払依頼書帳票シート
-		if($i == 1) {
-			// 居住表示
-			$cell = setCell(null, $sheet, 'address', 1, $endColumn, 1, $endRow, $address);
-			// 契約物件番号
-			$cell = setCell(null, $sheet, 'contractBukkenNo', 1, $endColumn, 1, $endRow, $bukken['contractBukkenNo']);
-			// 支払確定日
-			$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji_intermediary', 1, $endColumn, 1, $endRow, convert_dt($payDetail_intermediary['contractFixDay'], 'Y年n月j日'));
-			// 契約担当者
-			$cell = setCell(null, $sheet, 'contractStaffName', 1, $endColumn, 1, $endRow, $contractStaffName);
+		// 20250723 S_Delete
+		// // ・支払依頼書帳票シート
+		// if($i == 1) {
+		// 	// 居住表示
+		// 	$cell = setCell(null, $sheet, 'address', 1, $endColumn, 1, $endRow, $address);
+		// 	// 契約物件番号
+		// 	$cell = setCell(null, $sheet, 'contractBukkenNo', 1, $endColumn, 1, $endRow, $bukken['contractBukkenNo']);
+		// 	// 支払確定日
+		// 	$cell = setCell(null, $sheet, 'contractFixDay_dt_kanji_intermediary', 1, $endColumn, 1, $endRow, convert_dt($payDetail_intermediary['contractFixDay'], 'Y年n月j日'));
+		// 	// 契約担当者
+		// 	$cell = setCell(null, $sheet, 'contractStaffName', 1, $endColumn, 1, $endRow, $contractStaffName);
 
-			// 20250402 S_Add
-			if ($cntIntermediary == 0) {
-				$payDetail_intermediary = $payDetail_outsourcing;
-				$payDetail_outsourcing = []; // clear array
-			}
+		// 	// 20250402 S_Add
+		// 	if ($cntIntermediary == 0) {
+		// 		$payDetail_intermediary = $payDetail_outsourcing;
+		// 		$payDetail_outsourcing = []; // clear array
+		// 	}
 
-			if ($cntOutsourcing == 0) {
-				$payDetail_outsourcing = []; // clear array
-			}
-			// 20250402 E_Add
+		// 	if ($cntOutsourcing == 0) {
+		// 		$payDetail_outsourcing = []; // clear array
+		// 	}
+		// 	// 20250402 E_Add
 
-			// 仲介料
-			// 日時
-			$contractFixDateTime = convert_dt($payDetail_intermediary['contractFixDay'], 'Y/n/j');
-			if(!empty($contractFixDateTime)) $contractFixDateTime .= '  ';
-			if(!empty($payDetail_intermediary['contractFixTime'])) $contractFixDateTime .= $payDetail_intermediary['contractFixTime'] . '～';
-			$cell = setCell(null, $sheet, 'contractFixDateTime_intermediary', 1, $endColumn, 1, $endRow, $contractFixDateTime);
-			// 契約書番号
-			$cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contract['contractFormNumber']);
-			// 複数地番/複数家屋番号
-			$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
+		// 	// 仲介料
+		// 	// 日時
+		// 	$contractFixDateTime = convert_dt($payDetail_intermediary['contractFixDay'], 'Y/n/j');
+		// 	if(!empty($contractFixDateTime)) $contractFixDateTime .= '  ';
+		// 	if(!empty($payDetail_intermediary['contractFixTime'])) $contractFixDateTime .= $payDetail_intermediary['contractFixTime'] . '～';
+		// 	$cell = setCell(null, $sheet, 'contractFixDateTime_intermediary', 1, $endColumn, 1, $endRow, $contractFixDateTime);
+		// 	// 契約書番号
+		// 	$cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contract['contractFormNumber']);
+		// 	// 複数地番/複数家屋番号
+		// 	$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
 			
-			// 20250616 S_Add
-			// 複数地権者（売主）<-契約者名
-			$cell = setCell(null, $sheet, 'list_contractorName', 1, $endColumn, 1, $endRow, $list_contractorName);
-			// 20250616 E_Add
+		// 	// 20250616 S_Add
+		// 	// 複数地権者（売主）<-契約者名
+		// 	$cell = setCell(null, $sheet, 'list_contractorName', 1, $endColumn, 1, $endRow, $list_contractorName);
+		// 	// 20250616 E_Add
 
-			// 支払先<-取引先名称
-			$cell = setCell(null, $sheet, 'supplierName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['supplierName']);
-			/*
-			// 複数支払先<-契約者名
-			$cell = setCell(null, $sheet, 'list_contractorName_intermediary', 1, $endColumn, 1, $endRow, $list_contractorName_intermediary);
-			*/
-			// 振込口座名義<-名義
-			$cell = setCell(null, $sheet, 'bankName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['bankName']);
-			// 銀行・信用金庫等<-銀行名
-			$cell = setCell(null, $sheet, 'bank_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['bank']);
-			// 支店
-			$cell = setCell(null, $sheet, 'branchName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['branchName']);
-			// 口座種類<-口座種別
-			$cell = setCell(null, $sheet, 'accountTypeName_intermediary', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['accountType'], $payDetail_intermediary['accountType']));
-			// 口座番号<-口座
-			$cell = setCell(null, $sheet, 'accountName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['accountName']);
-			// 代金
-			$cell = setCell(null, $sheet, 'payPriceTax_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['payPriceTax']);
-			// 備考<-支払名称+備考
-			$cell = setCell(null, $sheet, 'paymentName_intermediary', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail_intermediary['paymentCode']) . $payDetail_intermediary['detailRemarks']);
+		// 	// 支払先<-取引先名称
+		// 	$cell = setCell(null, $sheet, 'supplierName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['supplierName']);
+		// 	/*
+		// 	// 複数支払先<-契約者名
+		// 	$cell = setCell(null, $sheet, 'list_contractorName_intermediary', 1, $endColumn, 1, $endRow, $list_contractorName_intermediary);
+		// 	*/
+		// 	// 振込口座名義<-名義
+		// 	$cell = setCell(null, $sheet, 'bankName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['bankName']);
+		// 	// 銀行・信用金庫等<-銀行名
+		// 	$cell = setCell(null, $sheet, 'bank_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['bank']);
+		// 	// 支店
+		// 	$cell = setCell(null, $sheet, 'branchName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['branchName']);
+		// 	// 口座種類<-口座種別
+		// 	$cell = setCell(null, $sheet, 'accountTypeName_intermediary', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['accountType'], $payDetail_intermediary['accountType']));
+		// 	// 口座番号<-口座
+		// 	$cell = setCell(null, $sheet, 'accountName_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['accountName']);
+		// 	// 代金
+		// 	$cell = setCell(null, $sheet, 'payPriceTax_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['payPriceTax']);
+		// 	// 備考<-支払名称+備考
+		// 	$cell = setCell(null, $sheet, 'paymentName_intermediary', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail_intermediary['paymentCode']) . $payDetail_intermediary['detailRemarks']);
 
-			// 業務委託料
-			// 日時
-			$contractFixDateTime = convert_dt($payDetail_outsourcing['contractFixDay'], 'Y/m/d');
-			if(!empty($contractFixDateTime)) $contractFixDateTime .= '  ';
-			if(!empty($payDetail_outsourcing['contractFixTime'])) $contractFixDateTime .= $payDetail_outsourcing['contractFixTime'] . '～';
-			$cell = setCell(null, $sheet, 'contractFixDateTime_outsourcing', 1, $endColumn, 1, $endRow, $contractFixDateTime);
-			// 契約書番号
-			// 20250402 S_Update
-			// $cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contract['contractFormNumber']);
-			$cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $contract['contractFormNumber']);
-			// 20250402 E_Update
-			// 複数地番/複数家屋番号
-			// 20250402 S_Update
-			// $cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
-			$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $list_blockOrBuildingNumber);
-			// 20250402 E_Update
+		// 	// 業務委託料
+		// 	// 日時
+		// 	$contractFixDateTime = convert_dt($payDetail_outsourcing['contractFixDay'], 'Y/m/d');
+		// 	if(!empty($contractFixDateTime)) $contractFixDateTime .= '  ';
+		// 	if(!empty($payDetail_outsourcing['contractFixTime'])) $contractFixDateTime .= $payDetail_outsourcing['contractFixTime'] . '～';
+		// 	$cell = setCell(null, $sheet, 'contractFixDateTime_outsourcing', 1, $endColumn, 1, $endRow, $contractFixDateTime);
+		// 	// 契約書番号
+		// 	// 20250402 S_Update
+		// 	// $cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $contract['contractFormNumber']);
+		// 	$cell = setCell(null, $sheet, 'contractFormNumber', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $contract['contractFormNumber']);
+		// 	// 20250402 E_Update
+		// 	// 複数地番/複数家屋番号
+		// 	// 20250402 S_Update
+		// 	// $cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $list_blockOrBuildingNumber);
+		// 	$cell = setCell(null, $sheet, 'list_blockOrBuildingNumber', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $list_blockOrBuildingNumber);
+		// 	// 20250402 E_Update
 
-			// 20250616 S_Add
-			// 複数地権者（売主）<-契約者名
-			$cell = setCell(null, $sheet, 'list_contractorName', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $list_contractorName);
-			// 20250616 E_Add
+		// 	// 20250616 S_Add
+		// 	// 複数地権者（売主）<-契約者名
+		// 	$cell = setCell(null, $sheet, 'list_contractorName', 1, $endColumn, 1, $endRow, $cntIntermediary == 0 || $cntOutsourcing == 0 ? null : $list_contractorName);
+		// 	// 20250616 E_Add
 
-			// 支払先<-取引先名称
-			$cell = setCell(null, $sheet, 'supplierName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['supplierName']);
-			/*
-			// 複数支払先<-契約者名
-			$cell = setCell(null, $sheet, 'list_contractorName_outsourcing', 1, $endColumn, 1, $endRow, $list_contractorName_outsourcing);
-			*/
-			// 振込口座名義<-名義
-			$cell = setCell(null, $sheet, 'bankName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['bankName']);
-			// 銀行・信用金庫等<-銀行名
-			$cell = setCell(null, $sheet, 'bank_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['bank']);
-			// 支店
-			$cell = setCell(null, $sheet, 'branchName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['branchName']);
-			// 口座種類<-口座種別
-			$cell = setCell(null, $sheet, 'accountTypeName_outsourcing', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['accountType'], $payDetail_outsourcing['accountType']));
-			// 口座番号<-口座
-			$cell = setCell(null, $sheet, 'accountName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['accountName']);
-			// 代金
-			$cell = setCell(null, $sheet, 'payPriceTax_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['payPriceTax']);
-			// 備考<-支払名称+備考
-			$cell = setCell(null, $sheet, 'paymentName_outsourcing', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail_outsourcing['paymentCode']) . $payDetail_outsourcing['detailRemarks']);
-			// 20250616 S_Add
-			if($cntIntermediary == 0 || $cntOutsourcing == 0){
-				$sheet->removeRow(5,1);
-				$sheet->getCell('J5')->setValue('=SUM(J4:J4)');
-				$sheet->getCell('K5')->setValue('=SUM(K4:K4)');
-				$sheet->getCell('M5')->setValue('=SUM(M4:M4)');
-			}
-			// 20250616 E_Add
-		}
+		// 	// 支払先<-取引先名称
+		// 	$cell = setCell(null, $sheet, 'supplierName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['supplierName']);
+		// 	/*
+		// 	// 複数支払先<-契約者名
+		// 	$cell = setCell(null, $sheet, 'list_contractorName_outsourcing', 1, $endColumn, 1, $endRow, $list_contractorName_outsourcing);
+		// 	*/
+		// 	// 振込口座名義<-名義
+		// 	$cell = setCell(null, $sheet, 'bankName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['bankName']);
+		// 	// 銀行・信用金庫等<-銀行名
+		// 	$cell = setCell(null, $sheet, 'bank_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['bank']);
+		// 	// 支店
+		// 	$cell = setCell(null, $sheet, 'branchName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['branchName']);
+		// 	// 口座種類<-口座種別
+		// 	$cell = setCell(null, $sheet, 'accountTypeName_outsourcing', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['accountType'], $payDetail_outsourcing['accountType']));
+		// 	// 口座番号<-口座
+		// 	$cell = setCell(null, $sheet, 'accountName_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['accountName']);
+		// 	// 代金
+		// 	$cell = setCell(null, $sheet, 'payPriceTax_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['payPriceTax']);
+		// 	// 備考<-支払名称+備考
+		// 	$cell = setCell(null, $sheet, 'paymentName_outsourcing', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail_outsourcing['paymentCode']) . $payDetail_outsourcing['detailRemarks']);
+		// 	// 20250616 S_Add
+		// 	if($cntIntermediary == 0 || $cntOutsourcing == 0){
+		// 		$sheet->removeRow(5,1);
+		// 		$sheet->getCell('J5')->setValue('=SUM(J4:J4)');
+		// 		$sheet->getCell('K5')->setValue('=SUM(K4:K4)');
+		// 		$sheet->getCell('M5')->setValue('=SUM(M4:M4)');
+		// 	}
+		// 	// 20250616 E_Add
+		// }
+		// 20250723 E_Delete
 
 		// ・決済案内シート
 		if($i == 2) {
@@ -1125,10 +1261,30 @@ for($i = 0 ; $i < 7; $i++) {
 */
 // 20250402 S_Update
 // for($i = 1 ; $i < 8; $i++) {
-for($i = 1 ; $i < $numberOfSheet; $i++) {
-// 20250402 E_Update
-	$spreadsheet->removeSheetByIndex(1);
+// 20250723 S_Update
+// for($i = 1 ; $i < $numberOfSheet; $i++) {
+// // 20250402 E_Update
+// 	$spreadsheet->removeSheetByIndex(1);
+// }
+// 支払依頼書帳票シート計算式を設定 START
+$sheet = $spreadsheet->getSheet(1);
+$rowSum = $totalRows + $posMergeBegin;
+for($i = $posMergeBegin ; $i < $rowSum; $i++) {
+	$sheet->setCellValue('N' . $i, '==IF(OR(K'. $i .'<>"", L'. $i .'<>""), K'. $i .'+L'. $i .', "")');
 }
+
+$sheet->setCellValue('K' . $rowSum, '=SUM(K'. $posMergeBegin .':K'. ($rowSum - 1) .')');
+$sheet->setCellValue('L' . $rowSum, '=SUM(L'. $posMergeBegin .':L'. ($rowSum - 1) .')');
+$sheet->setCellValue('N' . $rowSum, '=SUM(N'. $posMergeBegin .':N'. ($rowSum - 1) .')');
+
+$sheet->setSelectedCell('A1');// 初期選択セル設定
+// 支払依頼書帳票シート計算式を設定 END
+
+$iBegin = $haveIntermediaryOrOutsourcing ? 2 : 1;
+for($i = $iBegin ; $i < $numberOfSheet; $i++) {
+	$spreadsheet->removeSheetByIndex($iBegin);
+}
+// 20250723 E_Update
 // 20220529 E_Update
 // 20220331 E_Update
 
