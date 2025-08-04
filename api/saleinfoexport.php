@@ -895,7 +895,15 @@ function createExportInOut($spreadsheet, $sale, $payDetails, $sheetIndex, $slipC
 				else $address = $addressNotLand;
 			}
 			// addSlipData2($transferSlipDatas, $contracts, $payDetail, $pay, $contractType, $slipCodes, $codeLists['paymentType'], $slipRemarks, $address, $payDetail['contractBukkenNo'], $list_contractorNameComma, '');
-			$slipRemarks = isset($payDetail['contractFixDay']) ? '売決済' : '買掛計上';
+			// 20250801 S_Update
+			// $slipRemarks = isset($payDetail['contractFixDay']) ? '売決済' : '買掛計上';
+			if($payDetail['paymentCode'] == '1003'){// 仲介手数料
+				$slipRemarks = isset($payDetail['contractFixDay']) ? '売決済' : '買掛計上';
+			}
+			else{
+				$slipRemarks = '売決済';
+			}
+			// 20250801 E_Update
 			addSlipData2($transferSlipDatas, null, $payDetail, $pay, $contractType, $slipCodes, $codeLists['paymentType2'], $slipRemarks, $address, $payDetail['contractBukkenNo'], $list_contractorNameComma, '', true);
 		}
 	
@@ -1078,7 +1086,15 @@ function getExpertDataExportInOut($sale, $payDetails, $slipCodes, $codeLists, $l
 					if($addressLand != '') $address = $addressLand;
 					else $address = $addressNotLand;
 				}
-				$slipRemarks = isset($payDetail['contractFixDay']) ? '売決済' : '買掛計上';
+				// 20250801 S_Update
+				// $slipRemarks = isset($payDetail['contractFixDay']) ? '売決済' : '買掛計上';
+				if($payDetail['paymentCode'] == '1003'){// 仲介手数料
+					$slipRemarks = isset($payDetail['contractFixDay']) ? '売決済' : '買掛計上';
+				}
+				else{
+					$slipRemarks = '売決済';
+				}
+				// 20250801 E_Update
 				addSlipData2($transferSlipDatas, null, $payDetail, $pay, $contractType, $slipCodes, $codeLists['paymentType2'], $slipRemarks, $address, $payDetail['contractBukkenNo'], $list_contractorNameComma, '', true);
 			}
 
