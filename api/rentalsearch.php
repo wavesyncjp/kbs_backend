@@ -16,6 +16,15 @@ $query = ORM::for_table(TBLRENTALINFO)
 			->select('p1.*')
 			->select('p3.bukkenNo')
 			->select('p3.contractBukkenNo')
+			// 20250804 S_Add
+			->select_expr(
+				'(SELECT GROUP_CONCAT(DISTINCT p4.banktransferNameKana SEPARATOR "、")
+				FROM ' . TBLRENTALCONTRACT . ' p4
+				WHERE p4.rentalInfoPid = p1.pid AND p4.deleteDate IS NULL
+				)',
+				'banktransferNameKanaListMap'
+			)
+			// 20250804 E_Add
 			// 20240201 S_Update
 			// ->inner_join(TBLCONTRACTINFO, array('p1.contractInfoPid', '=', 'p2.pid'), 'p2')
 			->left_outer_join(TBLCONTRACTINFO, array('p1.contractInfoPid', '=', 'p2.pid'), 'p2')
@@ -55,6 +64,31 @@ if (isset($param->validType) && $param->validType !== '') {
 if(isset($param->bankPid) && $param->bankPid !== '') {
 	$query = $query->where('p1.bankPid', $param->bankPid);
 }
+
+// 20250804 S_Add
+// 建物名_Like
+if (isset($param->apartmentName_Like) && $param->apartmentName_Like !== '') {
+	$query = $query->where_like('p1.apartmentName', $param->apartmentName_Like . '%');
+}
+
+if (isset($param->banktransferNameKana_Like) && $param->banktransferNameKana_Like !== '') {
+	$subquery = ORM::for_table(TBLRENTALCONTRACT)
+    ->table_alias('p1')
+    ->distinct()
+    ->select('p1.rentalInfoPid')
+    ->where_like('p1.banktransferNameKana', $param->banktransferNameKana_Like . '%')
+    ->where_null('p1.deleteDate')
+    ->find_array();
+
+	$ids = array_column($subquery, 'rentalInfoPid');
+
+	if (!empty($ids)) {
+		$query = $query->where_in('p1.pid', $ids);
+	} else {
+		$query = $query->where_raw('1 = 0');
+	}
+}
+// 20250804 E_Add
 
 $query = getQueryExpertTempland($param, $query, 'p3.pid');// 20250502 Add
 
