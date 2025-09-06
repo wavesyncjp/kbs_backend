@@ -1269,13 +1269,21 @@ for($i = 0 ; $i < 7; $i++) {
 // 支払依頼書帳票シート計算式を設定 START
 $sheet = $spreadsheet->getSheet(1);
 $rowSum = $totalRows + $posMergeBegin;
+// 20250818 S_Update
+// for($i = $posMergeBegin ; $i < $rowSum; $i++) {
+// 	$sheet->setCellValue('N' . $i, '==IF(OR(K'. $i .'<>"", L'. $i .'<>""), K'. $i .'+L'. $i .', "")');
+// }
+
+// $sheet->setCellValue('K' . $rowSum, '=SUM(K'. $posMergeBegin .':K'. ($rowSum - 1) .')');
+// $sheet->setCellValue('L' . $rowSum, '=SUM(L'. $posMergeBegin .':L'. ($rowSum - 1) .')');
+// $sheet->setCellValue('N' . $rowSum, '=SUM(N'. $posMergeBegin .':N'. ($rowSum - 1) .')');
+
 for($i = $posMergeBegin ; $i < $rowSum; $i++) {
-	$sheet->setCellValue('N' . $i, '==IF(OR(K'. $i .'<>"", L'. $i .'<>""), K'. $i .'+L'. $i .', "")');
+	$sheet->setCellValue('L' . $i, '=IF(K'. $i .'<>"", K'. $i .', "")');
 }
 
 $sheet->setCellValue('K' . $rowSum, '=SUM(K'. $posMergeBegin .':K'. ($rowSum - 1) .')');
-$sheet->setCellValue('L' . $rowSum, '=SUM(L'. $posMergeBegin .':L'. ($rowSum - 1) .')');
-$sheet->setCellValue('N' . $rowSum, '=SUM(N'. $posMergeBegin .':N'. ($rowSum - 1) .')');
+// 20250818 E_Update
 
 $sheet->setSelectedCell('A1');// 初期選択セル設定
 // 支払依頼書帳票シート計算式を設定 END
