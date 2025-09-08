@@ -153,6 +153,7 @@ function searchContractSimple($param) {
 	->select('p1.successionSecurityDeposit')// 20250418 Add
 	->select('p2.bukkenNo')
 	->select('p2.bukkenName')
+	->select('p2.contractBukkenNo')// 20250909 Add
 	->inner_join(TBLTEMPLANDINFO, array('p1.tempLandInfoPid', '=', 'p2.pid'), 'p2')
 	->where_null('p1.deleteDate');
 
