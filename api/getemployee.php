@@ -21,7 +21,7 @@ if(isset($param->activeUser) && $param->activeUser === '1') {
 if(!isset($param->activeUser) || $param->activeUser !== '9') {
 	$query = $query->where_not_in('loginId', ['0001', '0002', '0003', '0004', '0005']);
 }
-$emps = $query->order_by_asc('displayOrder')->order_by_asc('depCode')->order_by_asc('userId')->find_array();
+$emps = $query->order_by_asc('userNameKana')->order_by_asc('userId')->find_array();
 // 20220517 E_Update
 
 echo json_encode($emps);
