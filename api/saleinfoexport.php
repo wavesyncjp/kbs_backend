@@ -394,7 +394,10 @@ foreach($sales as $sale) {
 			// 代金
 			$cell = setCell(null, $sheet, 'payPriceTax_intermediary', 1, $endColumn, 1, $endRow, $payDetail_intermediary['payPriceTax']);
 			// 備考<-支払名称+備考
-			$cell = setCell(null, $sheet, 'paymentName_intermediary', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail_intermediary['paymentCode']) . $payDetail_intermediary['detailRemarks']);
+			// 20250909 S_Update
+			// $cell = setCell(null, $sheet, 'paymentName_intermediary', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail_intermediary['paymentCode']) . $payDetail_intermediary['detailRemarks']);
+			$cell = setCell(null, $sheet, 'paymentName_intermediary', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType2'], $payDetail_intermediary['paymentCode']) . $payDetail_intermediary['detailRemarks']);
+			// 20250909 E_Update
 
 			// 業務委託料
 			// 日時
@@ -422,12 +425,15 @@ foreach($sales as $sale) {
 			// 代金
 			$cell = setCell(null, $sheet, 'payPriceTax_outsourcing', 1, $endColumn, 1, $endRow, $payDetail_outsourcing['payPriceTax']);
 			// 備考<-支払名称+備考
-			$cell = setCell(null, $sheet, 'paymentName_outsourcing', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail_outsourcing['paymentCode']) . $payDetail_outsourcing['detailRemarks']);
+			// 20250909 S_Update
+			// $cell = setCell(null, $sheet, 'paymentName_outsourcing', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType'], $payDetail_outsourcing['paymentCode']) . $payDetail_outsourcing['detailRemarks']);
+			$cell = setCell(null, $sheet, 'paymentName_outsourcing', 1, $endColumn, 1, $endRow, getCodeTitle($codeLists['paymentType2'], $payDetail_outsourcing['paymentCode']) . $payDetail_outsourcing['detailRemarks']);
+			// 20250909 E_Update
 		
 			// 20250616 S_Add
 			if($cntIntermediary == 0 || $cntOutsourcing == 0){
 				$sheet->removeRow(5,1);
-				$sheet->getCell('J5')->setValue('=SUM(J4:J4)');
+				// $sheet->getCell('J5')->setValue('=SUM(J4:J4)');// 20250909 Delete
 				$sheet->getCell('K5')->setValue('=SUM(K4:K4)');
 				$sheet->getCell('M5')->setValue('=SUM(M4:M4)');
 			}
