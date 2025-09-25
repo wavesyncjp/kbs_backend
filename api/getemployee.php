@@ -27,7 +27,10 @@ if (is_array($param->depCode) && count($param->depCode) > 0) {
 }
 // 20250924 S_Update
 $emps = $query->order_by_expr('CASE WHEN authority = 99 THEN 1 ELSE 0 END')
-	->order_by_asc('userNameKana')->order_by_asc('userId')->find_array();
+	->order_by_expr('CASE WHEN userNameKana IS NULL THEN 1 ELSE 0 END')
+	->order_by_asc('userNameKana')
+	->order_by_asc('userId')
+	->find_array();
 // 20250924 E_Update
 // 20220517 E_Update
 
