@@ -929,7 +929,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                     if(sizeof($bottomLandInfos) > 0) {
                         foreach($bottomLandInfos as $bottomLandInfo) {
                             $bottomLandInfo['rightsForm'] = '01';// 01：借地権
-                            $locsLand[] = $bottomLandInfo;
+                            //$locsLand[] = $bottomLandInfo;
                             // 20220615 S_Add
                             $bottomLandInfo['lenderBorrower'] = '貸主名';   // 貸主名/借主名
                             $bottomLandInfo['leasedAreaTitle'] = '';        // 借地対象面積タイトル
