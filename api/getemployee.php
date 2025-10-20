@@ -25,6 +25,12 @@ if(!isset($param->activeUser) || $param->activeUser !== '9') {
 if (is_array($param->depCode) && count($param->depCode) > 0) {
 	$query = $query->where_in('p1.depCode', $param->depCode);
 }
+
+// 権限の条件
+if (is_array($param->authority) && count($param->authority) > 0) {
+	$query = $query->where_in('p1.authority', $param->authority);
+}
+
 // 20250924 S_Update
 $emps = $query->order_by_expr('CASE WHEN authority = 99 THEN 1 ELSE 0 END')
 	->order_by_expr('CASE WHEN userNameKana IS NULL THEN 1 ELSE 0 END')
