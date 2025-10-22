@@ -11,7 +11,8 @@ $query = ORM::for_table(TBLUSER)
 			->select('ud.depCode', 'depCode')
 			->select('p2.depName')
 			->left_outer_join('tbluserdepartment', array('p1.userId', '=', 'ud.userId'), 'ud') // Add 20251022 テーブル名を定数にする
-			->left_outer_join(TBLDEPARTMENT, array('ud.depCode', '=', 'p2.depCode'), 'p2');
+			->left_outer_join(TBLDEPARTMENT, array('ud.depCode', '=', 'p2.depCode'), 'p2')
+			->where_null('ud.deleted_at');
 
 $query = $query->where_null('p1.deleteDate');
 
@@ -22,8 +23,7 @@ if(isset($param->userName) && $param->userName !== ''){
 	$query = $query->where_like('p1.userName', '%'.$param->userName.'%');
 }
 if(isset($param->depCode) && $param->depCode !== ''){
-	$query = $query->where('ud.depCode', $param->depCode)
-					->where_null('ud.deleted_at');
+	$query = $query->where('ud.depCode', $param->depCode);
 }
 if(isset($param->authority) && $param->authority !== ''){
 	$query = $query->where('p1.authority', $param->authority);
