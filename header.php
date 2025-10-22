@@ -37,6 +37,7 @@ ORM::configure('id_column_overrides', array(
 		, 'tblcontractdetailinfo'=>'pid'
 		, 'tblbukken'=>'bukkenId'
 		, 'tbluser'=>'userId'
+		, 'tbluserdepartment'=>'pid'
 		, 'tbltoken'=>'userId'
 		, 'tbldepartment'=>'depCode'
 		, 'tblemployee'=>'employeeCode'
@@ -100,6 +101,7 @@ define('TBLCONTRACTINFO','tblcontractinfo');
 define('TBLCONTRACTDETAILINFO','tblcontractdetailinfo');
 define('TBLBUKKEN','tblbukken');
 define('TBLUSER','tbluser');
+define('TBLUSERDEPARTMENT', 'tbluserdepartment');// 20251021 Add
 define('TBLTOKEN','tbltoken');
 define('TBLDEPARTMENT','tbldepartment');
 define('TBLEMPLOYEE','tblemployee');
