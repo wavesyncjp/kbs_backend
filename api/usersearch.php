@@ -12,9 +12,8 @@ $query = ORM::for_table(TBLUSER)
 			->select('p2.depName')
 			->left_outer_join('tbluserdepartment', array('p1.userId', '=', 'ud.userId'), 'ud') // Add 20251022 テーブル名を定数にする
 			->left_outer_join(TBLDEPARTMENT, array('ud.depCode', '=', 'p2.depCode'), 'p2')
-			->where_null('ud.deleted_at');
-
-$query = $query->where_null('p1.deleteDate');
+			->select_expr("CASE WHEN ud.deleted_at IS NULL THEN ud.depCode END", 'depCode')
+			->where_null('p1.deleteDate');
 
 if(isset($param->userId) && $param->userId !== ''){
 	$query = $query->where_like('p1.userId', $param->userId.'%');
@@ -22,8 +21,27 @@ if(isset($param->userId) && $param->userId !== ''){
 if(isset($param->userName) && $param->userName !== ''){
 	$query = $query->where_like('p1.userName', '%'.$param->userName.'%');
 }
+
 if(isset($param->depCode) && $param->depCode !== ''){
-	$query = $query->where('ud.depCode', $param->depCode);
+	$query = $query->where_raw(
+    "EXISTS (
+        SELECT 1 FROM tbluserdepartment ud2
+            WHERE ud2.userId = p1.userId
+            AND ud2.depCode = ?
+            AND ud2.deleted_at IS NULL
+    )",
+    [$param->depCode]
+);
+
+// 部署が設定されていなくてもユーザー情報は取得する
+$query = $query->where_raw(
+	"ud.deleted_at IS NULL
+	OR NOT EXISTS (
+			SELECT 1 FROM tbluserdepartment a
+			WHERE a.userId = p1.userId AND a.deleted_at IS NULL
+		)"
+);
+
 }
 if(isset($param->authority) && $param->authority !== ''){
 	$query = $query->where('p1.authority', $param->authority);
@@ -65,7 +83,7 @@ try {
 		}
 	}
 } catch (\Exception $th) {
-	echo $th->getMessage();
+	echo 'error';
 }
 
 echo json_encode(array_values($result));
