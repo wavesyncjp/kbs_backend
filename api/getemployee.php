@@ -8,8 +8,8 @@ $param = json_decode($postparam);
 $query = ORM::for_table(TBLUSER)
 			->table_alias('p1')
 			->select('p1.*')
-			->select('p2.displayOrder')
-			->left_outer_join(TBLDEPARTMENT, array('p1.depCode', '=', 'p2.depCode'), 'p2')
+			->distinct()
+			->left_outer_join('tbluserdepartment', array('p1.userId', '=', 'ud.userId'), 'ud')
 			->where_null('p1.deleteDate');
 
 if(isset($param->activeUser) && $param->activeUser === '1') {
@@ -23,7 +23,8 @@ if(!isset($param->activeUser) || $param->activeUser !== '9') {
 }
 
 if (is_array($param->depCode) && count($param->depCode) > 0) {
-	$query = $query->where_in('p1.depCode', $param->depCode);
+	$query = $query->where('ud.depCode', $param->depCode)
+					->where_null('ud.deleted_at');
 }
 
 // 権限の条件
