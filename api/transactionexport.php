@@ -913,7 +913,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                         ->where_null('p1.deleteDate')
                         ->order_by_asc('p1.registPosition')
                         ->findArray();
-                    if(sizeof($bottomLandInfos) > 0) {
+                    if(sizeof($bottomLandInfos) > 0 && count($locsBottom) === 0) {
                         foreach($bottomLandInfos as $bottomLandInfo) {
                             $bottomLandInfo['rightsForm'] = '01';// 01：借地権
                             // 20220615 S_Add
