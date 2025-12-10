@@ -35,6 +35,7 @@ try {
 		return isset($code);
 	})));
 
+	// 20251210 S_Add
 	// if (!empty($deps)) {
 	// 	$place = [];
 	// 	$binds = [];
@@ -71,6 +72,7 @@ try {
 	// 	", [$info->userId]);
 	// }
 
+	$userDepartmentUserId = $param->updateUserId ?? $param->createUserId;
     if (!empty($deps)) {
 
         // upsert
@@ -84,11 +86,11 @@ try {
                 $row = ORM::for_table(TBLUSERDEPARTMENT)->create();
                 $row->userId  = $info->userId;
                 $row->depCode = $depCode;
-                setInsert($row, $param->createUserId);
+                setInsert($row, $userDepartmentUserId);
             } else {
 				$row->deleteDate = null;
 				$row->deleteUserId = null;
-            	setUpdate($row, $param->updateUserId);
+            	setUpdate($row, $userDepartmentUserId);
 			}
             $row->save();
         }
@@ -101,7 +103,7 @@ try {
             ->find_many();
 
         foreach ($rowsToDelete as $row) {
-            setDelete($row, $param->updateUserId);
+            setDelete($row, $userDepartmentUserId);
             $row->save();
         }
 
@@ -113,12 +115,13 @@ try {
             ->find_many();
 
         foreach ($rowsToDeleteAll as $row) {
-            setDelete($row, $param->updateUserId);
+            setDelete($row, $userDepartmentUserId);
             $row->save();
         }
     }
 
 	$db->commit();
+	// 20251210 E_Add
 
 	$ret = ORM::for_table(TBLUSER)->findOne($info->userId)->asArray();
 	echo json_encode($ret);

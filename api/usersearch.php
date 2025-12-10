@@ -11,8 +11,8 @@ $query = ORM::for_table(TBLUSER)
 			->select('ud.depCode', 'depCode')
 			->select('p2.depName')
 			->left_outer_join(TBLUSERDEPARTMENT, array('p1.userId', '=', 'ud.userId'), 'ud') // Add 20251022
-			->left_outer_join(TBLDEPARTMENT, array('ud.depCode', '=', 'p2.depCode'), 'p2')
-			->select_expr("CASE WHEN ud.deleteDate IS NULL THEN ud.depCode END", 'depCode')
+			->left_outer_join(TBLDEPARTMENT, array('ud.depCode', '=', 'p2.depCode'), 'p2') // UPdate 20251022
+			->select_expr("CASE WHEN ud.deleteDate IS NULL THEN ud.depCode END", 'depCode') // Add 20251022
 			->where_null('p1.deleteDate');
 
 if(isset($param->userId) && $param->userId !== ''){
@@ -22,27 +22,30 @@ if(isset($param->userName) && $param->userName !== ''){
 	$query = $query->where_like('p1.userName', '%'.$param->userName.'%');
 }
 
+// 20251210 S_Add
 if(isset($param->depCode) && $param->depCode !== ''){
 	$query = $query->where_raw(
-    "EXISTS (
-        SELECT 1 FROM tbluserdepartment ud2
-            WHERE ud2.userId = p1.userId
-            AND ud2.depCode = ?
-            AND ud2.deleteDate IS NULL
-    )",
-    [$param->depCode]
-);
+		"EXISTS (
+			SELECT 1 FROM tbluserdepartment ud2
+				WHERE ud2.userId = p1.userId
+				AND ud2.depCode = ?
+				AND ud2.deleteDate IS NULL
+		)",
+		[$param->depCode]
+	);
 
-// 部署が設定されていなくてもユーザー情報は取得する
-$query = $query->where_raw(
-	"ud.deleteDate IS NULL
-	OR NOT EXISTS (
-			SELECT 1 FROM tbluserdepartment a
-			WHERE a.userId = p1.userId AND a.deleteDate IS NULL
-		)"
-);
-
+	// 部署が設定されていなくてもユーザー情報は取得する
+	$query = $query->where_raw(
+		"ud.deleteDate IS NULL
+		OR NOT EXISTS (
+				SELECT 1 FROM tbluserdepartment a
+				WHERE a.userId = p1.userId AND a.deleteDate IS NULL
+			)"
+	);
 }
+// 20251210 E_Add
+
+
 if(isset($param->authority) && $param->authority !== ''){
 	$query = $query->where('p1.authority', $param->authority);
 }
@@ -51,7 +54,7 @@ if(isset($param->authority) && $param->authority !== ''){
 try {
 	$rows = $query->where_not_in('p1.loginId', ['0001', '0002', '0003', '0004', '0005'])->order_by_asc('p1.userId')->find_array();
 
-	//　ユーザーごとにグループ化
+	// 20251210 S_Add
 	$result = [];
 	foreach ($rows as $r) {
 		$uid = $r['userId'];
@@ -82,6 +85,7 @@ try {
 			];
 		}
 	}
+	// 20251210 E_Add
 } catch (\Exception $th) {
 	echo 'error';
 }

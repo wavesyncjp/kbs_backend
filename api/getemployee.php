@@ -8,7 +8,7 @@ $param = json_decode($postparam);
 $query = ORM::for_table(TBLUSER)
 			->table_alias('p1')
 			->select('p1.*')
-			->distinct()
+			->distinct() // 20251210 Add
 			->left_outer_join(TBLUSERDEPARTMENT, array('p1.userId', '=', 'ud.userId'), 'ud')
 			->where_null('p1.deleteDate');
 
