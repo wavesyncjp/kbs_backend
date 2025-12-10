@@ -10,7 +10,7 @@ $query = ORM::for_table(TBLUSER)
 			->select_many('p1.userId', 'p1.loginId', 'p1.password', 'p1.userName', 'p1.userNameKana', 'p1.employeeCode', 'p1.authority', 'p1.mailAddress', 'p1.createUserId', 'p1.createDate', 'p1.updateUserId', 'p1.updateDate', 'p1.deleteUserId', 'p1.deleteDate')
 			->select('ud.depCode', 'depCode')
 			->select('p2.depName')
-			->left_outer_join('tbluserdepartment', array('p1.userId', '=', 'ud.userId'), 'ud') // Add 20251022 テーブル名を定数にする
+			->left_outer_join(TBLUSERDEPARTMENT, array('p1.userId', '=', 'ud.userId'), 'ud') // Add 20251022
 			->left_outer_join(TBLDEPARTMENT, array('ud.depCode', '=', 'p2.depCode'), 'p2')
 			->select_expr("CASE WHEN ud.deleted_at IS NULL THEN ud.depCode END", 'depCode')
 			->where_null('p1.deleteDate');
