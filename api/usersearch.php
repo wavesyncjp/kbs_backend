@@ -12,7 +12,7 @@ $query = ORM::for_table(TBLUSER)
 			->select('p2.depName')
 			->left_outer_join(TBLUSERDEPARTMENT, array('p1.userId', '=', 'ud.userId'), 'ud') // Add 20251022
 			->left_outer_join(TBLDEPARTMENT, array('ud.depCode', '=', 'p2.depCode'), 'p2')
-			->select_expr("CASE WHEN ud.deleted_at IS NULL THEN ud.depCode END", 'depCode')
+			->select_expr("CASE WHEN ud.deleteDate IS NULL THEN ud.depCode END", 'depCode')
 			->where_null('p1.deleteDate');
 
 if(isset($param->userId) && $param->userId !== ''){
@@ -28,17 +28,17 @@ if(isset($param->depCode) && $param->depCode !== ''){
         SELECT 1 FROM tbluserdepartment ud2
             WHERE ud2.userId = p1.userId
             AND ud2.depCode = ?
-            AND ud2.deleted_at IS NULL
+            AND ud2.deleteDate IS NULL
     )",
     [$param->depCode]
 );
 
 // 部署が設定されていなくてもユーザー情報は取得する
 $query = $query->where_raw(
-	"ud.deleted_at IS NULL
+	"ud.deleteDate IS NULL
 	OR NOT EXISTS (
 			SELECT 1 FROM tbluserdepartment a
-			WHERE a.userId = p1.userId AND a.deleted_at IS NULL
+			WHERE a.userId = p1.userId AND a.deleteDate IS NULL
 		)"
 );
 

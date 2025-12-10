@@ -35,41 +35,88 @@ try {
 		return isset($code);
 	})));
 
-	if (!empty($deps)) {
-		$place = [];
-		$binds = [];
-		foreach ($deps as $d) {
-			$place[] = "(?, ?, NOW(), NOW(), NULL)";
-			$binds[] = $info->userId;
-			$binds[] = $d;
-		}
+	// if (!empty($deps)) {
+	// 	$place = [];
+	// 	$binds = [];
+	// 	foreach ($deps as $d) {
+	// 		$place[] = "(?, ?, NOW(), NOW(), NULL)";
+	// 		$binds[] = $info->userId;
+	// 		$binds[] = $d;
+	// 	}
 
-		$sql = "INSERT INTO tbluserdepartment
-			(userId, depCode, created_at, updated_at, deleted_at) VALUES ".implode(',', $place)."
-			ON DUPLICATE KEY UPDATE
-				deleted_at = NULL,
-				updated_at = CURRENT_TIMESTAMP";
-		ORM::raw_execute($sql, $binds);
+	// 	$sql = "INSERT INTO tbluserdepartment
+	// 		(userId, depCode, created_at, updated_at, deleteDate) VALUES ".implode(',', $place)."
+	// 		ON DUPLICATE KEY UPDATE
+	// 			deleteDate = NULL,
+	// 			updated_at = CURRENT_TIMESTAMP";
+	// 	ORM::raw_execute($sql, $binds);
 
-		// 重複を削除
-		$in = implode(',', array_fill(0, count($deps), '?'));
-		$sql = "
-		UPDATE tbluserdepartment
-		SET deleted_at = NOW()
-		WHERE userId = ?
-			AND deleted_at IS NULL
-			AND depCode NOT IN ($in)
-		";
-		ORM::raw_execute($sql, array_merge([$info->userId], $deps));
-	} else {
-		// 部署情報が空で送信されたときは論理削除
-		ORM::raw_execute("
-		UPDATE tbluserdepartment
-		SET deleted_at = NOW()
-		WHERE userId = ?
-			AND deleted_at IS NULL
-		", [$info->userId]);
-	}
+	// 	// 重複を削除
+	// 	$in = implode(',', array_fill(0, count($deps), '?'));
+	// 	$sql = "
+	// 	UPDATE tbluserdepartment
+	// 	SET deleteDate = NOW()
+	// 	WHERE userId = ?
+	// 		AND deleteDate IS NULL
+	// 		AND depCode NOT IN ($in)
+	// 	";
+	// 	ORM::raw_execute($sql, array_merge([$info->userId], $deps));
+	// } else {
+	// 	// 部署情報が空で送信されたときは論理削除
+	// 	ORM::raw_execute("
+	// 	UPDATE tbluserdepartment
+	// 	SET deleteDate = NOW()
+	// 	WHERE userId = ?
+	// 		AND deleteDate IS NULL
+	// 	", [$info->userId]);
+	// }
+
+    if (!empty($deps)) {
+
+        // upsert
+        foreach ($deps as $depCode) {
+            $row = ORM::for_table(TBLUSERDEPARTMENT)
+                ->where('userId', $info->userId)
+                ->where('depCode', $depCode)
+                ->find_one();
+
+            if (!$row) {
+                $row = ORM::for_table(TBLUSERDEPARTMENT)->create();
+                $row->userId  = $info->userId;
+                $row->depCode = $depCode;
+                setInsert($row, $param->createUserId);
+            } else {
+				$row->deleteDate = null;
+				$row->deleteUserId = null;
+            	setUpdate($row, $param->updateUserId);
+			}
+            $row->save();
+        }
+
+        // 送信された部署コードに含まれない部署は論理削除
+        $rowsToDelete = ORM::for_table(TBLUSERDEPARTMENT)
+            ->where('userId', $info->userId)
+            ->where_null('deleteDate')
+            ->where_not_in('depCode', $deps)
+            ->find_many();
+
+        foreach ($rowsToDelete as $row) {
+            setDelete($row, $param->updateUserId);
+            $row->save();
+        }
+
+    } else {
+        // 送信された部署コードが空の場合、全て論理削除
+        $rowsToDeleteAll = ORM::for_table(TBLUSERDEPARTMENT)
+            ->where('userId', $info->userId)
+            ->where_null('deleteDate')
+            ->find_many();
+
+        foreach ($rowsToDeleteAll as $row) {
+            setDelete($row, $param->updateUserId);
+            $row->save();
+        }
+    }
 
 	$db->commit();
 

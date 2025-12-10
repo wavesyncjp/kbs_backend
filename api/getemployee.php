@@ -9,7 +9,7 @@ $query = ORM::for_table(TBLUSER)
 			->table_alias('p1')
 			->select('p1.*')
 			->distinct()
-			->left_outer_join('tbluserdepartment', array('p1.userId', '=', 'ud.userId'), 'ud')
+			->left_outer_join(TBLUSERDEPARTMENT, array('p1.userId', '=', 'ud.userId'), 'ud')
 			->where_null('p1.deleteDate');
 
 if(isset($param->activeUser) && $param->activeUser === '1') {
@@ -24,7 +24,7 @@ if(!isset($param->activeUser) || $param->activeUser !== '9') {
 
 if (is_array($param->depCode) && count($param->depCode) > 0) {
 	$query = $query->where('ud.depCode', $param->depCode)
-					->where_null('ud.deleted_at');
+					->where_null('ud.deleteDate');
 }
 
 // 権限の条件
