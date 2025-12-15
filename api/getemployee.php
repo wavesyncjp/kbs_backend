@@ -25,7 +25,10 @@ if(isset($param->activeUser) && $param->activeUser === '1') {
 // 20220517 S_Update
 // $emps = $query->where_not_equal('loginId', '0001')->where_not_equal('loginId', '0002')->order_by_asc('displayOrder')->order_by_asc('depCode')->order_by_asc('userId')->find_array();
 if(!isset($param->activeUser) || $param->activeUser !== '9') {
-	$query = $query->where_not_in('loginId', ['0001', '0002', '0003', '0004', '0005']);
+	// 20251216 S_Update
+	// $query = $query->where_not_in('loginId', ['0001', '0002', '0003', '0004', '0005']);
+	$query = $query->where_not_in('loginId', ['0001', '0002', '0003', '0004', '0005', '0006', '0007']);
+	// 20251216 E_Update
 }
 
 if (is_array($param->depCode) && count($param->depCode) > 0) {

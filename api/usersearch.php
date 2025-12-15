@@ -81,7 +81,10 @@ if(isset($param->authority) && $param->authority !== ''){
 
 //$deps = $query->where_not_equal('loginId', '0001')->where_not_equal('loginId', '0002')->order_by_asc('userId')->find_array();
 try {
-	$rows = $query->where_not_in('p1.loginId', ['0001', '0002', '0003', '0004', '0005'])->order_by_asc('p1.userId')->find_array();
+	// 20251216 S_Update
+	// $rows = $query->where_not_in('p1.loginId', ['0001', '0002', '0003', '0004', '0005'])->order_by_asc('p1.userId')->find_array();
+	$rows = $query->where_not_in('p1.loginId', ['0001', '0002', '0003', '0004', '0005', '0006', '0007'])->order_by_asc('p1.userId')->find_array();
+	// 20251216 E_Update
 
 	// 20251210 S_Add
 	$result = [];
