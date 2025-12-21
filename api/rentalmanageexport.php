@@ -17,7 +17,7 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 $fullPath  = __DIR__ . '/../template';
-$filePath = $fullPath.'/賃貸管理表.xlsx'; 
+$filePath = $fullPath.'/賃貸管理表.xlsx';
 // Excel操作
 $reader = new PhpOffice\PhpSpreadsheet\Reader\Xlsx();
 $spreadsheet = $reader->load($filePath);
@@ -50,17 +50,17 @@ $cell = null;
 // 賃貸契約を取得
 $renCons = getRentalContractsForExport2($param->pid,null);
 
-//物件の表示 所在地		
+// 物件の表示 所在地
 $cell = setCell($cell, $sheet, 'l_address', $currentColumn, $endColumn, $currentRow, $endRow, $renCons[0]['l_addressMap']);
 
-//物件の表示 名  称				
+// 物件の表示 名称
 $cell = setCell($cell, $sheet, 'apartmentName', $currentColumn, $endColumn, $currentRow, $endRow, $ren['apartmentName']);
 
-//支払期限
+// 支払期限
 $cell = setCell($cell, $sheet, 'usance', $currentColumn, $endColumn, $currentRow, $endRow, getCodeTitle($usanceList, (!isset($renCons[0]['usance']) || empty($renCons[0]['usance']) ? '1' : $renCons[0]['usance'])) . "分" .($renCons[0]['paymentDay'] == 0 ? '末' : $renCons[0]['paymentDay']) ."日払い");
 
-//支払振込	
-$bankName = getBankName($ren['bankPid']);			
+// 支払振込
+$bankName = getBankName($ren['bankPid']);
 $cell = setCell($cell, $sheet, 'bank_displayName', $currentColumn, $endColumn, $currentRow, $endRow, $bankName);
 
 $cell = searchCell($sheet, 'roomNo', $currentColumn, $endColumn, $endRow, $endRow);
@@ -78,42 +78,42 @@ $cell = null;
 foreach($renCons as $renCon) {
     $cntRenCons++;
 
-    //立ち退き情報
+    // 立ち退き情報
     $evic = getEvic($renCon);
     if(!isset($evic)){
         $evic = new stdClass();
         $evic->agreementCancellationDate = null;
         $evic->surrenderDate = null;
     }
-   
-    //部屋番号
+
+    // 部屋番号
     $cell = setCell($cell, $sheet, 'roomNo', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['roomNo']);
 
-    //用途
+    // 用途
     $cell = setCell($cell, $sheet, 'usePurpose', $currentColumn, $endColumn, $currentRow, $endRow, getCodeTitle($usePurposeList, $renCon['usePurpose']));
 
-    //賃借人
+    // 賃借人
     $cell = setCell($cell, $sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['borrowerName']);
 
-    //賃料
+    // 賃料
     $cell = setCell($cell, $sheet, 'rentPrice', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['rentPrice']);
 
-    //賃料消費税
+    // 賃料消費税
     $cell = setCell($cell, $sheet, 'rentPriceTax', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['rentPriceTax']);
 
-    //共益費
+    // 共益費
     $cell = setCell($cell, $sheet, 'condoFee', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['condoFee']);
 
-    //共益費消費税
+    // 共益費消費税
     $cell = setCell($cell, $sheet, 'condoFeeTax', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['condoFeeTax']);
 
-    //敷金
+    // 敷金
     $cell = setCell($cell, $sheet, 'deposit', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['deposit']);
 
-    //契約開始
+    // 契約開始
     $cell = setCell($cell, $sheet, 'loanPeriodStartDate', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($renCon['loanPeriodStartDate'], 'Y/m/d'));
 
-    //契約終了
+    // 契約終了
     $cell = setCell($cell, $sheet, 'loanPeriodEndDate', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($renCon['loanPeriodEndDate'], 'Y/m/d'));
 
     // 立退料 情報
@@ -123,10 +123,10 @@ foreach($renCons as $renCon) {
     // 明渡日
     $cell = setCell($cell, $sheet, 'surrenderDate', $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($evic->surrenderDate, 'Y/m/d'));
 
-    //明渡日に値が入っている行は灰色背景にする。
+    // 明渡日に値が入っている行は灰色背景にする。
     createConditionExcel($sheet,'A' . $currentRow . ':N' . $currentRow,'=$M' . $currentRow . '<>""', 'D9D9D9');
 
-    //備考
+    // 備考
     $cell = setCell($cell, $sheet, 'rentalContractNotes', $currentColumn, $endColumn, $currentRow, $endRow, $renCon['rentalContractNotes']);
 
     $currentRow++;
@@ -154,7 +154,7 @@ $renRevGroups = getRentalReceiveForExport($param->pid,null);
 foreach($renRevGroups as $renRevGroup) {
 
     $yearJP = explode(".", convert_jpdt($renRevGroup->year . '0101'))[0];
-    
+
     // シートをコピー
     $sheet = clone $spreadsheet->getSheet(1);
     $sheet->setTitle($yearJP . '_入金管理');
@@ -166,10 +166,10 @@ foreach($renRevGroups as $renRevGroup) {
     $cell = null;
 
     foreach ($renRevGroup->groups as $key => $rev) {
-        //物件の表示 名  称				
+        // 物件の表示 名称
         $cell = setCell($cell, $sheet, 'apartmentName', $currentColumn, $endColumn, $currentRow, $endRow, $ren['apartmentName']);
 
-        // 物件の表示 所在地	
+        // 物件の表示 所在地
         $cell = setCell($cell, $sheet, 'l_address', $currentColumn, $endColumn, $currentRow, $endRow, $rev->baseInfo['l_addressMap']);
         break;
     }
@@ -193,35 +193,38 @@ foreach($renRevGroups as $renRevGroup) {
     $color = 'D0CECE';
 
     foreach ($renRevGroup->groups as $key => $rev) {
-           
+
         $cntGroup++;
         $cell = null;
-        //年
+        // 年
         $cell = setCell($cell, $sheet, 'receiveDay_Year', $currentColumn, $endColumn, $currentRow, $endRow, $cntGroup == 1 ? $yearJP : null);
-   
-        //部屋番号
+
+        // 部屋番号
         $cell = setCell($cell, $sheet, 'roomNo', $currentColumn, $endColumn, $currentRow, $endRow, $rev->baseInfo['roomNo']);
-    
-        //契約者名				
+
+        // 契約者名
         $cell = setCell($cell, $sheet, 'contractorName', $currentColumn, $endColumn, $currentRow, $endRow, $rev->baseInfo['borrowerName']);
 
-        //賃料等月額				
+        // 賃料等月額
         $cell = setCell($cell, $sheet, 'ri_rentPrice', $currentColumn, $endColumn, $currentRow, $endRow, $rev->baseInfo['rentPriceRefMap']);
 
         for ($i = 1; $i <= 12; $i++) {
             $detail = $rev->details[$i];
-            //日付			
-            $cell = setCell($cell, $sheet, 'receiveDay_' . $i, $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($detail->receiveDay, 'Y/m/d'), $detail->isDisable ? $color : null);
+            // 日付
+            // 20251219 S_Update
+            // $cell = setCell($cell, $sheet, 'receiveDay_' . $i, $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($detail->receiveDay, 'Y/m/d'), $detail->isDisable ? $color : null);
+            $cell = setCell($cell, $sheet, 'receiveDay_' . $i, $currentColumn, $endColumn, $currentRow, $endRow, convert_dt($detail->receiveDay, 'm/d'), $detail->isDisable ? $color : null);
+            // 20251219 E_Update
         }
 
         $endRow += 1;// 20240426 Add
         for ($i = 1; $i <= 12; $i++) {
             $detail = $rev->details[$i];
-            //金額			
+            // 金額
             $cell = setCell($cell, $sheet, 'receivePrice_' . $i, $currentColumn, $endColumn, $currentRow, $endRow, $detail->receivePrice, $detail->isDisable ? $color : null);
         }
     }
-    
+
     $sheet->setSelectedCell('A1');// 初期選択セル設定
 }
 // コピー元入金管理シート削除
@@ -259,7 +262,7 @@ function setCell($cell, $sheet, $keyWord, $startColumn, $endColumn, $startRow, $
         $setColumn = \PhpOffice\PhpSpreadsheet\Cell\Coordinate ::columnIndexFromString($cell->getColumn());
         $setRow = $cell->getRow();
         $sheet->setCellValueByColumnAndRow($setColumn, $setRow, $value);
-	   
+
         if(isset($color)){
             $sheet->getStyle($cell->getColumn() . $cell->getRow())->getFill()
             ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB($color);
@@ -282,15 +285,15 @@ function copyBlockWithVal($sheet, $startPos, $blockRowCount, $copyCount, $colums
 
 // エクセルの条件付き書式で行に色を付ける
 function createConditionExcel($sheet,$range,$condition, $color){
-	// Create conditional formatting rule
-	$conditional = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
-	$conditional->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_EXPRESSION)
-		->addCondition($condition);
-	$conditional->getStyle()->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
-	$conditional->getStyle()->getFill()->getEndColor()->setARGB($color);
-	
-	// Apply conditional formatting to the range
-	$sheet->getStyle($range)->setConditionalStyles([$conditional]);	
+    // Create conditional formatting rule
+    $conditional = new \PhpOffice\PhpSpreadsheet\Style\Conditional();
+    $conditional->setConditionType(\PhpOffice\PhpSpreadsheet\Style\Conditional::CONDITION_EXPRESSION)
+        ->addCondition($condition);
+    $conditional->getStyle()->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID);
+    $conditional->getStyle()->getFill()->getEndColor()->setARGB($color);
+
+    // Apply conditional formatting to the range
+    $sheet->getStyle($range)->setConditionalStyles([$conditional]);
 }
 
 /**
@@ -298,25 +301,25 @@ function createConditionExcel($sheet,$range,$condition, $color){
  * @param rentalInfoPid 賃貸情報
  */
 function getRentalContractsForExport2($rentalInfoPid) {
-	$queryRC = ORM::for_table(TBLRENTALCONTRACT)
-	->table_alias('p1')
-	->select('p1.*')
-	->select('p2.roomNo')
-	->select('p2.borrowerName')
-	->select('p3.address', 'l_addressMap')
-	->select('p5.displayOrder')
-	->left_outer_join(TBLRESIDENTINFO, array('p1.residentInfoPid', '=', 'p2.pid'), 'p2')
-	->left_outer_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p3.pid'), 'p3')
-	->left_outer_join(TBLCODE, ' p5.code = 047 and p5.codeDetail = p1.usePurpose ', 'p5')
-	->where_null('p1.deleteDate')
-	->where_null('p2.deleteDate');
-	
-	$queryRC = $queryRC->where('p1.rentalInfoPid', $rentalInfoPid);
+    $queryRC = ORM::for_table(TBLRENTALCONTRACT)
+    ->table_alias('p1')
+    ->select('p1.*')
+    ->select('p2.roomNo')
+    ->select('p2.borrowerName')
+    ->select('p3.address', 'l_addressMap')
+    ->select('p5.displayOrder')
+    ->left_outer_join(TBLRESIDENTINFO, array('p1.residentInfoPid', '=', 'p2.pid'), 'p2')
+    ->left_outer_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p3.pid'), 'p3')
+    ->left_outer_join(TBLCODE, ' p5.code = 047 and p5.codeDetail = p1.usePurpose ', 'p5')
+    ->where_null('p1.deleteDate')
+    ->where_null('p2.deleteDate');
+
+    $queryRC = $queryRC->where('p1.rentalInfoPid', $rentalInfoPid);
     // 20241008 S_Update
-	// $results = $queryRC->order_by_expr('p5.displayOrder asc, LENGTH(p2.roomNo) asc, p2.roomNo asc')->findArray();
+    // $results = $queryRC->order_by_expr('p5.displayOrder asc, LENGTH(p2.roomNo) asc, p2.roomNo asc')->findArray();
     $results = $queryRC->order_by_asc('p1.pid')->findArray();
     // 20241008 S_Update
-	return $results;
+    return $results;
 }
 
 /**
@@ -324,55 +327,55 @@ function getRentalContractsForExport2($rentalInfoPid) {
  * @param rentalInfoPid 賃貸情報
  */
 function getRentalReceiveForExport($rentalInfoPid) {
-	$queryRC = ORM::for_table(TBLRENTALCONTRACT)
-	->table_alias('p1')
-	->select('p1.*')
-	->select('p2.roomNo')
-	->select('p2.borrowerName')
-	->select('p2.rentPrice', 'rentPriceRefMap')
-	->select('p3.address', 'l_addressMap')
-	->select('p4.receiveMonth')
-	->select('p4.receiveDay')
-	->select('p4.receiveFlg')
-	->select('p4.rentalContractPid')
-	->select('p5.receivePriceTax')
-	->left_outer_join(TBLRESIDENTINFO, 'p1.residentInfoPid = p2.pid and p2.deleteDate is null', 'p2')
-	->left_outer_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p3.pid'), 'p3')
-	->left_outer_join(TBLRENTALRECEIVE, 'p1.pid = p4.rentalContractPid and p4.deleteDate is null', 'p4')
+    $queryRC = ORM::for_table(TBLRENTALCONTRACT)
+    ->table_alias('p1')
+    ->select('p1.*')
+    ->select('p2.roomNo')
+    ->select('p2.borrowerName')
+    ->select('p2.rentPrice', 'rentPriceRefMap')
+    ->select('p3.address', 'l_addressMap')
+    ->select('p4.receiveMonth')
+    ->select('p4.receiveDay')
+    ->select('p4.receiveFlg')
+    ->select('p4.rentalContractPid')
+    ->select('p5.receivePriceTax')
+    ->left_outer_join(TBLRESIDENTINFO, 'p1.residentInfoPid = p2.pid and p2.deleteDate is null', 'p2')
+    ->left_outer_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p3.pid'), 'p3')
+    ->left_outer_join(TBLRENTALRECEIVE, 'p1.pid = p4.rentalContractPid and p4.deleteDate is null', 'p4')
     ->left_outer_join(TBLRECEIVECONTRACTDETAIL, ' p5.rentalReceivePid = p4.pid and p5.deleteDate is null', 'p5')
-	->where_null('p1.deleteDate');
-	
-	$queryRC = $queryRC->where('p1.rentalInfoPid', $rentalInfoPid);
+    ->where_null('p1.deleteDate');
+
+    $queryRC = $queryRC->where('p1.rentalInfoPid', $rentalInfoPid);
     // 20241113 S_Update
-	// // 20241028 S_Update
+    // // 20241028 S_Update
     // // $rentalReceives = $queryRC->order_by_expr('p4.receiveMonth asc, LENGTH(p2.roomNo) asc, p2.roomNo asc, p4.rentalContractPid asc')->findArray();
     // $rentalReceives = $queryRC->order_by_asc('p1.pid')->findArray();
     // // 20241028 E_Update
     $rentalReceives = $queryRC->order_by_expr('p4.receiveMonth asc, p1.pid asc')->findArray();
     // 20241113 E_Update
-	
+
     $results = array();
 
-	$receiveYears = array();
-	if (isset($rentalReceives)) {
+    $receiveYears = array();
+    if (isset($rentalReceives)) {
         // 20241008 S_Add
         // 入金開始年月
         $minYYMMGroups = array();
         // 20241008 E_Add
-		foreach ($rentalReceives as $rev) {
+        foreach ($rentalReceives as $rev) {
             $year = substr($rev['receiveMonth'], 0, 4);
-			if (in_array($year, $receiveYears) == false) {
-				$receiveYears[] = $year;
-			}
-		}
+            if (in_array($year, $receiveYears) == false) {
+                $receiveYears[] = $year;
+            }
+        }
 
-		foreach ($receiveYears as $y) {
-			$obj = new stdClass();
-			$obj->year = $y;
+        foreach ($receiveYears as $y) {
+            $obj = new stdClass();
+            $obj->year = $y;
             $obj->groups = array();
 
-			foreach ($rentalReceives as $rev) {
-				if (substr($rev['receiveMonth'], 0, 4) == $y) {
+            foreach ($rentalReceives as $rev) {
+                if (substr($rev['receiveMonth'], 0, 4) == $y) {
 
                     $evic = getEvic($rev);
 
@@ -380,13 +383,13 @@ function getRentalReceiveForExport($rentalInfoPid) {
                     // $roomRentExemptionStartDate = isset($evic) ? $evic->roomRentExemptionStartDate : '';
                     $initLoanPeriodEndDate = getInitLoanPeriodEndDate($evic, true);
                     // 20241008 E_Update
-                    
+
                     // 20240426 S_Delete
                     // $isDisable = isset($roomRentExemptionStartDate) && !empty($roomRentExemptionStartDate) && substr($roomRentExemptionStartDate, 0, 6) <= $rev['receiveMonth'];
                     // 20240426 E_Delete
 
                     $key = $y.'_'.$rev['roomNo'].'_'.$rev['rentalContractPid'];
-					
+
                     // 20241008 S_Add
                     $keyMinGroup = $rev['roomNo'].'_'.$rev['rentalContractPid'];
                     if (!isset($minYYMMGroups[$keyMinGroup])) {
@@ -444,7 +447,7 @@ function getRentalReceiveForExport($rentalInfoPid) {
                         $data->details = $details;
 
                         $obj->groups[$key] = $data;
-                        
+
                     }
                     $receiveDay = $rev['receiveDay'];
                     $receivePrice = $rev['receivePriceTax'];
@@ -468,11 +471,11 @@ function getRentalReceiveForExport($rentalInfoPid) {
                             // 20240426 E_Delete
                         }
                     }
-				}
-			}
-			$results[] = $obj;
-		}
-	}
-	return $results;
+                }
+            }
+            $results[] = $obj;
+        }
+    }
+    return $results;
 }
 ?>
