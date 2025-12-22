@@ -145,6 +145,7 @@ function getRentalApartments($contractInfoPid) {
 function searchContractSimple($param) {
 	$query = ORM::for_table(TBLCONTRACTINFO)
 	->table_alias('p1')
+	->distinct()
 	->select('p1.pid')
 	->select('p1.contractNumber')
 	->select('p1.tempLandInfoPid')
@@ -154,7 +155,10 @@ function searchContractSimple($param) {
 	->select('p2.bukkenNo')
 	->select('p2.bukkenName')
 	->select('p2.contractBukkenNo')// 20250909 Add
+	//->select('p3.contractDataType')
 	->inner_join(TBLTEMPLANDINFO, array('p1.tempLandInfoPid', '=', 'p2.pid'), 'p2')
+	// ->inner_join(TBLCONTRACTDETAILINFO, array('p1.pid', '=', 'p3.contractInfoPid'), 'p3')
+	// ->where_null('p3.deleteDate')
 	->where_null('p1.deleteDate');
 
 	if(isset($param->tempLandInfoPid)){
@@ -162,6 +166,24 @@ function searchContractSimple($param) {
 	}
 	if(isset($param->contractInfoPid)){
 		$query = $query->where('p1.pid', $param->contractInfoPid);
+	}
+
+	if(isset($param->contractInfoPid) && $param->locationInfoPid > 0){
+		$query = $query->where('p3.locationInfoPid', $param->locationInfoPid);
+	}
+
+	if (isset($param->locationInfoPid) && $param->locationInfoPid > 0) {
+		$query = $query->where_raw(
+			'EXISTS (
+				SELECT 1
+				FROM ' . TBLCONTRACTDETAILINFO . ' cd
+				WHERE cd.deleteDate IS NULL
+				AND cd.contractInfoPid = p1.pid
+				AND cd.locationInfoPid = ?
+				AND cd.contractDataType = ?
+			)',
+			[$param->locationInfoPid, '01']
+		);
 	}
 	return $query->order_by_desc('p1.pid')->find_array();
 }
