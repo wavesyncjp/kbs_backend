@@ -5,6 +5,8 @@ require '../header.php';
 $postdata = file_get_contents("php://input");
 $param = json_decode($postdata);
 
+// 20251214 S_Update
+/*
 $query = ORM::for_table(TBLUSER)
 			->table_alias('p1')
 			->select('p1.*')
@@ -31,5 +33,95 @@ if(isset($param->authority) && $param->authority !== ''){
 //$deps = $query->where_not_equal('loginId', '0001')->where_not_equal('loginId', '0002')->order_by_asc('userId')->find_array();
 $deps = $query->where_not_in('loginId', ['0001', '0002', '0003', '0004', '0005'])->order_by_asc('userId')->find_array();
 echo json_encode($deps);
+*/
+$query = ORM::for_table(TBLUSER)
+			->table_alias('p1')
+			->select_many('p1.userId', 'p1.loginId', 'p1.password', 'p1.userName', 'p1.userNameKana', 'p1.employeeCode', 'p1.authority', 'p1.mailAddress', 'p1.createUserId', 'p1.createDate', 'p1.updateUserId', 'p1.updateDate', 'p1.deleteUserId', 'p1.deleteDate')
+			->select('ud.depCode', 'depCode')
+			->select('p2.depName')
+			->left_outer_join(TBLUSERDEPARTMENT, array('p1.userId', '=', 'ud.userId'), 'ud') // Add 20251022
+			->left_outer_join(TBLDEPARTMENT, array('ud.depCode', '=', 'p2.depCode'), 'p2') // UPdate 20251022
+			->select_expr("CASE WHEN ud.deleteDate IS NULL THEN ud.depCode END", 'depCode') // Add 20251022
+			->where_null('p1.deleteDate');
 
+if(isset($param->userId) && $param->userId !== ''){
+	$query = $query->where_like('p1.userId', $param->userId.'%');
+}
+if(isset($param->userName) && $param->userName !== ''){
+	$query = $query->where_like('p1.userName', '%'.$param->userName.'%');
+}
+
+// 20251210 S_Add
+if(isset($param->depCode) && $param->depCode !== ''){
+	$query = $query->where_raw(
+		"EXISTS (
+			SELECT 1 FROM tbluserdepartment ud2
+				WHERE ud2.userId = p1.userId
+				AND ud2.depCode = ?
+				AND ud2.deleteDate IS NULL
+		)",
+		[$param->depCode]
+	);
+
+	// 部署が設定されていなくてもユーザー情報は取得する
+	$query = $query->where_raw(
+		"ud.deleteDate IS NULL
+		OR NOT EXISTS (
+				SELECT 1 FROM tbluserdepartment a
+				WHERE a.userId = p1.userId AND a.deleteDate IS NULL
+			)"
+	);
+}
+// 20251210 E_Add
+
+
+if(isset($param->authority) && $param->authority !== ''){
+	$query = $query->where('p1.authority', $param->authority);
+}
+
+//$deps = $query->where_not_equal('loginId', '0001')->where_not_equal('loginId', '0002')->order_by_asc('userId')->find_array();
+try {
+	// 20251216 S_Update
+	// $rows = $query->where_not_in('p1.loginId', ['0001', '0002', '0003', '0004', '0005'])->order_by_asc('p1.userId')->find_array();
+	$rows = $query->where_not_in('p1.loginId', ['0001', '0002', '0003', '0004', '0005', '0006', '0007'])->order_by_asc('p1.userId')->find_array();
+	// 20251216 E_Update
+
+	// 20251210 S_Add
+	$result = [];
+	foreach ($rows as $r) {
+		$uid = $r['userId'];
+		if (!isset($result[$uid])) {
+			$result[$uid] = [
+				'userId'   => $r['userId'],
+				'userName' => $r['userName'],
+				'authority'=> $r['authority'],
+				'userNameKana'=> $r['userNameKana'],
+				'password'=> $r['password'],
+				'employeeCode'=> $r['employeeCode'],
+				'mailAddress' => $r['mailAddress'],
+				'loginId' => $r['loginId'],
+				'createUserId' => $r['createUserId'],
+				'createDate' => $r['createDate'],
+				'updateUserId' => $r['updateUserId'],
+				'updateDate' => $r['updateDate'],
+				'deleteUserId' => $r['deleteUserId'],
+				'deleteDate' => $r['deleteDate'],
+				'departments' => [],
+			];
+		}
+
+		if (!empty($r['depCode'])) {
+			$result[$uid]['departments'][] = [
+			'depCode' => $r['depCode'],
+			'depName' => $r['depName'],
+			];
+		}
+	}
+	// 20251210 E_Add
+} catch (\Exception $th) {
+	echo 'error';
+}
+
+echo json_encode(array_values($result));
+// 20251214 E_Update
 ?>
