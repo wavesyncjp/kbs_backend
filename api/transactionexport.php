@@ -820,6 +820,19 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                             // $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)->where('locationInfoPid', $building['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
                             $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)->where('tempLandInfoPid', $building['tempLandInfoPid'])->where('locationInfoPid', $building['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
                             // 20230922 E_Update
+                            if(sizeof($bottomLandInfos) > 0) {
+                                foreach($bottomLandInfos as $bottomLandInfo) {
+                                    $leasedArea += $bottomLandInfo['leasedArea'];
+                                    $bottomLandInfo['bottomLandPid'] = $building['pid'];    // 底地PID<-建物PID
+                                    $bottomLandInfo['lenderBorrower'] = '借主名';           // 貸主名/借主名
+                                    $bottomLandInfo['leasedAreaTitle'] = '借地契約面積：';  // 借地対象面積タイトル
+                                    $bottomLandInfo['leasedArea'] = $bottomLandInfo['leasedArea'] . '㎡';
+                                    // 20230922 S_Add
+                                    $bottomLandInfo['landRentTitle'] = '地代';
+                                    // 20230922 E_Add
+                                    $locsBottom[] = $bottomLandInfo;
+                                }
+                            }
                         }
                     }
                     $loc['leasedArea'] = $leasedArea;
@@ -913,8 +926,18 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                         ->where_null('p1.deleteDate')
                         ->order_by_asc('p1.registPosition')
                         ->findArray();
-                    if(sizeof($bottomLandInfos) > 0 && count($locsBottom) === 0) {
+                    if(sizeof($bottomLandInfos) > 0) {
                         foreach($bottomLandInfos as $bottomLandInfo) {
+                            $isExists = false;
+                            foreach ($locsLand as $loc) {
+                                if ($loc['pid'] === $bottomLandInfo['bottomLandPid']) {
+                                    $isExists = true;
+                                    break;
+                                }
+                            }
+                            if(!$isExists) {
+                                $locsLand[] = $bottomLandInfo;
+                            };
                             $bottomLandInfo['rightsForm'] = '01';// 01：借地権
                             // 20220615 S_Add
                             $bottomLandInfo['lenderBorrower'] = '貸主名';   // 貸主名/借主名
@@ -998,6 +1021,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
     // セル結合を解除
     $sheet->unmergeCells('A' . $mergeFrom . ':A' . $mergeTo);
     // 20220615 E_Add
+
 
     // 所在地情報（土地）が複数存在する場合
     if(sizeof($locsLand) > 1) {
