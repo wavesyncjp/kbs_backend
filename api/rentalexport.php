@@ -122,6 +122,7 @@ foreach($renCons as $renCon) {
     }
 
     // シートのユニークなタイトルを設定
+    $sheetTitle = sanitizeSheetTitle($sheetTitle);// 20251211 Add
     $sheet->setTitle($sheetTitle);
 
     // 重複を避けるためにタイトルを追跡
@@ -523,4 +524,11 @@ function setCell($cell, $sheet, $keyWord, $startColumn, $endColumn, $startRow, $
     }
     return $cell;
 }
+
+// 20251211 S_Add
+function sanitizeSheetTitle($title) {
+	$title = preg_replace('/[\\\\\\/\\:\\?\\*\\[\\]]/', '', $title);
+	return mb_substr($title, 0, 31);
+}
+// 20251211 E_Add
 ?>
