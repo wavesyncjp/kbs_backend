@@ -249,7 +249,7 @@ function createRentalContracts($rental, $residentPids, $userPid) {
         //賃貸契約情報登録
         $rentalContract = ORM::for_table(TBLRENTALCONTRACT)->where('rentalInfoPid', $rental->pid)->where('residentInfoPid', $residentPid)->where_null('deleteDate')->find_one();
         if(!empty($rentalContract)) {
-            return;
+            continue;
         }
         $rentalContract = new stdClass();
         $rentalContract->rentalInfoPid = $rental->pid;
@@ -265,7 +265,7 @@ function createRentalContracts($rental, $residentPids, $userPid) {
         //立ち退き登録
         $eviction = ORM::for_table(TBLEVICTIONINFO)->where('rentalInfoPid', $rental->pid)->where('residentInfoPid', $residentPid)->where_null('deleteDate')->find_one();
         if(!empty($eviction)) {
-            return;
+            continue;
         }
         $eviction = new stdClass();
         $eviction->rentalInfoPid = $rental->pid;
