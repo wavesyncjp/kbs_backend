@@ -158,7 +158,6 @@ if(($loc->locationType == '01' || $loc->locationType == '02') && $loc->apartment
 
         if(isset($preData)){
             $rental = ORM::for_table(TBLRENTALINFO)->create();
-            
             setInsert($rental, $userPid);
             if($preData->contractInfoPid > 0){
                 $rental->contractInfoPid = $preData->contractInfoPid;

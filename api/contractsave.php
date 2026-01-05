@@ -72,12 +72,16 @@ setPayByContract($contract, $userId);// 20210728 Add
 //契約詳細
 if(isset($param->details)){
 	foreach ($param->details as $detail){
-		
+	
 		$action = -1;
 		//削除
 		if(isset($detail->deleteUserId) && $detail->deleteUserId > 0) {
 			$detailSave = ORM::for_table(TBLCONTRACTDETAILINFO)->find_one($detail->pid);
-			$detailSave->delete();	
+			if($rental = shouldDetachRentaFromContract($detailSave, $detail)) {
+				detachRentalFromContract($rental);
+			}
+			
+			$detailSave->delete();
 			$action = 2;
 		}
 		else {
@@ -234,5 +238,90 @@ if(isset($param->locationsChangedMap)){
 // 20250616 E_Add
 
 echo json_encode(getContractInfo($contract->pid));
+
+/**
+ * 賃貸情報と契約の関連を解除するかどうか
+ *
+ * @param string $savedContractDataType
+ * @param object $newDetail
+ * @return false|object
+ */
+function shouldDetachRentaFromContract(string $savedContractDataType, object $newDetail) {
+	if($savedContractDataType !== "01") {
+		return false;
+	}
+	if($newDetail->contractDataType === "01" || !is_null($newDetail->deleteUserId)) {
+		return false;
+	}
+	$rentalInfo = ORM::for_table(TBLRENTALINFO)
+		->where("contractInfoPid", $newDetail->contractInfoPid)
+		->where("locationInfoPid", $newDetail->locationInfoPid)
+		->where_null("deleteDate")
+		->find_one();
+	if (!$rentalInfo) {
+		return false;
+	}
+
+	return $rentalInfo;
+}
+
+/**
+ * 賃貸情報、契約、入金データと契約との紐づきを解除する
+ *
+ * @param \ORM $rental
+ * @return void
+ */
+function detachRentalFromContract(\ORM $rental) {
+	$rental->contractInfoPid = null;
+	$rental->contractSellerInfoPid = null;
+
+	$rentalContracts = ORM::for_table(TBLRENTALCONTRACT)
+		->where("rentalInfoPid", $rental->pid)
+		->where("contractInfoPid", $rental->contractInfoPid)
+		->where_null("deleteDate")
+		->find_many();
+	$evicInfos = ORM::for_table(TBLEVICTIONINFO)
+		->where("rentalInfoPid", $rental->pid)
+		->where("contractInfoPid", $rental->contractInfoPid)
+		->where_null("deleteDate")
+		->find_many();
+
+	if(!empty($rentalContracts)) {
+		foreach ($rentalContracts as $rentalContract) {
+			$rentalReceives = ORM::for_table(TBLRENTALRECEIVE)
+				->where("rentalInfoPid", $rental->pid)
+				->where("contractInfoPid", $rental->contractInfoPid)
+				->where("rentalContractPid", $rental->rentalContractPid)
+				->where_null("deleteDate")
+				->find_many();
+			if(!empty($rentalReceives)) {
+				foreach ($rentalReceives as $rentalReceive) {
+					$rentalReceive->contractInfoPid = null;
+					$rentalReceive->save();
+				}
+			}
+
+			$receiveContract = ORM::for_table(TBLRECEIVECONTRACT)
+				->where("rentalContractPid", $rental->rentalContractPid)
+				->where("contractInfoPid", $rental->contractInfoPid)
+				->where_null("deleteDate")
+				->find_one();
+			$receiveContract->contractInfoPid = null;
+			$receiveContract->save();
+
+			$rentalContract->contractInfoPid = null;
+			$rentalContract->save();
+		}
+
+	}
+
+	if(!empty($evicInfos)) {
+		foreach ($evicInfos as $evic) {
+			$evic->contractInfoPid = null;
+			$evic->save();
+		}
+	}
+	$rental->save();
+}
 
 ?>
