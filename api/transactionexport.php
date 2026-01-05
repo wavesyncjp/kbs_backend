@@ -928,8 +928,17 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                         ->findArray();
                     if(sizeof($bottomLandInfos) > 0) {
                         foreach($bottomLandInfos as $bottomLandInfo) {
+                            $isExists = false;
+                            foreach ($locsLand as $loc) {
+                                if ($loc['pid'] === $bottomLandInfo['bottomLandPid']) {
+                                    $isExists = true;
+                                    break;
+                                }
+                            }
+                            if(!$isExists) {
+                                $locsLand[] = $bottomLandInfo;
+                            };
                             $bottomLandInfo['rightsForm'] = '01';// 01：借地権
-                            $locsLand[] = $bottomLandInfo;
                             // 20220615 S_Add
                             $bottomLandInfo['lenderBorrower'] = '貸主名';   // 貸主名/借主名
                             $bottomLandInfo['leasedAreaTitle'] = '';        // 借地対象面積タイトル
@@ -1012,6 +1021,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
     // セル結合を解除
     $sheet->unmergeCells('A' . $mergeFrom . ':A' . $mergeTo);
     // 20220615 E_Add
+
 
     // 所在地情報（土地）が複数存在する場合
     if(sizeof($locsLand) > 1) {
