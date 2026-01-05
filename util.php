@@ -2121,13 +2121,13 @@ function getBankName($bankPid)
 
 // 20231019 S_Add
 function getLocationPidByBuilding($locationInfoPid){
-	$query = ORM::for_table(TBLLOCATIONINFO)
-	->select('pid')
-	->where_null('deleteDate')
-	->where('ridgePid', $locationInfoPid);
-
-	return $query->find_one()->pid;
+	return array_column(ORM::for_table(TBLLOCATIONINFO)
+		->select('pid')
+		->where_null('deleteDate')
+		->where('ridgePid', $locationInfoPid)
+		->find_array(), "pid");
 }
+
 function getLocationInfoForReport($locationInfoPid){
 	$query = ORM::for_table(TBLLOCATIONINFO)
 	->select('structure', 'l_structureMap');
