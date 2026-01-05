@@ -218,7 +218,10 @@ if(isset($csvInfo['targetTableCode']) && $csvInfo['targetTableCode'] === '10') {
     $targets = [];
     // 20220914 S_Add
     // すべての営業ユーザーを格納する
-    $users = ORM::for_table(TBLUSER)->select('userId')->select('depCode')->where('authority', '03')->where_null('deleteDate')->where_not_in('loginId', ['0001', '0002', '0003', '0004', '0005'])->order_by_asc('depCode')->order_by_asc('userId')->findArray();
+    // 20251216 S_Update
+    // $users = ORM::for_table(TBLUSER)->select('userId')->select('depCode')->where('authority', '03')->where_null('deleteDate')->where_not_in('loginId', ['0001', '0002', '0003', '0004', '0005'])->order_by_asc('depCode')->order_by_asc('userId')->findArray();
+    $users = ORM::for_table(TBLUSER)->select('userId')->select('depCode')->where('authority', '03')->where_null('deleteDate')->where_not_in('loginId', ['0001', '0002', '0003', '0004', '0005', '0006', '0007'])->order_by_asc('depCode')->order_by_asc('userId')->findArray();
+    // 20251216 E_Update
     foreach($users as $user) {
         $groups = [];
         $groups = $row;
