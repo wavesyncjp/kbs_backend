@@ -179,7 +179,7 @@ if(($loc->locationType == '01' || $loc->locationType == '02') && $loc->apartment
     }
     
     if($rental->contractInfoPid > 0){
-        createRentalContracts($rental, $residentPids, $userPid);
+        createRentalContracts($rental->locationInfoPid, $rental, $residentPids, $userPid);
     }
 }
 // 20240123 E_Add
@@ -211,7 +211,7 @@ if(($loc->locationType == '04')) {
 
     if(isset($preData)) {
         if($rental->contractInfoPid > 0 && $preData->contractInfoPid == $rental->contractInfoPid) {
-            createRentalContracts($rental, $residentPids, $userPid);
+            createRentalContracts($loc->pid, $rental, $residentPids, $userPid);
         }
     }
 }
@@ -244,7 +244,7 @@ echo json_encode($loc);
  * @param int $userPid
  * @return void
  */
-function createRentalContracts($rental, $residentPids, $userPid) {
+function createRentalContracts($locationInfoPid, $rental, $residentPids, $userPid) {
     foreach($residentPids as $residentPid){
         //賃貸契約情報登録
         $rentalContract = ORM::for_table(TBLRENTALCONTRACT)->where('rentalInfoPid', $rental->pid)->where('residentInfoPid', $residentPid)->where_null('deleteDate')->find_one();
@@ -255,7 +255,7 @@ function createRentalContracts($rental, $residentPids, $userPid) {
         $rentalContract->rentalInfoPid = $rental->pid;
         $rentalContract->residentInfoPid = $residentPid;
         $rentalContract->contractInfoPid = $rental->contractInfoPid;
-        $rentalContract->locationInfoPid = $rental->locationInfoPid;
+        $rentalContract->locationInfoPid = $locationInfoPid;
         $rentalContract->tempLandInfoPid = $rental->tempLandInfoPid;
         $rentalContract->updateUserId = $userPid;
         $rentalContract->createUserId = $userPid;
