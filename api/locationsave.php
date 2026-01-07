@@ -183,6 +183,15 @@ if(($loc->locationType == '01' || $loc->locationType == '02') && $loc->apartment
     }
 }
 // 20240123 E_Add
+if(($loc->locationType == '03') && $loc->apartmentName != null && $loc->apartmentName ) {
+    $rental = ORM::for_table(TBLRENTALINFO)->where('locationInfoPid', $loc->pid)->where_null('deleteDate')->find_one();
+    if(!empty($rental) && $isChangedApartmentName && $rental->apartmentName != $loc->apartmentName) {
+        $rental->apartmentName = $loc->apartmentName;
+        setUpdate($rental, $param->updateUserId);
+        $rental->save();
+    }
+}
+
 if(($loc->locationType == '04')) {
     $userPid = $param->createUserId > 0 ? $param->createUserId : $param->updateUserId;
 
