@@ -857,7 +857,10 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                     // 20230922 E_Add
                 }
                 // 20220620 E_Add
-                $locsLand[] = $loc;
+                if(enableAddLocsLands($locsLand, $loc['pid'])) {
+                    $loc['locationInfoPid'] = $loc['pid'];
+                    $locsLand[] = $loc;
+                };
             }
             // 区分が02：建物の場合
             else if($loc['locationType'] === '02') {
@@ -928,16 +931,6 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                         ->findArray();
                     if(sizeof($bottomLandInfos) > 0) {
                         foreach($bottomLandInfos as $bottomLandInfo) {
-                            $isExists = false;
-                            foreach ($locsLand as $loc) {
-                                if ($loc['pid'] === $bottomLandInfo['bottomLandPid']) {
-                                    $isExists = true;
-                                    break;
-                                }
-                            }
-                            if(!$isExists) {
-                                $locsLand[] = $bottomLandInfo;
-                            };
                             $bottomLandInfo['rightsForm'] = '01';// 01：借地権
                             // 20220615 S_Add
                             $bottomLandInfo['lenderBorrower'] = '貸主名';   // 貸主名/借主名
@@ -948,6 +941,10 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                             // 20230922 E_Add
                             $locsBottom[] = $bottomLandInfo;
                             // 20220615 E_Add
+                            if(enableAddLocsLands($locsLand, $bottomLandInfo['bottomLandPid'])) {
+                                $bottomLandInfo['locationInfoPid'] = $bottomLandInfo['bottomLandPid'];
+                                $locsLand[] = $bottomLandInfo;
+                            };
                         }
                     }
                     // 20220611 E_Update
@@ -1313,5 +1310,20 @@ function getSharerName($loc, $split) {
     return implode($split, $ret);
 }
 // 20220615 E_Add
+/**
+ * 表示対象の土地の所在地情報を追加できるか確認
+ *
+ * @param array $locsLands
+ * @param int $bottomLandPid
+ * @return bool
+ */
+function enableAddLocsLands($locsLands, $bottomLandPid) {
+    foreach ($locsLands as $loc) {
+        if ($loc['locationInfoPid'] === $bottomLandPid) {
+            return false;
+        }
+    }
+    return true;
+}
 
 ?>
