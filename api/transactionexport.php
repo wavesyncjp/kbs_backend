@@ -929,8 +929,10 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                         ->where_null('p1.deleteDate')
                         ->order_by_asc('p1.registPosition')
                         ->findArray();
+                    $leasedArea = 0;
                     if(sizeof($bottomLandInfos) > 0) {
                         foreach($bottomLandInfos as $bottomLandInfo) {
+                            $leasedArea += $bottomLandInfo['leasedArea'];
                             $bottomLandInfo['rightsForm'] = '01';// 01：借地権
                             // 20220615 S_Add
                             $bottomLandInfo['lenderBorrower'] = '貸主名';   // 貸主名/借主名
@@ -941,6 +943,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                             // 20230922 E_Add
                             $locsBottom[] = $bottomLandInfo;
                             // 20220615 E_Add
+                            $bottomLandInfo['leasedArea'] = $leasedArea;
                             if(enableAddLocsLands($locsLand, $bottomLandInfo['bottomLandPid'])) {
                                 $bottomLandInfo['locationInfoPid'] = $bottomLandInfo['bottomLandPid'];
                                 $locsLand[] = $bottomLandInfo;
