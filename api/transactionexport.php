@@ -987,21 +987,40 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                     $bottomLandInfos = findBottomLandWithLocation($loc['pid']);
                     if(sizeof($bottomLandInfos) > 0) {
                         foreach($bottomLandInfos as $bottomLandInfo) {
-                            $bottomLandInfo['rightsForm'] = '01';// 01：借地権
+                            // locsLand（所在）用：leasedArea 等の値は保持する
+                            $landRow = $bottomLandInfo;
+                            $landRow['rightsForm'] = '01';// 01：借地権
+
+                            // locsBottom（貸主/借主などの明細）用：借地対象面積はここでは表示しない
+                            $bottomRow = $bottomLandInfo;
+                            $bottomRow['rightsForm'] = '01';// 01：借地権
                             // 20220615 S_Add
-                            $bottomLandInfo['lenderBorrower'] = '貸主名';   // 貸主名/借主名
-                            $bottomLandInfo['leasedAreaTitle'] = '';        // 借地対象面積タイトル
-                            $bottomLandInfo['leasedArea'] = '';             // 借地対象面積
+                            $bottomRow['lenderBorrower'] = '貸主名';   // 貸主名/借主名
+                            $bottomRow['leasedAreaTitle'] = '';        // 借地対象面積タイトル
+                            $bottomRow['leasedArea'] = '';             // 借地対象面積（←ここで空にする）
                             // 20230922 S_Add
-                            $bottomLandInfo['landRentTitle'] = '地代';
+                            $bottomRow['landRentTitle'] = '地代';
                             // 20230922 E_Add
-                            $locsBottom[] = $bottomLandInfo;
+                            $locsBottom[] = $bottomRow;
                             // 20220615 E_Add
 
-                            if(enableAddLocsLands($locsLand, $bottomLandInfo['bottomLandPid'])) {
-                                $bottomLandInfo['locationInfoPid'] = $bottomLandInfo['bottomLandPid'];
-                                $locsLand[] = $bottomLandInfo;
-                            };
+                            // 所在（土地）へ追加。既に同じ底地土地が存在する場合は leasedArea を上書きしない
+                            if(enableAddLocsLands($locsLand, $landRow['bottomLandPid'])) {
+                                $landRow['locationInfoPid'] = $landRow['bottomLandPid'];
+                                $locsLand[] = $landRow;
+                            } else {
+                                // 既存行の leasedArea が空で、新しい行に値がある場合のみ補完
+                                foreach ($locsLand as &$existsLand) {
+                                    if (($existsLand['locationInfoPid'] ?? null) === $landRow['bottomLandPid']) {
+                                        $newArea = $landRow['leasedArea'] ?? '';
+                                        if (($existsLand['leasedArea'] ?? '') === '' && $newArea !== '') {
+                                            $existsLand['leasedArea'] = $newArea;
+                                        }
+                                        break;
+                                    }
+                                }
+                                unset($existsLand);
+                            }
                         }
                     }
                     // 20220611 E_Update
@@ -1382,6 +1401,36 @@ function enableAddLocsLands($locsLands, $bottomLandPid) {
     }
     return true;
 }
+
+//Service
+/**
+ * 帳票の所在項目の候補を取得する
+ *
+ * @param object $loc
+ * @param array $bottomLandInfos
+ * @return void
+ */
+function collectLocationCandidateFromType01($loc, $bottomLandInfos) {
+    return [
+        'source'         => 'type01_land',
+        'landPid'        => $loc['pid'],
+        'tempLandInfoPid'=> $loc['tempLandInfoPid'],
+
+        // 重複排除の基準キー（Resolverでuniqするときに使う）
+        'dedupeKey'      => 'land:' . $loc['pid'],
+
+        // まだ整形しない“表示の素材”
+        'displayRaw'     => $loc,
+
+        // 状態・補助情報（Policy判断用）
+        'meta' => [
+            'locationType' => $loc['locationType'],
+            'hasBottom'    => !empty($bottomLandInfos),
+            'bottomCount'  => is_array($bottomLandInfos) ? count($bottomLandInfos) : 0,
+        ]
+    ];
+}
+
 
 //Repository
 /**
