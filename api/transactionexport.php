@@ -800,8 +800,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
 
     if(sizeof($pids) > 0) {
         // 所在地情報を取得
-        $locs = ORM::for_table(TBLLOCATIONINFO)->where_in('pid', $pids)->where_null('deleteDate')->order_by_asc('pid')->findArray();
-        foreach($locs as $loc) {
+        foreach(findLocationInfosByPids($pids) as $loc) {
             // 区分が01：土地の場合
             if($loc['locationType'] === '01') {
                 // 20220620 S_Add
@@ -811,22 +810,24 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                     // 対象の土地を底地選択している建物を取得
                     // 20230922 S_Update
                     // $buildings = ORM::for_table(TBLLOCATIONINFO)->where('bottomLandPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
-                    $buildings = ORM::for_table(TBLLOCATIONINFO)
-                        ->where('tempLandInfoPid', $loc['tempLandInfoPid'])
-                        ->where_raw(
-                            '(bottomLandPid = ? OR pid IN (SELECT locationInfoPid FROM ' . TBLBOTTOMLANDINFO . ' WHERE bottomLandPid = ? AND deleteDate IS NULL))',
-                            array($loc['pid'], $loc['pid'])
-                        )
-                        ->where_null('deleteDate')
-                        ->order_by_asc('pid')
-                        ->findArray();
+                    // $buildings = ORM::for_table(TBLLOCATIONINFO)
+                    //     ->where('tempLandInfoPid', $loc['tempLandInfoPid'])
+                    //     ->where_raw(
+                    //         '(bottomLandPid = ? OR pid IN (SELECT locationInfoPid FROM ' . TBLBOTTOMLANDINFO . ' WHERE bottomLandPid = ? AND deleteDate IS NULL))',
+                    //         array($loc['pid'], $loc['pid'])
+                    //     )
+                    //     ->where_null('deleteDate')
+                    //     ->order_by_asc('pid')
+                    //     ->findArray();
+                    $buildings = findBuildingsUsingTargetLand($loc['tempLandInfoPid'], $loc['pid']);
+            
                     // 20230922 E_Update
                     if(sizeof($buildings) > 0) {
                         foreach($buildings as $building) {
                             // 底地情報を取得
                             // 20230922 S_Update
                             // $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)->where('locationInfoPid', $building['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
-                            $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)->where('tempLandInfoPid', $building['tempLandInfoPid'])->where('locationInfoPid', $building['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
+                            $bottomLandInfos[] = findBottomLandsByBuilding($building['tempLandInfoPid'], $building['pid']);
                             // 20230922 E_Update
                             if(sizeof($bottomLandInfos) > 0) {
                                 foreach($bottomLandInfos as $bottomLandInfo) {
@@ -873,13 +874,13 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                     if(enableAddLocsLands($locsLand, $loc['pid'])) {
                     $loc['locationInfoPid'] = $loc['pid'];
                     $locsLand[] = $loc;
-                } else if($leasedArea > 0) {
-                    foreach ($locsLand as &$locs) {
-                        if ($locs['locationInfoPid'] === $loc['pid']) {
-                            $locs['leasedArea'] = $loc['leasedArea'];
+                    } else if($leasedArea > 0) {
+                        foreach ($locsLand as &$locs) {
+                            if ($locs['locationInfoPid'] === $loc['pid']) {
+                                $locs['leasedArea'] = $loc['leasedArea'];
+                            }
                         }
                     }
-                }
                 }
                 // 20220620 E_Add
             }
@@ -932,24 +933,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                         // 20210614 E_Add
                     }
                     */
-                    $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)
-                        ->table_alias('p1')
-                        ->inner_join(TBLLOCATIONINFO, array('p1.bottomLandPid', '=', 'p2.pid'), 'p2')
-                        ->select('p2.address', 'address')
-                        ->select('p2.blockNumber', 'blockNumber')
-                        ->select('p2.landCategory', 'landCategory')
-                        ->select('p1.leasedArea', 'leasedArea')
-                        ->select('p2.area', 'area')
-                        // 20220615 S_Add
-                        ->select('p1.tempLandInfoPid', 'tempLandInfoPid')
-                        ->select('p1.locationInfoPid', 'locationInfoPid')
-                        ->select('p1.bottomLandPid', 'bottomLandPid')
-                        ->select('p1.landRent', 'landRent')
-                        // 20220615 S_Add
-                        ->where('p1.locationInfoPid', $loc['pid'])
-                        ->where_null('p1.deleteDate')
-                        ->order_by_asc('p1.registPosition')
-                        ->findArray();
+                    $bottomLandInfos = findBottomLandWithLocation($loc['pid']);
                     if(sizeof($bottomLandInfos) > 0) {
                         foreach($bottomLandInfos as $bottomLandInfo) {
                             $bottomLandInfo['rightsForm'] = '01';// 01：借地権
@@ -1348,4 +1332,81 @@ function enableAddLocsLands($locsLands, $bottomLandPid) {
     return true;
 }
 
+
+//Repository
+/**
+ * pidから所在地情報を取得
+ *
+ * @param array $pids
+ * @return array
+ */
+function findLocationInfosByPids(array $pids) {
+    return ORM::for_table(TBLLOCATIONINFO)
+    ->where_in('pid', $pids)
+    ->where_null('deleteDate')
+    ->order_by_asc('pid')
+    ->findArray();
+}
+
+/**
+ * 指定の土地を底地として利用している建物を取得
+ *
+ * @param int $templandInfoPid
+ * @param int $locationInfoPid
+ * @return array
+ */
+function findBuildingsUsingTargetLand(int $templandInfoPid, int $locationInfoPid) {
+    return ORM::for_table(TBLLOCATIONINFO)
+        ->where('tempLandInfoPid', $templandInfoPid)
+        ->where_raw(
+            '(bottomLandPid = ? OR pid IN (SELECT locationInfoPid FROM ' . TBLBOTTOMLANDINFO . ' WHERE bottomLandPid = ? AND deleteDate IS NULL))',
+            array($locationInfoPid, $locationInfoPid)
+        )
+        ->where_null('deleteDate')
+        ->order_by_asc('pid')
+        ->findArray();
+}
+
+/**
+ * 建物の底地を取得
+ *
+ * @param integer $buildingTempLandPid
+ * @param integer $buildingPid
+ * @return array
+ */
+function findBottomLandsByBuilding(int $buildingTempLandPid, int $buildingPid) {
+    return ORM::for_table(TBLBOTTOMLANDINFO)
+        ->where('tempLandInfoPid', $buildingTempLandPid)
+        ->where('locationInfoPid', $buildingPid)
+        ->where_null('deleteDate')
+        ->order_by_asc('registPosition')
+        ->findArray();
+}
+
+/**
+ * 建物の底地を所在地情報と一緒に取得する
+ *
+ * @param integer $buildingLocationPid
+ * @return array
+ */
+function findBottomLandWithLocation(int $buildingLocationPid) {
+        return ORM::for_table(TBLBOTTOMLANDINFO)
+            ->table_alias('p1')
+            ->inner_join(TBLLOCATIONINFO, array('p1.bottomLandPid', '=', 'p2.pid'), 'p2')
+            ->select('p2.address', 'address')
+            ->select('p2.blockNumber', 'blockNumber')
+            ->select('p2.landCategory', 'landCategory')
+            ->select('p1.leasedArea', 'leasedArea')
+            ->select('p2.area', 'area')
+            // 20220615 S_Add
+            ->select('p1.tempLandInfoPid', 'tempLandInfoPid')
+            ->select('p1.locationInfoPid', 'locationInfoPid')
+            ->select('p1.bottomLandPid', 'bottomLandPid')
+            ->select('p1.landRent', 'landRent')
+            // 20220615 S_Add
+            ->where('p1.locationInfoPid', $buildingLocationPid)
+            ->where_null('p1.deleteDate')
+            ->order_by_asc('p1.registPosition')
+            ->findArray();
+}
 ?>
