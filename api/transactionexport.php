@@ -788,9 +788,73 @@ function setCell($cell, $sheet, $keyWord, $startColumn, $endColumn, $startRow, $
  * 謄本情報を設定する
  */
 // 20220615 S_Update
-// function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists) {
-// 20250616 S_Update
-// function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists, $getBottom = false) {
+// 
+/**
+ * ============================
+ * Location "service" helpers
+ * (minimal refactor for extensibility)
+ * ============================
+ */
+
+
+
+/**
+ * 建物群から底地明細を集め、bottomLandInfo.pid でユニーク化して返す
+ */
+function collectBottomLandInfosUnique(array $buildings): array
+{
+    $uniq = []; // [bottomLandInfoPid => bottomLandInfo]
+    foreach ($buildings as $building) {
+        if (!is_array($building)) continue;
+        $tempLandInfoPid = (int)($building['tempLandInfoPid'] ?? 0);
+        $buildingPid     = (int)($building['pid'] ?? 0);
+        if ($tempLandInfoPid <= 0 || $buildingPid <= 0) continue;
+
+        $rows = findBottomLandsByBuilding($tempLandInfoPid, $buildingPid);
+        foreach ($rows as $r) {
+            if (!is_array($r) || !isset($r['pid'])) continue;
+            $pid = (int)$r['pid'];
+            if ($pid <= 0) continue;
+            if (isset($uniq[$pid])) continue;
+            $uniq[$pid] = $r;
+        }
+    }
+    return array_values($uniq);
+}
+
+/**
+ * 底地明細（ユニーク化済み）から、対象土地の借地対象面積を合計する
+ * ※同一底地明細は collectBottomLandInfosUnique() で除去済みの前提
+ */
+function calcLeasedAreaForLandFromBottomInfos(int $landPid, array $bottomLandInfos): int
+{
+    $sum = 0;
+    foreach ($bottomLandInfos as $bli) {
+        if (!is_array($bli)) continue;
+        if ((int)($bli['bottomLandPid'] ?? 0) !== $landPid) continue;
+        $sum += (int)($bli['leasedArea'] ?? 0);
+    }
+    return $sum;
+}
+
+/**
+ * $locsBottom へ「pid重複なし」で追加する
+ */
+function addLocsBottomUniqueByPid(array &$locsBottom, array $row): void
+{
+    $pid = (int)($row['pid'] ?? 0);
+    if ($pid <= 0) {
+        $locsBottom[] = $row;
+        return;
+    }
+    foreach ($locsBottom as $added) {
+        if ((int)($added['pid'] ?? 0) === $pid) {
+            return;
+        }
+    }
+    $locsBottom[] = $row;
+}
+
 function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists, $getBottom = false, $detailsLeaseholdLand = null) {
 // 20250616 E_Update
 // 20220615 E_Update
@@ -803,86 +867,73 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         foreach(findLocationInfosByPids($pids) as $loc) {
             // 区分が01：土地の場合
             if($loc['locationType'] === '01') {
-                // 20220620 S_Add
+                // 01（土地）は「所在候補」はこの土地のみ。底地明細は leasedArea 計算の材料として扱う。
+                $leasedArea = null;
+
                 if($getBottom) {
-                    $leasedArea = 0;// 借地対象面積
-
                     // 対象の土地を底地選択している建物を取得
-                    // 20230922 S_Update
-                    // $buildings = ORM::for_table(TBLLOCATIONINFO)->where('bottomLandPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('pid')->findArray();
-                    // $buildings = ORM::for_table(TBLLOCATIONINFO)
-                    //     ->where('tempLandInfoPid', $loc['tempLandInfoPid'])
-                    //     ->where_raw(
-                    //         '(bottomLandPid = ? OR pid IN (SELECT locationInfoPid FROM ' . TBLBOTTOMLANDINFO . ' WHERE bottomLandPid = ? AND deleteDate IS NULL))',
-                    //         array($loc['pid'], $loc['pid'])
-                    //     )
-                    //     ->where_null('deleteDate')
-                    //     ->order_by_asc('pid')
-                    //     ->findArray();
-                    $buildings = findBuildingsUsingTargetLand($loc['tempLandInfoPid'], $loc['pid']);
-            
-                    // 20230922 E_Update
-                    if(sizeof($buildings) > 0) {
-                        foreach($buildings as $building) {
-                            // 底地情報を取得
-                            // 20230922 S_Update
-                            // $bottomLandInfos = ORM::for_table(TBLBOTTOMLANDINFO)->where('locationInfoPid', $building['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
-                            $bottomLandInfos[] = findBottomLandsByBuilding($building['tempLandInfoPid'], $building['pid']);
-                            // 20230922 E_Update
-                            if(sizeof($bottomLandInfos) > 0) {
-                                foreach($bottomLandInfos as $bottomLandInfo) {
-                                    if($bottomLandInfo['bottomLandPid'] === $loc['pid']) {
-                                        $leasedArea += $bottomLandInfo['leasedArea'];
-                                    }
-                                    foreach ($locsBottom as $added) {
-                                        if ($added['pid'] === $bottomLandInfo['pid']) {
-                                            continue 2;
-                                        }
-                                    }
-                                    $bottomLandInfo['bottomLandPid'] = $building['pid'];    // 底地PID<-建物PID
-                                    $bottomLandInfo['lenderBorrower'] = '借主名';           // 貸主名/借主名
-                                    $bottomLandInfo['leasedAreaTitle'] = '借地契約面積：';  // 借地対象面積タイトル
-                                    $bottomLandInfo['leasedArea'] = $bottomLandInfo['leasedArea'] . '㎡';
-                                    // 20230922 S_Add
-                                    $bottomLandInfo['landRentTitle'] = '地代';
-                                    // 20230922 E_Add
-                                    $locsBottom[] = $bottomLandInfo;
-                                }
-                            }
-                        }
-                    }
-                    $loc['leasedArea'] = $leasedArea;
+                    $buildings = findBuildingsUsingTargetLand((int)$loc['tempLandInfoPid'], (int)$loc['pid']);
 
-                    // 20230922 S_Add
+                    // 建物群から底地明細を集めてユニーク化（別建物が同じ底地明細を参照しても二重計上しない）
+                    $bottomLandInfosUnique = collectBottomLandInfosUnique($buildings);
+
+                    // 借地対象面積（合計）
+                    $leasedArea = calcLeasedAreaForLandFromBottomInfos((int)$loc['pid'], $bottomLandInfosUnique);
+
+                    // 帳票の「底地（借主名・地代など）」行のために、底地明細を整形して追加
+                    foreach($bottomLandInfosUnique as $bli) {
+                        if(!is_array($bli)) continue;
+
+                        $row = $bli;
+                        // 底地PID <- 建物PID（行の紐づけ先を建物側に寄せる）
+                        $row['bottomLandPid'] = $bli['locationInfoPid'] ?? '';
+                        $row['lenderBorrower'] = '借主名';           // 貸主名/借主名
+                        $row['leasedAreaTitle'] = '借地契約面積：';  // 借地対象面積タイトル
+                        $row['leasedArea'] = isset($bli['leasedArea']) && $bli['leasedArea'] !== '' ? ($bli['leasedArea'] . '㎡') : '';
+                        $row['landRentTitle'] = '地代';
+
+                        addLocsBottomUniqueByPid($locsBottom, $row);
+                    }
+
+                    // 入居者情報（駐車場）を取得（借主名がある場合のみ）
                     if(isset($loc['borrowerName']) && $loc['borrowerName'] !== '') {
-                        // 入居者情報（駐車場）を取得
-                        $residents = ORM::for_table(TBLRESIDENTINFO)->where('tempLandInfoPid', $loc['tempLandInfoPid'])->where('locationInfoPid', $loc['pid'])->where_null('deleteDate')->order_by_asc('registPosition')->findArray();
+                        $residents = ORM::for_table(TBLRESIDENTINFO)
+                            ->where('tempLandInfoPid', $loc['tempLandInfoPid'])
+                            ->where('locationInfoPid', $loc['pid'])
+                            ->where_null('deleteDate')
+                            ->order_by_asc('registPosition')
+                            ->findArray();
+
                         if(sizeof($residents) > 0) {
                             foreach($residents as $resident) {
-                                $resident['bottomLandPid'] = '';                            // 底地PID
-                                $resident['lenderBorrower'] = '借主名';                     // 貸主名/借主名
-                                $resident['lenderBorrowerName'] = $resident['borrowerName'];// 借主氏名
-                                $resident['leasedAreaTitle'] = '';                          // 借地対象面積タイトル
+                                $resident['bottomLandPid'] = '';                             // 底地PID
+                                $resident['lenderBorrower'] = '借主名';                      // 貸主名/借主名
+                                $resident['lenderBorrowerName'] = $resident['borrowerName']; // 借主氏名
+                                $resident['leasedAreaTitle'] = '';                           // 借地対象面積タイトル
                                 $resident['leasedArea'] = '';
                                 $resident['landRentTitle'] = '賃料';
-                                $resident['landRent'] = $resident['rentPrice'];             // 賃料
+                                $resident['landRent'] = $resident['rentPrice'];              // 賃料
                                 $locsBottom[] = $resident;
                             }
                         }
                     }
-                    // 20230922 E_Add
-                    if(enableAddLocsLands($locsLand, $loc['pid'])) {
+                }
+
+                // 土地（所在候補）の追加
+                if(enableAddLocsLands($locsLand, $loc['pid'])) {
                     $loc['locationInfoPid'] = $loc['pid'];
+                    if($leasedArea !== null) {
+                        $loc['leasedArea'] = $leasedArea;
+                    }
                     $locsLand[] = $loc;
-                    } else if($leasedArea > 0) {
-                        foreach ($locsLand as &$locs) {
-                            if ($locs['locationInfoPid'] === $loc['pid']) {
-                                $locs['leasedArea'] = $loc['leasedArea'];
-                            }
+                } else if($leasedArea !== null && $leasedArea > 0) {
+                    // 既に同じ土地が追加済みの場合は leasedArea のみ反映
+                    foreach ($locsLand as &$locs) {
+                        if ($locs['locationInfoPid'] === $loc['pid']) {
+                            $locs['leasedArea'] = $leasedArea;
                         }
                     }
                 }
-                // 20220620 E_Add
             }
             // 区分が02：建物の場合
             else if($loc['locationType'] === '02') {
@@ -1331,7 +1382,6 @@ function enableAddLocsLands($locsLands, $bottomLandPid) {
     }
     return true;
 }
-
 
 //Repository
 /**
