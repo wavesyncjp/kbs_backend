@@ -823,7 +823,7 @@ function collectBottomLandInfosUnique(array $buildings): array
 
 /**
  * 底地明細（ユニーク化済み）から、対象土地の借地対象面積を合計する
- * ※同一底地明細は collectBottomLandInfosUnique() で除去済みの前提
+ * ※collectBottomLandInfosUnique() で除去済みの前提
  */
 function calcLeasedAreaForLandFromBottomInfos(int $landPid, array $bottomLandInfos): int
 {
@@ -837,16 +837,16 @@ function calcLeasedAreaForLandFromBottomInfos(int $landPid, array $bottomLandInf
 }
 
 /**
- * $locsBottom へ「pid重複なし」で追加する
+ * $locsStakeholders へ「pid重複なし」で追加する
  */
-function addLocsBottomUniqueByPid(array &$locsBottom, array $row): void
+function addLocsStakeholdersUniqueByPid(array &$locsStakeholders, array $row): void
 {
-    foreach ($locsBottom as $added) {
+    foreach ($locsStakeholders as $added) {
         if ($added['pid'] === $row['pid']) {
             return;
         }
     }
-    $locsBottom[] = $row;
+    $locsStakeholders[] = $row;
 }
 
 function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists, $getBottom = false, $detailsLeaseholdLand = null) {
@@ -854,7 +854,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
 // 20220615 E_Update
     $locsLand = [];     // 土地
     $locsBuilding = []; // 建物
-    $locsBottom = [];   // 底地 20220615 Add
+    $locsStakeholders = [];   // 賃貸借の条件（貸主/借主）欄表示用
 
     if(sizeof($pids) > 0) {
         // 所在地情報を取得
@@ -874,7 +874,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                     // 借地対象面積（合計）
                     $leasedArea = calcLeasedAreaForLandFromBottomInfos($loc['pid'], $bottomLandInfosUnique);
 
-                    // 帳票の「底地（借主名・地代など）」行のために、底地明細を整形して追加
+                    // 帳票の「賃貸借の条件欄（借主）」行のために、底地明細を整形して追加
                     foreach($bottomLandInfosUnique as $bli) {
                         if(!is_array($bli)) continue;
 
@@ -886,7 +886,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                         $row['leasedArea'] = isset($bli['leasedArea']) && $bli['leasedArea'] !== '' ? ($bli['leasedArea'] . '㎡') : '';
                         $row['landRentTitle'] = '地代';
 
-                        addLocsBottomUniqueByPid($locsBottom, $row);
+                        addLocsStakeholdersUniqueByPid($locsStakeholders, $row);
                     }
 
                     // 入居者情報（駐車場）を取得（借主名がある場合のみ）
@@ -907,7 +907,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                                 $resident['leasedArea'] = '';
                                 $resident['landRentTitle'] = '賃料';
                                 $resident['landRent'] = $resident['rentPrice'];              // 賃料
-                                $locsBottom[] = $resident;
+                                $locsStakeholders[] = $resident;
                             }
                         }
                     }
@@ -985,17 +985,17 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                             $landRow = $bottomLandInfo;
                             $landRow['rightsForm'] = '01';// 01：借地権
 
-                            // locsBottom（貸主/借主などの明細）用：借地対象面積はここでは表示しない
+                            // locsStakeholders（貸主の明細）用
                             $bottomRow = $bottomLandInfo;
                             $bottomRow['rightsForm'] = '01';// 01：借地権
                             // 20220615 S_Add
                             $bottomRow['lenderBorrower'] = '貸主名';   // 貸主名/借主名
                             $bottomRow['leasedAreaTitle'] = '';        // 借地対象面積タイトル
-                            $bottomRow['leasedArea'] = '';             // 借地対象面積（←ここで空にする）
+                            $bottomRow['leasedArea'] = '';             // 借地対象面積（後で追加）
                             // 20230922 S_Add
                             $bottomRow['landRentTitle'] = '地代';
                             // 20230922 E_Add
-                            $locsBottom[] = $bottomRow;
+                            $locsStakeholders[] = $bottomRow;
                             // 20220615 E_Add
 
                             // 所在（土地）へ追加。既に同じ底地土地が存在する場合は leasedArea を上書きしない
@@ -1063,7 +1063,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
                                     // 20230922 S_Add
                                     $bottomLandInfo['landRentTitle'] = '地代';
                                     // 20230922 E_Add
-                                    $locsBottom[] = $bottomLandInfo;
+                                    $locsStakeholders[] = $bottomLandInfo;
                                     // 20220615 E_Add
                                 }
                             }
@@ -1158,17 +1158,17 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $currentRow = $cell->getRow();
     }
 
-    // 底地が複数存在する場合
-    if(sizeof($locsBottom) > 1) {
+    // 賃貸借の条件欄が複数存在する場合
+    if(sizeof($locsStakeholders) > 1) {
         // 底地の行をコピー
-        copyBlockWithVal($sheet, $currentRow, 2, sizeof($locsBottom) - 1, $endColumn);
-        $mergeTo += (sizeof($locsBottom) - 1) * 2;
+        copyBlockWithVal($sheet, $currentRow, 2, sizeof($locsStakeholders) - 1, $endColumn);
+        $mergeTo += (sizeof($locsStakeholders) - 1) * 2;
     }
 
     // セルを再結合
     $sheet->mergeCells('A' . $mergeFrom . ':A' . $mergeTo);
 
-    foreach($locsBottom as $loc) {
+    foreach($locsStakeholders as $loc) {
         // 貸主名/借主名
         $cell = setCell(null, $sheet, 'l2_lenderBorrower', $currentColumn, $endColumn, $currentRow, $endRow, $loc['lenderBorrower']);
         // 借地対象面積タイトル
@@ -1191,7 +1191,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $cell = setCell($cell, $sheet, 'l2_landRent', $currentColumn, $endColumn, $currentRow, $endRow, $loc['landRent']);
     }
     // 底地が存在しない場合、Emptyを設定
-    for ($i = 1; $i <= 1 - sizeof($locsBottom); $i++) {
+    for ($i = 1; $i <= 1 - sizeof($locsStakeholders); $i++) {
         // 貸主名/借主名<-Empty
         $cell = setCell(null, $sheet, 'l2_lenderBorrower', $currentColumn, $endColumn, $currentRow, $endRow, ' 貸主名 ・ 借主名');
         // 借地対象面積タイトル<-Empty
@@ -1397,34 +1397,6 @@ function enableAddLocsLands($locsLands, $bottomLandPid) {
 }
 
 //Service
-/**
- * 帳票の所在項目の候補を取得する
- *
- * @param object $loc
- * @param array $bottomLandInfos
- * @return void
- */
-function collectLocationCandidateFromType01($loc, $bottomLandInfos) {
-    return [
-        'source'         => 'type01_land',
-        'landPid'        => $loc['pid'],
-        'tempLandInfoPid'=> $loc['tempLandInfoPid'],
-
-        // 重複排除の基準キー（Resolverでuniqするときに使う）
-        'dedupeKey'      => 'land:' . $loc['pid'],
-
-        // まだ整形しない“表示の素材”
-        'displayRaw'     => $loc,
-
-        // 状態・補助情報（Policy判断用）
-        'meta' => [
-            'locationType' => $loc['locationType'],
-            'hasBottom'    => !empty($bottomLandInfos),
-            'bottomCount'  => is_array($bottomLandInfos) ? count($bottomLandInfos) : 0,
-        ]
-    ];
-}
-
 
 //Repository
 /**
