@@ -799,22 +799,21 @@ function setCell($cell, $sheet, $keyWord, $startColumn, $endColumn, $startRow, $
 
 
 /**
- * 建物群から底地明細を集め、bottomLandInfo.pid でユニーク化して返す
+ * 建物から底地情報を集め、bottomLandInfo.pid でユニーク化して返す
+ * 
+ * @param array $buildings 建物の所在地情報配列
+ * @return array
  */
 function collectBottomLandInfosUnique(array $buildings): array
 {
     $uniq = []; // [bottomLandInfoPid => bottomLandInfo]
     foreach ($buildings as $building) {
         if (!is_array($building)) continue;
-        $tempLandInfoPid = (int)($building['tempLandInfoPid'] ?? 0);
-        $buildingPid     = (int)($building['pid'] ?? 0);
-        if ($tempLandInfoPid <= 0 || $buildingPid <= 0) continue;
 
-        $rows = findBottomLandsByBuilding($tempLandInfoPid, $buildingPid);
+        $rows = findBottomLandsByBuilding($building['tempLandInfoPid'], $building['pid']);
         foreach ($rows as $r) {
-            if (!is_array($r) || !isset($r['pid'])) continue;
-            $pid = (int)$r['pid'];
-            if ($pid <= 0) continue;
+            if (!is_array($r)) continue;
+            $pid = $r['pid'];
             if (isset($uniq[$pid])) continue;
             $uniq[$pid] = $r;
         }
@@ -842,13 +841,8 @@ function calcLeasedAreaForLandFromBottomInfos(int $landPid, array $bottomLandInf
  */
 function addLocsBottomUniqueByPid(array &$locsBottom, array $row): void
 {
-    $pid = (int)($row['pid'] ?? 0);
-    if ($pid <= 0) {
-        $locsBottom[] = $row;
-        return;
-    }
     foreach ($locsBottom as $added) {
-        if ((int)($added['pid'] ?? 0) === $pid) {
+        if ($added['pid'] === $row['pid']) {
             return;
         }
     }
@@ -872,13 +866,13 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
 
                 if($getBottom) {
                     // 対象の土地を底地選択している建物を取得
-                    $buildings = findBuildingsUsingTargetLand((int)$loc['tempLandInfoPid'], (int)$loc['pid']);
+                    $buildings = findBuildingsUsingTargetLand($loc['tempLandInfoPid'], $loc['pid']);
 
                     // 建物群から底地明細を集めてユニーク化（別建物が同じ底地明細を参照しても二重計上しない）
                     $bottomLandInfosUnique = collectBottomLandInfosUnique($buildings);
 
                     // 借地対象面積（合計）
-                    $leasedArea = calcLeasedAreaForLandFromBottomInfos((int)$loc['pid'], $bottomLandInfosUnique);
+                    $leasedArea = calcLeasedAreaForLandFromBottomInfos($loc['pid'], $bottomLandInfosUnique);
 
                     // 帳票の「底地（借主名・地代など）」行のために、底地明細を整形して追加
                     foreach($bottomLandInfosUnique as $bli) {
