@@ -48,7 +48,7 @@ $dependTypeCodeList = ORM::for_table(TBLCODE)->select('codeDetail')->select('nam
 $codeLists['dependType'] = $dependTypeCodeList;
 
 $cntContracts = 0;
-
+try {
 // 仕入契約情報を取得
 // 20250616 S_Update
 // $contracts = ORM::for_table(TBLCONTRACTINFO)->where('tempLandInfoPid', $param->pid)->where_not_null('contractNow')->where_not_equal('contractNow', '')->where_null('deleteDate')->order_by_asc('pid')->findArray();
@@ -138,7 +138,7 @@ foreach($contracts as $contract) {
     foreach($detailsLeaseholdLand as $detail) {
         $detailIds[] = $detail['locationInfoPid'];
     }
-    setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $detailIds, $codeLists, true, $detailsLeaseholdLand);
+    setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $detailIds, $codeLists, true, $detailsLeaseholdLand, array_column($sellers, "contractorName"));
     // 20250616 E_Update
     // 20220615 E_Update
 
@@ -737,6 +737,15 @@ readfile($savePath);
 
 // 削除
 unlink($savePath);
+} catch (\Throwable $e) {
+    header('Content-Type: application/json; charset=utf-8', true, 500);
+
+        echo json_encode([
+        'error' => true,
+        'message' => $e->getMessage(),
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 /**
  * 行と値コピー
@@ -790,15 +799,6 @@ function setCell($cell, $sheet, $keyWord, $startColumn, $endColumn, $startRow, $
 // 20220615 S_Update
 // 
 /**
- * ============================
- * Location "service" helpers
- * (minimal refactor for extensibility)
- * ============================
- */
-
-
-
-/**
  * 建物から底地情報を集め、bottomLandInfo.pid でユニーク化して返す
  * 
  * @param array $buildings 建物の所在地情報配列
@@ -849,7 +849,7 @@ function addLocsStakeholdersUniqueByPid(array &$locsStakeholders, array $row): v
     $locsStakeholders[] = $row;
 }
 
-function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists, $getBottom = false, $detailsLeaseholdLand = null) {
+function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRow, $pids, $codeLists, $getBottom = false, $detailsLeaseholdLand = null, $sellers) {
 // 20250616 E_Update
 // 20220615 E_Update
     $locsLand = [];     // 土地
@@ -1158,17 +1158,18 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $currentRow = $cell->getRow();
     }
 
+    $filteredStakeholders = filterStakeholdersForLeaseCondition($locsStakeholders, $sellers);
     // 賃貸借の条件欄が複数存在する場合
-    if(sizeof($locsStakeholders) > 1) {
+    if(sizeof($filteredStakeholders) > 1) {
         // 底地の行をコピー
-        copyBlockWithVal($sheet, $currentRow, 2, sizeof($locsStakeholders) - 1, $endColumn);
-        $mergeTo += (sizeof($locsStakeholders) - 1) * 2;
+        copyBlockWithVal($sheet, $currentRow, 2, sizeof($filteredStakeholders) - 1, $endColumn);
+        $mergeTo += (sizeof($filteredStakeholders) - 1) * 2;
     }
 
     // セルを再結合
     $sheet->mergeCells('A' . $mergeFrom . ':A' . $mergeTo);
 
-    foreach($locsStakeholders as $loc) {
+    foreach($filteredStakeholders as $loc) {
         // 貸主名/借主名
         $cell = setCell(null, $sheet, 'l2_lenderBorrower', $currentColumn, $endColumn, $currentRow, $endRow, $loc['lenderBorrower']);
         // 借地対象面積タイトル
@@ -1191,7 +1192,7 @@ function setLocationInfo($sheet, $currentColumn, $endColumn, $currentRow, $endRo
         $cell = setCell($cell, $sheet, 'l2_landRent', $currentColumn, $endColumn, $currentRow, $endRow, $loc['landRent']);
     }
     // 底地が存在しない場合、Emptyを設定
-    for ($i = 1; $i <= 1 - sizeof($locsStakeholders); $i++) {
+    for ($i = 1; $i <= 1 - sizeof($filteredStakeholders); $i++) {
         // 貸主名/借主名<-Empty
         $cell = setCell(null, $sheet, 'l2_lenderBorrower', $currentColumn, $endColumn, $currentRow, $endRow, ' 貸主名 ・ 借主名');
         // 借地対象面積タイトル<-Empty
@@ -1396,11 +1397,62 @@ function enableAddLocsLands($locsLands, $bottomLandPid) {
     return true;
 }
 
-//Service
-
-//Repository
 /**
- * pidから所在地情報を取得
+ * 「賃貸借の条件欄」に表示/非表示の判断
+ * （借主名（建物の所有者）と売主が同じ名前なら表示しない）
+ *
+ * @param array $loc
+ * @param string $shareName
+ * @param array $sellers
+ * @return boolean
+ */
+function shouldSkipBorrower(array $loc, string $shareName, array $sellers): bool
+{
+    $shareNames = explode('、', $shareName);
+    if (count($shareNames) !== 1) return false;
+
+    if ($shareNames[0] === mb_convert_kana($sellers[0] ?? '', 'kvrn')) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * 「賃貸借の条件欄」に表示する行だけ返す
+ *
+ * @param array $locsStakeholders
+ * @param array $sellers
+ * @return array
+ */
+function filterStakeholdersForLeaseCondition(array $locsStakeholders, array $sellers): array
+{
+    if(empty($sellers)) return $locsStakeholders;
+    if (count($sellers) !== 1) return $locsStakeholders;
+
+    $filteredStakeholders = [];
+    foreach ($locsStakeholders as $row) {
+        if($row['lenderBorrower'] !== '借主名') {
+            $filteredStakeholders[] = $row;
+            continue;
+        }
+
+        $shareName = getSharerName($row, '、');
+        if (shouldSkipBorrower($row, $shareName, $sellers)) {
+            continue; // 「賃貸借の条件欄」を非表示にする
+        }
+        $filteredStakeholders[] = $row;
+        
+    }
+
+    return $filteredStakeholders;
+}
+
+/**
+ *  Repository ============================
+ */
+
+/** pidから所在地情報を取得
  *
  * @param array $pids
  * @return array
@@ -1474,4 +1526,5 @@ function findBottomLandWithLocation(int $buildingLocationPid) {
             ->order_by_asc('p1.registPosition')
             ->findArray();
 }
+
 ?>
