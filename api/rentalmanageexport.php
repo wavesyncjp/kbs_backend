@@ -247,7 +247,6 @@ readfile($savePath);
 // 削除
 unlink($savePath);
 
-
 /**
  * セルに値設定
  */
