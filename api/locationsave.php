@@ -212,7 +212,7 @@ if(($loc->locationType == '01' || $loc->locationType == '02') && $loc->apartment
 }
 // 20240123 E_Add
 // 20260115 S_Add
-if(($loc->locationType == '03') && $loc->apartmentName != null && $loc->apartmentName ) {
+if(($loc->locationType === '03') && $loc->apartmentName !== null && $loc->apartmentName !== '' ) {
     $rental = ORM::for_table(TBLRENTALINFO)->where('locationInfoPid', $loc->pid)->where_null('deleteDate')->find_one();
     if(!empty($rental) && $isChangedApartmentName && $rental->apartmentName != $loc->apartmentName) {
         $rental->apartmentName = $loc->apartmentName;
@@ -221,29 +221,31 @@ if(($loc->locationType == '03') && $loc->apartmentName != null && $loc->apartmen
     }
 }
 
-if(($loc->locationType == '04')) {
+if(($loc->locationType === '04')) {
     $userPid = $param->createUserId > 0 ? $param->createUserId : $param->updateUserId;
 
     //賃貸情報登録
     $ridgeLocation = ORM::for_table(TBLLOCATIONINFO)->where_null('deleteDate')->find_one($param->ridgePid);
-    //  FIX ME 建物名の有無の制御
-    $rental = ORM::for_table(TBLRENTALINFO)->where('locationInfoPid', $ridgeLocation->pid)->where_null('deleteDate')->find_one();
-    $preData = getForRegisterRental($loc->pid);
-    if($rental == null || !isset($rental)){
-        if(isset($preData)){
-            $rental = ORM::for_table(TBLRENTALINFO)->create();
 
-            setInsert($rental, $userPid);
-            if($preData->contractInfoPid > 0){
-                $rental->contractInfoPid = $preData->contractInfoPid;
-                $rental->contractSellerInfoPid = $preData->contractSellerInfoPid;
+    if ($ridgeLocation->apartmentName !== null && $ridgeLocation->apartmentName !== '') {
+        $rental = ORM::for_table(TBLRENTALINFO)->where('locationInfoPid', $ridgeLocation->pid)->where_null('deleteDate')->find_one();
+        $preData = getForRegisterRental($loc->pid);
+        if($rental == null || !isset($rental)){
+            if(isset($preData)){
+                $rental = ORM::for_table(TBLRENTALINFO)->create();
+
+                setInsert($rental, $userPid);
+                if($preData->contractInfoPid > 0){
+                    $rental->contractInfoPid = $preData->contractInfoPid;
+                    $rental->contractSellerInfoPid = $preData->contractSellerInfoPid;
+                }
+                
+                $rental->locationInfoPid = $ridgeLocation->pid;
+                $rental->tempLandInfoPid = $ridgeLocation->tempLandInfoPid;
+                $rental->apartmentName = $ridgeLocation->apartmentName;
+
+                $rental->save();
             }
-            
-            $rental->locationInfoPid = $ridgeLocation->pid;
-            $rental->tempLandInfoPid = $ridgeLocation->tempLandInfoPid;
-            $rental->apartmentName = $ridgeLocation->apartmentName;
-
-            $rental->save();
         }
     }
 
