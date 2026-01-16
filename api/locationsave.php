@@ -179,40 +179,84 @@ if(($loc->locationType == '01' || $loc->locationType == '02') && $loc->apartment
     }
     
     if($rental->contractInfoPid > 0){
-        foreach($residentPids as $residentPid){
-            //賃貸契約情報登録
-            $rentalContract = ORM::for_table(TBLRENTALCONTRACT)->where('rentalInfoPid', $rental->pid)->where('residentInfoPid', $residentPid)->where_null('deleteDate')->find_one();
-            if($rentalContract == null || !isset($rentalContract)){
-                $rentalContract = new stdClass();
-                $rentalContract->rentalInfoPid = $rental->pid;
-                $rentalContract->residentInfoPid = $residentPid;
-                $rentalContract->contractInfoPid = $rental->contractInfoPid;
-                $rentalContract->locationInfoPid = $rental->locationInfoPid;
-                $rentalContract->tempLandInfoPid = $rental->tempLandInfoPid;
-                $rentalContract->updateUserId = $userPid;
-                $rentalContract->createUserId = $userPid;
+        // 20260115 S_Update
+        // foreach($residentPids as $residentPid){
+        //     //賃貸契約情報登録
+        //     $rentalContract = ORM::for_table(TBLRENTALCONTRACT)->where('rentalInfoPid', $rental->pid)->where('residentInfoPid', $residentPid)->where_null('deleteDate')->find_one();
+        //     if($rentalContract == null || !isset($rentalContract)){
+        //         $rentalContract = new stdClass();
+        //         $rentalContract->rentalInfoPid = $rental->pid;
+        //         $rentalContract->residentInfoPid = $residentPid;
+        //         $rentalContract->contractInfoPid = $rental->contractInfoPid;
+        //         $rentalContract->locationInfoPid = $rental->locationInfoPid;
+        //         $rentalContract->tempLandInfoPid = $rental->tempLandInfoPid;
+        //         $rentalContract->updateUserId = $userPid;
+        //         $rentalContract->createUserId = $userPid;
 
-                saveRentalContract($rentalContract,false);
+        //         saveRentalContract($rentalContract,false);
+        // //立ち退き登録
+        //     $eviction = ORM::for_table(TBLEVICTIONINFO)->where('rentalInfoPid', $rental->pid)->where('residentInfoPid', $residentPid)->where_null('deleteDate')->find_one();
+        //     if($eviction == null || !isset($eviction)){
+        //         $eviction = new stdClass();
+        //         $eviction->rentalInfoPid = $rental->pid;
+        //         $eviction->residentInfoPid = $residentPid;
+        //         $eviction->contractInfoPid = $rental->contractInfoPid;
+        //         $eviction->locationInfoPid = $rental->locationInfoPid;
+        //         $eviction->tempLandInfoPid = $rental->tempLandInfoPid;
+        //         $eviction->updateUserId = $userPid;
+        //         $eviction->createUserId = $userPid;
+        //     }
+        createRentalContracts($rental->locationInfoPid, $rental, $residentPids, $userPid);
+        // 20260115 E_Update
+    }
+}
+// 20240123 E_Add
+// 20260115 S_Add
+if(($loc->locationType === '03') && $loc->apartmentName !== null && $loc->apartmentName !== '' ) {
+    $rental = ORM::for_table(TBLRENTALINFO)->where('locationInfoPid', $loc->pid)->where_null('deleteDate')->find_one();
+    if(!empty($rental) && $isChangedApartmentName && $rental->apartmentName != $loc->apartmentName) {
+        $rental->apartmentName = $loc->apartmentName;
+        setUpdate($rental, $param->updateUserId);
+        $rental->save();
+    }
+}
+
+if(($loc->locationType === '04')) {
+    $userPid = $param->createUserId > 0 ? $param->createUserId : $param->updateUserId;
+
+    //賃貸情報登録
+    $ridgeLocation = ORM::for_table(TBLLOCATIONINFO)->where_null('deleteDate')->find_one($param->ridgePid);
+
+    if ($ridgeLocation->apartmentName !== null && $ridgeLocation->apartmentName !== '') {
+        $rental = ORM::for_table(TBLRENTALINFO)->where('locationInfoPid', $ridgeLocation->pid)->where_null('deleteDate')->find_one();
+        $preData = getForRegisterRental($loc->pid);
+        if($rental == null || !isset($rental)){
+            if(isset($preData)){
+                $rental = ORM::for_table(TBLRENTALINFO)->create();
+
+                setInsert($rental, $userPid);
+                if($preData->contractInfoPid > 0){
+                    $rental->contractInfoPid = $preData->contractInfoPid;
+                    $rental->contractSellerInfoPid = $preData->contractSellerInfoPid;
+                }
+                
+                $rental->locationInfoPid = $ridgeLocation->pid;
+                $rental->tempLandInfoPid = $ridgeLocation->tempLandInfoPid;
+                $rental->apartmentName = $ridgeLocation->apartmentName;
+
+                $rental->save();
             }
+        }
+    }
 
-            //立ち退き登録
-            $eviction = ORM::for_table(TBLEVICTIONINFO)->where('rentalInfoPid', $rental->pid)->where('residentInfoPid', $residentPid)->where_null('deleteDate')->find_one();
-            if($eviction == null || !isset($eviction)){
-                $eviction = new stdClass();
-                $eviction->rentalInfoPid = $rental->pid;
-                $eviction->residentInfoPid = $residentPid;
-                $eviction->contractInfoPid = $rental->contractInfoPid;
-                $eviction->locationInfoPid = $rental->locationInfoPid;
-                $eviction->tempLandInfoPid = $rental->tempLandInfoPid;
-                $eviction->updateUserId = $userPid;
-                $eviction->createUserId = $userPid;
-
-                saveEviction($eviction);
-            }
+    if(isset($preData)) {
+        if($rental->contractInfoPid > 0 && $preData->contractInfoPid == $rental->contractInfoPid) {
+            createRentalContracts($loc->pid, $rental, $residentPids, $userPid);
         }
     }
 }
 // 20240123 E_Add
+// 20260115 E_Add
 
 ORM::get_db()->commit();
 
@@ -233,5 +277,51 @@ $residents = ORM::for_table(TBLRESIDENTINFO)->where('locationInfoPid', $location
 $loc['residents'] = $residents;
 // 20220614 E_Add
 echo json_encode($loc);
+
+// 20260115 S_Add
+/**
+ * 賃貸契約を入居者ごとに作成する
+ *
+ * @param \ORM $rental
+ * @param array $residentPids
+ * @param int $userPid
+ * @return void
+ */
+function createRentalContracts($locationInfoPid, $rental, $residentPids, $userPid) {
+    foreach($residentPids as $residentPid){
+        //賃貸契約情報登録
+        $rentalContract = ORM::for_table(TBLRENTALCONTRACT)->where('rentalInfoPid', $rental->pid)->where('residentInfoPid', $residentPid)->where_null('deleteDate')->find_one();
+        if(!empty($rentalContract)) {
+            continue;
+        }
+        $rentalContract = new stdClass();
+        $rentalContract->rentalInfoPid = $rental->pid;
+        $rentalContract->residentInfoPid = $residentPid;
+        $rentalContract->contractInfoPid = $rental->contractInfoPid;
+        $rentalContract->locationInfoPid = $locationInfoPid;
+        $rentalContract->tempLandInfoPid = $rental->tempLandInfoPid;
+        $rentalContract->updateUserId = $userPid;
+        $rentalContract->createUserId = $userPid;
+
+        saveRentalContract($rentalContract,false);
+
+        //立ち退き登録
+        $eviction = ORM::for_table(TBLEVICTIONINFO)->where('rentalInfoPid', $rental->pid)->where('residentInfoPid', $residentPid)->where_null('deleteDate')->find_one();
+        if(!empty($eviction)) {
+            continue;
+        }
+        $eviction = new stdClass();
+        $eviction->rentalInfoPid = $rental->pid;
+        $eviction->residentInfoPid = $residentPid;
+        $eviction->contractInfoPid = $rental->contractInfoPid;
+        $eviction->locationInfoPid = $rental->locationInfoPid;
+        $eviction->tempLandInfoPid = $rental->tempLandInfoPid;
+        $eviction->updateUserId = $userPid;
+        $eviction->createUserId = $userPid;
+
+        saveEviction($eviction);
+    }
+}
+// 20260115 E_Add
 
 ?>

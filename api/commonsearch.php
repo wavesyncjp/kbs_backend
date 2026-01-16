@@ -73,10 +73,14 @@ function searchResident($param) {
 	// 20231019 S_Add
 	$locationInfoPid = $param->locationInfoPid;
 	if (isset($locationInfoPid) && $locationInfoPid !== '') {
-		$locationInfoPidTemp = getLocationPidByBuilding($locationInfoPid);
-		if (isset($locationInfoPidTemp) && $locationInfoPidTemp != null){
-			$locationInfoPid = $locationInfoPidTemp;
-		}
+		// 20260115 S_Update
+		// $locationInfoPidTemp = getLocationPidByBuilding($locationInfoPid);
+		// if (isset($locationInfoPidTemp) && $locationInfoPidTemp != null){
+		// 	$locationInfoPid = $locationInfoPidTemp;
+		// }
+		$locationInfoPidTemps = getLocationPidByBuilding($locationInfoPid);
+		$locationInfoPid = !empty($locationInfoPidTemps) ? $locationInfoPidTemps: [$locationInfoPid];
+		// 20260115 E_Update
 	}
 	// 20231019 E_Add
 	$query = ORM::for_table(TBLRESIDENTINFO)->where_null('deleteDate')->where_not_null('roomNo');
@@ -85,10 +89,14 @@ function searchResident($param) {
 	// if (isset($param->locationInfoPid) && $param->locationInfoPid !== '') {
 	// 	$query = $query->where('locationInfoPid', $param->locationInfoPid);
 	// }
-	if (isset($locationInfoPid)) {
-		$query = $query->where('locationInfoPid', $locationInfoPid);
-	}
+	// if (isset($locationInfoPid)) {
 	// 20231019 E_Update
+	// 	$query = $query->where('locationInfoPid', $locationInfoPid);
+	// 20260115 S_Update
+	if (!empty($locationInfoPid)) {
+		$query = $query->where_in('locationInfoPid', $locationInfoPid);
+	}
+	// 20260115 E_Update
 
 	if (isset($param->tempLandInfoPid) && $param->tempLandInfoPid !== '') {
 		$query = $query->where('tempLandInfoPid', $param->tempLandInfoPid);
