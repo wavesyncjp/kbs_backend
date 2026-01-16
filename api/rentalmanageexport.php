@@ -338,10 +338,11 @@ function getRentalReceiveForExport($rentalInfoPid) {
     ->select('p2.rentPrice', 'rentPriceRefMap')
     ->select('p3.address', 'l_addressMap')
     ->select('p4.receiveMonth')
-    ->select('p4.receiveDay')
+    // ->select('p3.receiveDay') 20260116 Delete
     ->select('p4.receiveFlg')
     ->select('p4.rentalContractPid')
     ->select('p5.receivePriceTax')
+    ->select('p5.contractFixDay') // 20260116 Add
     ->left_outer_join(TBLRESIDENTINFO, 'p1.residentInfoPid = p2.pid and p2.deleteDate is null', 'p2')
     ->left_outer_join(TBLLOCATIONINFO, array('p1.locationInfoPid', '=', 'p3.pid'), 'p3')
     ->left_outer_join(TBLRENTALRECEIVE, 'p1.pid = p4.rentalContractPid and p4.deleteDate is null', 'p4')
@@ -452,8 +453,11 @@ function getRentalReceiveForExport($rentalInfoPid) {
                         $obj->groups[$key] = $data;
 
                     }
-                    $receiveDay = $rev['receiveDay'];
+                    // 20260116 S_Update
+                    // $receiveDay = $rev['receiveDay'];
+                    $receiveDay = $rev['contractFixDay'];
                     $receivePrice = $rev['receivePriceTax'];
+                    // 20260116 E_Update
 
                     $details = $obj->groups[$key]->details;
 
