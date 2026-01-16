@@ -32,8 +32,7 @@ $endRow = 6;
 
 $newline = "\n";
 
-try {
-    // 賃貸情報を取得
+// 賃貸情報を取得
 $ren = ORM::for_table(TBLRENTALINFO)->findOne($param->pid)->asArray();
 
 //用途
@@ -223,10 +222,6 @@ foreach($renRevGroups as $renRevGroup) {
 
         $endRow += 1;// 20240426 Add
         for ($i = 1; $i <= 12; $i++) {
-            // if ($yearJP == 'R8') {
-            //     throw new Exception(json_encode($rev->details));
-            // }
-
             $detail = $rev->details[$i];
             // 金額
             $cell = setCell($cell, $sheet, 'receivePrice_' . $i, $currentColumn, $endColumn, $currentRow, $endRow, $detail->receivePrice, $detail->isDisable ? $color : null);
@@ -251,15 +246,6 @@ readfile($savePath);
 
 // 削除
 unlink($savePath);
-
-} catch (\Throwable $th) {
-    header('Content-Type: application/json');
-    echo json_encode([
-        'error' => true,
-        'message' => $th->getMessage()
-    ]);
-    exit;
-}
 
 
 /**
