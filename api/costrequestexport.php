@@ -568,7 +568,10 @@ foreach ($targets as $key => $groups) {
 		//借方金額
 		$cell = setCell($cell, $sheet, 'debtorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->debtorPayPrice);
 		//貸方勘定科目
-		$cell = setCell($cell, $sheet, 'creditorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorKanjyoName);
+		// 20260129 S_Update
+		//$cell = setCell($cell, $sheet, 'creditorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayPrice);
+		$cell = setCell($cell, $sheet, 'creditorKanjyoName', $currentColumn, $endColumn, $currentRow, $endRow, isset($slipData->creditorPayPrice) ? $slipData->creditorKanjyoName : '');
+		// 20260129 E_Update
 		//貸方金額
 		$cell = setCell($cell, $sheet, 'creditorPayPrice', $currentColumn, $endColumn, $currentRow, $endRow, $slipData->creditorPayPrice);
 		//摘要
